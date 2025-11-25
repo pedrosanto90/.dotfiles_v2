@@ -90,7 +90,7 @@ wget -O vscode.deb https://go.microsoft.com/fwlink/?LinkID=760868
 sudo apt install -y ./vscode.deb
 # NordVPN
 echo 'installing NordVPN...'
-sh <(curl -sSf https://downloads.nordcdn.com/apps/linux/install.sh)
+wget -qO - https://downloads.nordcdn.com/apps/linux/install.sh | sudo sh
 
 # Docker
 apt install -y ca-certificates gnupg lsb-release
