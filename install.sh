@@ -12,9 +12,11 @@ if [ -z "$USER_NAME" ]; then
     exit 1
 fi
 HOME_DIR="/home/$USER_NAME" # O diretório home real do utilizador
-DOTFILES_DIR="$HOME_DIR/.dotfiles_v2" # Diretório base dos dotfiles
+DOTFILES_REPO="https://github.com/pedrosanto90/.dotfiles_v2"
+DOTFILES_DIR="$HOME_DIR/.dotfiles_v2" # Diretório local do repositório clonado
 
 SCRIPT_DIR=$(pwd)
+NVIM_VERSION="v0.10.1" 
 WEZTERM_VERSION="20241118-081016-f36b8e3a" 
 
 DEB_OBSIDIAN_URL="https://github.com/obsidianmd/obsidian-releases/releases/download/v1.6.3/obsidian-1.6.3.deb"
@@ -34,14 +36,22 @@ fi
 echo "Inicializando o Script de Configuração do Ambiente de Trabalho para o utilizador: $USER_NAME"
 echo "---------------------------------------------------------"
 
-# 1. Configurar Repositórios (non-free)
-echo "1. Configurando repositórios 'non-free' e atualizando..."
-sed -i '/deb http/s/ main/ main contrib non-free non-free-firmware/g' /etc/apt/sources.list
+# 1. Configurar Repositórios (non-free) - CORREÇÃO CRÍTICA DO SOURCES.LIST
+echo "1. Corrigindo /etc/apt/sources.list e atualizando para Trixie..."
+# Reescreve o sources.list com sintaxe correta para evitar erros 'gvfs-smb'
+cat << EOF > /etc/apt/sources.list
+# Repositórios Debian 13 (Trixie) gerados pelo script
+deb http://deb.debian.org/debian/ trixie main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian/ trixie-updates main contrib non-free non-free-firmware
+deb http://security.debian.org/debian-security/ trixie-security main contrib non-free non-free-firmware
+EOF
+
+# Força a limpeza e atualização dos índices
+apt clean
 apt update
 apt upgrade -y
 
 # 2. Instalar Core System e Ferramentas (apt)
-# Inclui i3, rofi, zsh, tmux, git, arandr e utilidades essenciais.
 echo "2. Instalando Core System, i3, ZSH e Utilidades essenciais..."
 apt install -y \
   xserver-xorg \
@@ -83,16 +93,22 @@ apt install -y \
 
 # 3. Configurar Repositórios Externos (VSCode, NordVPN e Docker)
 echo "3. Configurando repositórios externos e instalando VS Code e NordVPN..."
-# ... (código de configuração de repositórios) ...
-# VSCode
-echo 'installing VS Code...'
-wget -O vscode.deb https://go.microsoft.com/fwlink/?LinkID=760868
-sudo apt install -y ./vscode.deb
-# NordVPN
-echo 'installing NordVPN...'
-wget -qO - https://downloads.nordcdn.com/apps/linux/install.sh | sudo sh
+# VSCode - CORRIGIDO: Usando o repo em vez do deb direto para atualizações mais fáceis.
+echo '3.1. Adicionando repositório e instalando VS Code...'
+wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/
+rm packages.microsoft.gpg
+echo "deb [arch=amd64] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list
+
+# NordVPN - CORRIGIDO: Usando o repo em vez do script pipeline
+echo '3.2. Adicionando repositório e instalando NordVPN...'
+wget -qO- https://repo.nordvpn.com/gpg/nordvpn_public.asc | gpg --dearmor > nordvpn.gpg
+install -o root -g root -m 644 nordvpn.gpg /etc/apt/trusted.gpg.d/
+rm nordvpn.gpg
+echo "deb [arch=amd64] https://repo.nordvpn.com/debian stable main" > /etc/apt/sources.list.d/nordvpn.list
 
 # Docker
+echo "3.3. Adicionando repositório do Docker..."
 apt install -y ca-certificates gnupg lsb-release
 install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
@@ -111,10 +127,15 @@ apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker
 echo "3.5. Adicionando o utilizador $USER_NAME ao grupo docker (necessário logout/login)..."
 usermod -aG docker $USER_NAME
 
+# Instalar pacotes via repositório (VSCode e NordVPN)
+echo "3.6. Instalando VS Code e NordVPN via apt..."
+apt install -y code nordvpn
+
 # 4. Instalar Neovim a partir do Código Fonte
-echo "4. Instalando Neovim ..."
+echo "4. Instalando Neovim ($NVIM_VERSION) a partir do Código Fonte..."
 git clone https://github.com/neovim/neovim /opt/neovim-src
 cd /opt/neovim-src
+git checkout $NVIM_VERSION
 make CMAKE_BUILD_TYPE=Release
 make install
 cd $SCRIPT_DIR
@@ -171,12 +192,14 @@ su - $USER_NAME -c "sh -c \"$(wget -O- https://raw.githubusercontent.com/ohmyzsh
 
 # 9. Configuração de Dotfiles (Criação de Symlinks Automatizada)
 echo "9. Automatizando a criação de Symlinks para Dotfiles..."
-git clone https://github.com/pedrosanto90/.dotfiles_v2
+# CLONAGEM CORRIGIDA: Clonar o repositório para o $HOME_DIR para ser acessível pelo utilizador
+su - $USER_NAME -c "git clone $DOTFILES_REPO $DOTFILES_DIR"
+
 su - $USER_NAME -c "
   mkdir -p \"\$HOME_DIR/.config\"
   mkdir -p \"\$HOME_DIR/scripts\" # Garante que o diretório scripts existe
-
-  # 9.1 Limpeza ZSH: Remover ficheiros de configuração ZSH existentes antes de criar symlinks
+  
+  # 9.1 Limpeza ZSH: Remover ficheiros de configuração ZSH existentes
   echo '  -> Limpeza: Removendo ficheiros ZSH existentes (.zshrc, .zprofile, etc)...'
   rm -rf \"\$HOME_DIR/.zshrc\"
   rm -rf \"\$HOME_DIR/.zprofile\"
@@ -201,7 +224,6 @@ su - $USER_NAME -c "
 
 # 10. Configurar Ambiente Node.js (NVM, Node v22, NestJS, Angular)
 echo "10. Configurando Ambiente Node.js (NVM, Node v22, NestJS, Angular)..."
-# Executa todos os comandos como o utilizador não-root
 su - $USER_NAME -c "
   echo '  -> Instalando NVM (v0.39.7)...'
   # 10.1 Instalar NVM
@@ -274,7 +296,7 @@ echo "✅ Instalação e Configuração concluída! 🎉"
 echo ""
 echo "!!! AVISO IMPORTANTE !!!"
 echo "Para que as permissões do Docker, o novo ambiente ZSH e o NVM entrem em vigor,"
-echo "deve fazer **LOGOUT e LOGIN** ou **REINICIAR** a máquina."
+echo "o utilizador $USER_NAME deve fazer **LOGOUT e LOGIN** ou **REINICIAR** a máquina."
 echo ""
 echo "Recomendação: Reinicie a máquina (shutdown -r now) para garantir que tudo inicia corretamente."
 
