@@ -86,16 +86,12 @@ apt install -y \
 echo "3. Configurando repositórios externos e instalando VS Code e NordVPN..."
 # ... (código de configuração de repositórios) ...
 # VSCode
-wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
-install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/
-rm packages.microsoft.gpg
-echo "deb [arch=amd64] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list
-
+echo 'installing VS Code...'
+wget -O vscode.deb https://go.microsoft.com/fwlink/?LinkID=760868
+sudo apt install -y ./vscode.deb
 # NordVPN
-wget -qO- https://repo.nordvpn.com/gpg/nordvpn_public.asc | gpg --dearmor > nordvpn.gpg
-install -o root -g root -m 644 nordvpn.gpg /etc/apt/trusted.gpg.d/
-rm nordvpn.gpg
-echo "deb [arch=amd64] https://repo.nordvpn.com/debian stable main" > /etc/apt/sources.list.d/nordvpn.list
+echo 'installing NordVPN...'
+sh <(curl -sSf https://downloads.nordcdn.com/apps/linux/install.sh)
 
 # Docker
 apt install -y ca-certificates gnupg lsb-release
@@ -121,10 +117,9 @@ echo "3.6. Instalando VS Code e NordVPN via apt..."
 apt install -y code nordvpn
 
 # 4. Instalar Neovim a partir do Código Fonte
-echo "4. Instalando Neovim ($NVIM_VERSION) a partir do Código Fonte..."
+echo "4. Instalando Neovim ..."
 git clone https://github.com/neovim/neovim /opt/neovim-src
 cd /opt/neovim-src
-git checkout $NVIM_VERSION
 make CMAKE_BUILD_TYPE=Release
 make install
 cd $SCRIPT_DIR
