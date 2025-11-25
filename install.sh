@@ -15,7 +15,6 @@ HOME_DIR="/home/$USER_NAME" # O diretório home real do utilizador
 DOTFILES_DIR="$HOME_DIR/.dotfiles_v2" # Diretório base dos dotfiles
 
 SCRIPT_DIR=$(pwd)
-NVIM_VERSION="v0.10.1" 
 WEZTERM_VERSION="20241118-081016-f36b8e3a" 
 
 DEB_OBSIDIAN_URL="https://github.com/obsidianmd/obsidian-releases/releases/download/v1.6.3/obsidian-1.6.3.deb"
@@ -111,10 +110,6 @@ apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker
 # 3.5 Configurar Permissões do Docker
 echo "3.5. Adicionando o utilizador $USER_NAME ao grupo docker (necessário logout/login)..."
 usermod -aG docker $USER_NAME
-
-# Instalar pacotes via repositório (VSCode e NordVPN)
-echo "3.6. Instalando VS Code e NordVPN via apt..."
-apt install -y code nordvpn
 
 # 4. Instalar Neovim a partir do Código Fonte
 echo "4. Instalando Neovim ..."
