@@ -1,0 +1,42 @@
+#!/bin/bash
+# juce: script para criar projeto CMake com JUCE
+
+NAME=$1
+
+# Evita erro se nenhum nome for passado
+if [ -z "$NAME" ]; then
+    echo "Uso: ./juce <NomeDoProjeto>"
+    exit 1
+fi
+
+mkdir -p "$NAME" && cd "$NAME" || exit
+
+cat >CMakeLists.txt <<EOF
+cmake_minimum_required(VERSION 3.15)
+project($NAME VERSION 0.0.1)
+
+# Caminho para o JUCE (ajuste conforme a tua máquina)
+set(JUCE_DIR "/home/pedro/JUCE")
+
+# Adiciona o JUCE
+add_subdirectory(\${JUCE_DIR} JUCE)
+
+juce_add_plugin($NAME
+    COMPANY_NAME "MinhaEmpresa"
+    PLUGIN_MANUFACTURER_CODE MnEm
+    PLUGIN_CODE P${RANDOM}
+    FORMATS VST3
+    PRODUCT_NAME "$NAME"
+)
+
+target_sources($NAME PRIVATE
+    PluginProcessor.cpp
+    PluginEditor.cpp
+)
+
+target_compile_features($NAME PRIVATE cxx_std_17)
+target_link_libraries($NAME PRIVATE juce::juce_audio_utils)
+EOF
+
+# Gera o build system
+cmake -S . -B build

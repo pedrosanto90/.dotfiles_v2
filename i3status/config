@@ -1,0 +1,63 @@
+# i3status configuration file.
+# see "man i3status" for documentation.
+
+# It is important that this file is edited as UTF-8.
+# The following line should contain a sharp s:
+# ß
+# If the above line is not correctly displayed, fix your editor first!
+# i3status configuration file.
+# see "man i3status" for documentation.
+
+# It is important that this file is edited as UTF-8.
+# The following line should contain a sharp s:
+# ß
+# If the above line is not correctly displayed, fix your editor first!
+
+general {
+        colors = true
+        interval = 1
+}
+
+order += "volume master"
+order += "disk /"
+order += "battery all"
+order += "memory"
+order += "load"
+order += "tztime local"
+
+volume master {
+        format = "󰕾 %volume"
+        format_muted = "󰝟 muted (%volume)"
+        device = "default"
+        mixer = "Master"
+        mixer_idx = 0
+}
+
+battery all {
+        format = "%status %percentage %remaining"
+        format_down = "No battery"
+        status_chr = ""
+        status_bat = "🔋 BAT"
+        status_unk = "? UNK"
+        status_full = ""
+        path = "/sys/class/power_supply/BAT%d/uevent"
+        low_threshold = 10
+        last_full_capacity = true
+        integer_battery_capacity = true
+}
+
+tztime local {
+        format = " %Y-%m-%d  %H:%M:%S  "
+}
+
+load {
+        format = " %1min"
+}
+
+disk "/" {
+        format = " %avail"
+}
+
+memory {
+    format = " %used (%total)"
+}

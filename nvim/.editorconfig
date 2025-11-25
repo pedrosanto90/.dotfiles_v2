@@ -1,0 +1,33 @@
+[*.lua]
+indent_size = 2
+
+[*.html]
+indent_size = 2
+
+[*.css]
+indent_size = 2
+
+[*.js]
+indent_size = 2
+
+[*.ts]
+indent_size = 2
+
+[*.tsx]
+indent_size = 2
+
+[*.h]
+indent_size = 4
+
+[*.py]
+indent_size = 4
+
+[*.cpp]
+indent_size = 2
+
+[*.c]
+indent_size = 2
+
+[*.asm]
+indentsize = 8
+tabstop = 8

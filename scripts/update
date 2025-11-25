@@ -1,0 +1,28 @@
+#!/bin/bash
+
+while read -r line; do
+    echo $line
+done </etc/os-release
+
+yay -Syyuu
+
+# if [ -f /etc/os-release ]; then
+#     . /etc/os-release
+#     case "$ID" in
+#     arch)
+#         echo "arch"
+#         # comandos de update para Arch
+#         sudo pacman -Syu
+#         ;;
+#     debian | ubuntu | linuxmint)
+#         echo "Debian"
+#         # comandos de update para Debian/Ubuntu
+#         sudo apt update && sudo apt upgrade -y
+#         ;;
+#     *)
+#         echo "Not recognized"
+#         ;;
+#     esac
+# else
+#     echo "Cant identify distro"
+# fi

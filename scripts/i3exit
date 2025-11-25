@@ -1,0 +1,16 @@
+#!/bin/bash
+# /usr/bin/i3exit
+
+# take screenshot
+import -window root /tmp/screenshot.png
+
+# blur it
+convert /tmp/screenshot.png -blur 0x12 /tmp/screenshotblur.png
+rm /tmp/screenshot.png
+
+# lock the screen
+i3lock -i /tmp/screenshotblur.png
+
+xset dpms force off
+
+systemctl suspend

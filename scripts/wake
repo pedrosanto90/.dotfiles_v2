@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Function to print the usage of the script
+usage() {
+    echo "Usage: $0 <MAC_ADDRESS>"
+    echo "Example: $0 00:11:22:33:44:55"
+    exit 1
+}
+
+# Check if the user provided a MAC address
+if [ "$#" -ne 1 ]; then
+    usage
+fi
+
+MAC_ADDRESS=$1
+
+# Check if wakeonlan is installed
+if ! command -v wakeonlan &>/dev/null; then
+    echo "The wakeonlan command could not be found."
+    echo "Please install it by running 'sudo apt-get install wakeonlan'"
+    exit 1
+fi
+
+# Send the magic packet to wake the machine
+wakeonlan $MAC_ADDRESS
+
+# Check if the command was successful
+if [ $? -eq 0 ]; then
+    echo "Magic packet sent successfully to $MAC_ADDRESS"
+else
+    echo "Failed to send magic packet to $MAC_ADDRESS"
+    exit 1
+fi
