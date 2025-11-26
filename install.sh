@@ -41,7 +41,7 @@ apt clean
 apt update -y
 apt upgrade -y
 # install necessary packages
-apt install -y xserver-xorg i3 i3status rofi dmenu fzf lightdm tmux nitrogen zsh git curl wget build-essential cmake make ninja-build pkg-config libtool libtool-bin gettext unzip network-manager network-manager-gnome network-manager-openvpn network-manager-openvpn-gnome thunar gvfs-backends gvfs-smb blueman chromium x11-xserver-utils maim xclip pulseaudio-utils brightnessctl arandr
+apt install -y xserver-xorg i3 i3status rofi dmenu fzf lightdm tmux nitrogen zsh git curl wget build-essential cmake make ninja-build pkg-config libtool libtool-bin gettext unzip network-manager network-manager-gnome network-manager-openvpn network-manager-openvpn-gnome thunar gvfs-backends gvfs-smb blueman chromium x11-xserver-utils maim xclip pulseaudio-utils brightnessctl arandr eza bat
 
 # enable lightdm
 systemctl enable lightdm
@@ -94,6 +94,7 @@ git clone https://github.com/neovim/neovim
 cd neovim
 make CMAKE_BUILD_TYPE=Release
 make install
+sleep 20
 
 
 # Obsidian
