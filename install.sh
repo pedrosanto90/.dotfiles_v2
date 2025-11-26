@@ -68,7 +68,7 @@ git clone https://github.com/neovim/neovim
 cd neovim
 make CMAKE_BUILD_TYPE=RelWithDebInfo
 make install
-cd
+cd /home/$USER_NAME
 
 #dbeaver 
 sudo wget -O /usr/share/keyrings/dbeaver.gpg.key https://dbeaver.io/debs/dbeaver.gpg.key
@@ -97,7 +97,7 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
 nvm isntall 22
 nvm alias default 22
 
-cd ~
+cd /home/$USER_NAME
 rm -rf .zshrc
 rm -rf .zprofile
 rm -rf .zsh_history
@@ -124,7 +124,7 @@ ln -s ~/.dotfiles_v2/wallpaper/* ~/Pictures/
 ln -s ~/.dotfiles_v2/zsh/.* ~
 
 # configure git
-cd ~
+cd /home/$USER_NAME
 echo "Configuring git..."
 echo "-----------------------------------"
 echo "Prepare to answer some questions:"
