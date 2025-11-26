@@ -1,8 +1,13 @@
-## My dotfiles for Debian with i3
+# My dotfiles for Debian with i3
 
-# Instalation
-# The install script is made for Debian 13
-# After install Debian 13 minimal run the following with sudo
+## Instalation
+## The install script is made for Debian 13
+## Need to have git installed
+```bash
+sudo apt install git
+```
+## After install Debian 13 minimal run the following with sudo
+
 
 ```bash
 git clone https://github.com/pedrosanto90/.dotfiles_v2.git
