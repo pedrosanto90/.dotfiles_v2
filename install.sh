@@ -87,12 +87,9 @@ snap install onlyoffice-desktopeditors
 #postman
 snap install postman
 
-#oh my zsh
-sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)"
 
 #nvm
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
-
 
 export NVM_DIR=\"\$HOME/.nvm\"
 [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\"
@@ -139,6 +136,9 @@ echo "-----------------------------------"
 echo "Prepare to answer some questions:"
 sleep 5
 ./scripts/configure_git.sh
+
+#oh my zsh
+sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)"
 
 echo '-----------------------------------'
 echo "Installation completed! Please restart your computer with 'sudo shutdown -r now'"
