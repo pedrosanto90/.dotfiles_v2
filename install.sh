@@ -11,7 +11,7 @@ BITWARDEN_APPIMAGE_URL="https://vault.bitwarden.com/download/?app=desktop&platfo
 POSTMAN_TAR_URL="https://dl.pstmn.io/download/latest/linux_64"
 INSOMNIA_DEB_URL="https://insomnia.rest/download/core/debian"
 
-cd ~
+cd /home/$USER
 
 mkdir .config
 mkdir scripts
@@ -88,12 +88,13 @@ sudo systemctl enable docker.service
 sudo groupadd docker
 sudo usermod -aG docker $USER
 
+cd /home/$USER
+
 # install neovim from source
-cd ~
-git clone https://github.com/neovim/neovim
-cd neovim
+git clone https://github.com/neovim/neovim /opt/neovim-src
+cd /opt/neovim-src
 make CMAKE_BUILD_TYPE=Release
-make install
+sudo make install
 sleep 20
 
 
