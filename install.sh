@@ -13,15 +13,15 @@ INSOMNIA_DEB_URL="https://insomnia.rest/download/core/debian"
 
 cd ~
 
-mkdir -p ~/.config
-mkdir -p ~/scripts
-mkdir -p ~/Documents
-mkdir -p ~/Downloads
-mkdir -p ~/Documents/projects
-mkdir -p ~/Documents/work/domatica
-mkdir -p ~/Pictures
-mkdir -p ~/Music
-mkdir -p ~/Videos
+mkdir .config
+mkdir scripts
+mkdir Documents
+mkdir Downloads
+mkdir Documents/projects
+mkdir Documents/work/domatica
+mkdir Pictures
+mkdir Music
+mkdir Videos
 
 # first we update the package list and then upgrade existing packages
 sudo apt update -y
