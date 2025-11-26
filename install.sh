@@ -93,9 +93,18 @@ sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/ins
 #nvm
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
 
+
+export NVM_DIR=\"\$HOME/.nvm\"
+[ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\"
+
 # configure to use node 22
 nvm isntall 22
 nvm alias default 22
+
+#webex
+wget -O /tmp/webex.deb https://binaries.webex.com/WebexDesktop-Ubuntu-Official-Package/Webex.deb
+
+sudo apt install -y /tmp/webex.deb
 
 cd /home/$USER_NAME
 rm -rf .zshrc
