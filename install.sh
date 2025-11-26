@@ -151,6 +151,7 @@ ln -s ~/.dotfiles_v2/wallpapper/lofi-bart.jpg ~/Pictures/lofi-bart.jpg
 
 # configure git
 echo "Configure git..."
+cd ~
 ./scripts/git_config.sh
 
 echo "Installation completed! Please restart your computer."
