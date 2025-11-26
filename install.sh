@@ -1,21 +1,7 @@
 #!/bin/bash
 
-# Este script instala e configura um ambiente de desenvolvimento completo
-# no Debian 13 (Trixie), incluindo i3, Ferramentas de Dev e Node.js.
-# Deve ser executado com 'sudo'.
-
-# --- VARIAVEIS ---
-# Obtém o nome do utilizador original que invocou o 'sudo'
-USER_NAME=$(logname 2>/dev/null || echo ${SUDO_USER}) 
-if [ -z "$USER_NAME" ]; then
-    echo "Erro: Não foi possível determinar o nome do utilizador não-root. Certifique-se de que executa com 'sudo'."
-    exit 1
-fi
-HOME_DIR="/home/$USER_NAME" # O diretório home real do utilizador
-DOTFILES_REPO="https://github.com/pedrosanto90/.dotfiles_v2"
-DOTFILES_DIR="$HOME_DIR/.dotfiles_v2" # Diretório local do repositório clonado
-
-SCRIPT_DIR=$(pwd)
+# this scipt installs the necessary tools for a debian based system
+# it requires sudo privileges
 
 DEB_OBSIDIAN_URL="https://github.com/obsidianmd/obsidian-releases/releases/download/v1.6.3/obsidian-1.6.3.deb"
 DEB_ONLYOFFICE_URL="https://download.onlyoffice.com/install/desktop/editors/linux/onlyoffice-desktopeditors_amd64.deb"
@@ -25,18 +11,22 @@ BITWARDEN_APPIMAGE_URL="https://vault.bitwarden.com/download/?app=desktop&platfo
 POSTMAN_TAR_URL="https://dl.pstmn.io/download/latest/linux_64"
 INSOMNIA_DEB_URL="https://insomnia.rest/download/core/debian"
 
-# Garante que o script é executado como root (com a correção do USER_NAME)
-if [ "$EUID" -ne 0 ]; then
-  echo "Por favor, execute como root (sudo ./install.sh)"
-  exit 1
-fi
+mkdir -p \"\$HOME_DIR/.config\"
+mkdir -p \"\$HOME_DIR/scripts\"
+mkdir -p \"\$HOME_DIR/Documents\"
+mkdir -p \"\$HOME_DIR/Downloads\"
+mkdir -p \"\$HOME_DIR/Documents/projects\"
+mkdir -p \"\$HOME_DIR/Documents/work/domatica\"
+mkdir -p \"\$HOME_DIR/Pictures\"
+mkdir -p \"\$HOME_DIR/Music\"
+mkdir -p \"\$HOME_DIR/Videos\"
 
-echo "Inicializando o Script de Configuração do Ambiente de Trabalho para o utilizador: $USER_NAME"
-echo "---------------------------------------------------------"
+# first we update the package list and then upgrade existing packages
+sudo apt update
+sudo apt upgrade -y
 
-# 1. Configurar Repositórios (non-free) - CORREÇÃO CRÍTICA DO SOURCES.LIST
-echo "1. Corrigindo /etc/apt/sources.list e atualizando para Trixie..."
-# Reescreve o sources.list com sintaxe correta para evitar erros 'gvfs-smb'
+# replace sources.list with debian 13 (trixie) repositories
+
 cat << EOF > /etc/apt/sources.list
 # Repositórios Debian 13 (Trixie) gerados pelo script
 deb http://deb.debian.org/debian/ trixie main contrib non-free non-free-firmware
@@ -44,28 +34,33 @@ deb http://deb.debian.org/debian/ trixie-updates main contrib non-free non-free-
 deb http://security.debian.org/debian-security/ trixie-security main contrib non-free non-free-firmware
 EOF
 
-# Força a limpeza e atualização dos índices
+# update and upgrade again
 apt clean
 apt update
 apt upgrade -y
-
-# 2. Instalar Core System e Ferramentas (apt)
-echo "2. Instalando Core System, i3, ZSH e Utilidades essenciais..."
+# install necessary packages
 apt install -y xserver-xorg i3 i3status rofi dmenu fzf lightdm tmux nitrogen zsh git curl wget build-essential cmake ninja-build pkg-config libtool libtool-bin gettext unzip network-manager network-manager-gnome network-manager-openvpn network-manager-openvpn-gnome thunar gvfs-backends gvfs-smb blueman chromium x11-xserver-utils maim xclip pulseaudio-utils brightnessctl arandr
 
-# 3. Configurar Repositórios Externos (VSCode, NordVPN e Docker)
-echo "3. Configurando repositórios externos e instalando VS Code e NordVPN..."
-# VSCode - CORRIGIDO: Usando o repo em vez do deb direto para atualizações mais fáceis.
-wget -O vscode.deb https://go.microsoft.com/fwlink/?LinkID=760868
-sudo apt install -y ./vscode.deb
-rm vscode.deb
+# enable lightdm
+systemctl enable lightdm
 
-# NordVPN - CORRIGIDO: Usando o repo em vez do script pipeline
-wget -qO - https://downloads.nordcdn.com/apps/linux/install.sh | sudo sh
-sudo usermod -aG nordvpn $USER
+#install ohmyzsh
+sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)"
 
-# Docker
+# set zsh as default shell
+chsh -s $(which zsh)
+
+# install wezterm
+curl -fsSL https://apt.fury.io/wez/gpg.key | sudo gpg --yes --dearmor -o /usr/share/keyrings/wezterm-fury.gpg
+echo 'deb [signed-by=/usr/share/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez/ * *' | sudo tee /etc/apt/sources.list.d/wezterm.list
+sudo chmod 644 /usr/share/keyrings/wezterm-fury.gpg
+
+sudo apt update
+sudo apt install -y wezterm
+
+#install docker
 sudo apt remove $(dpkg --get-selections docker.io docker-compose docker-doc podman-docker containerd runc | cut -f1)
+
 # Add Docker's official GPG key:
 sudo apt update
 sudo apt install ca-certificates curl
@@ -83,34 +78,22 @@ Signed-By: /etc/apt/keyrings/docker.asc
 EOF
 
 sudo apt update
+
 sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-# ensure Docker starts on boot
-sudo systemctl start docker
-# permissions
+sudo systemctl start docker.service
+sudo systemctl enable docker.service
+# add user to docker group
 sudo groupadd docker
 sudo usermod -aG docker $USER
-# 4. Instalar Neovim a partir do Código Fonte
-echo "4. Instalando Neovim a partir do Código Fonte..."
-git clone https://github.com/neovim/neovim /opt/neovim-src
-cd /opt/neovim-src
+
+# install neovim from source
+cd ~
+git clone https://github.com/neovim/neovim
+cd neovim
 make CMAKE_BUILD_TYPE=Release
 make install
-cd $SCRIPT_DIR
 
-# 5. Instalar WezTerm a partir do Código Fonte (inclui Rust)
-curl -fsSL https://apt.fury.io/wez/gpg.key | sudo gpg --yes --dearmor -o /usr/share/keyrings/wezterm-fury.gpg
-echo 'deb [signed-by=/usr/share/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez/ * *' | sudo tee /etc/apt/sources.list.d/wezterm.list
-chmod 644 /usr/share/keyrings/wezterm-fury.gpg
-apt uddate
-apt install wezterm
 
-# Instalação das dependências de build do WezTerm
-apt install -y fontconfig libfreetype6-dev libxcb-xfixes0-dev libxkbcommon-dev libssl-dev
-
-cd $SCRIPT_DIR
-
-# 6. Instalar Outras Aplicações (Pacotes .deb)
-echo "6. Instalando Obsidian, OnlyOffice, Webex, Insomnia e DBeaver (.deb)..."
 # Obsidian
 wget -O /tmp/obsidian.deb "$DEB_OBSIDIAN_URL" && dpkg -i /tmp/obsidian.deb
 # OnlyOffice
@@ -140,115 +123,31 @@ tar -xzf /tmp/postman.tar.gz -C $INSTALL_DIR
 ln -sf $INSTALL_DIR/Postman/Postman /usr/local/bin/postman
 rm /tmp/postman.tar.gz
 
-# 8. Configurar ZSH e Oh-My-ZSH
-echo "8. Configurando ZSH e Oh-My-ZSH..."
-chsh -s $(which zsh) $USER_NAME # Altera a shell padrão do utilizador
-su - $USER_NAME -c "sh -c \"$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh --no-check-certificate)\""
+# install node, python, npm, pip and nvm
+sudo apt install -y npm python3 python3-pip
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
 
-# 9. Configuração de Dotfiles (Criação de Symlinks Automatizada)
-echo "9. Automatizando a criação de Symlinks para Dotfiles..."
-# CLONAGEM CORRIGIDA: Clonar o repositório para o $HOME_DIR para ser acessível pelo utilizador
-git clone $DOTFILES_REPO $DOTFILES_DIR
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 
-mkdir -p \"\$HOME_DIR/.config\"
-mkdir -p \"\$HOME_DIR/scripts\" # Garante que o diretório scripts existe
-
-# 9.1 Limpeza ZSH: Remover ficheiros de configuração ZSH existentes
-echo '  -> Limpeza: Removendo ficheiros ZSH existentes (.zshrc, .zprofile, etc)...'
-rm -rf \"\$HOME_DIR/.zshrc\"
-rm -rf \"\$HOME_DIR/.zprofile\"
-rm -rf \"\$HOME_DIR/.zsh_history\"
-
-# 9.2 Symlinks para ~/.config/
-echo '  -> Criando symlinks em \$HOME_DIR/.config/...'
-ln -sfn \"$DOTFILES_DIR/.config/nvim\" \"\$HOME_DIR/.config/nvim\"
-ln -sfn \"$DOTFILES_DIR/.config/tmux\" \"\$HOME_DIR/.config/tmux\"
-ln -sfn \"$DOTFILES_DIR/.config/i3\" \"\$HOME_DIR/.config/i3\"
-ln -sfn \"$DOTFILES_DIR/.config/i3status\" \"\$HOME_DIR/.config/i3status\"
-ln -sfn \"$DOTFILES_DIR/.config/wezterm\" \"\$HOME_DIR/.config/wezterm\"
-
-# 9.3 Symlinks para o diretório Home (~)
-echo '  -> Criando symlinks na \$HOME_DIR/ (dotfiles ZSH)...'
-ln -sfn \"$DOTFILES_DIR/zsh/.zshrc\" \"\$HOME_DIR/.zshrc\"
-
-# 9.4 Symlink para o diretório scripts
-echo '  -> Criando symlink para \$HOME_DIR/scripts...'
-ln -sfn \"$DOTFILES_DIR/scripts\" \"\$HOME_DIR/scripts\"
-
-# 10. Configurar Ambiente Node.js (NVM, Node v22, NestJS, Angular)
-echo "10. Configurando Ambiente Node.js (NVM, Node v22, NestJS, Angular)..."
-echo '  -> Instalando NVM (v0.39.7)...'
-# 10.1 Instalar NVM
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-
-# 10.2 Carregar NVM para o shell atual do subshell
-export NVM_DIR=\"\$HOME/.nvm\"
-[ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\"
-
-# 10.3 Instalar e Definir Node.js v22 como padrão
-echo '  -> Instalando Node.js v22 e definindo como padrão...'
 nvm install 22
-nvm alias default 22
+nvm default alias 22
 
-# 10.4 Instalar CLIs Globais
-echo '  -> Instalando CLIs Globais: NestJS e Angular...'
-npm install -g @nestjs/cli @angular/cli
+# Clone dotfiles
+git clone https://github.com/pedrosanto90/.dotfiles_v2.git
 
-echo '  -> Node.js v22, NestJS CLI e Angular CLI instalados com sucesso.'
+#create symlinks for config files
+ln -s ~/.dotfiles_v2/i3/config ~/.config/i3
+ln -s ~/.dotfiles_v2/i3status/config ~/.config/i3status
+ln -s ~/.dotfiles_v2/wezterm/wezterm.lua ~/.config/wezterm
+ln -s ~/.dotfiles_v2/nvim ~/.config/nvim
+ln -s ~/.dotfiles_v2/tmux/.tmux.conf ~/.tmux.conf
+ln -s ~/.dotfiles_v2/zsh/.zshrc ~/.zshrc
+ln -s ~/.dotfiles_v2/zsh/.zshprofile ~/.zshprofile
+ln -s ~/.dotfiles_v2/scripts ~/scripts
+ln -s ~/.dotfiles_v2/wallpapper/lofi-bart.jpg ~/Pictures/lofi-bart.jpg
 
-# 11. Configuração Interativa do Git
-echo "11. Configuração Interativa do Git (user.name e user.email)..."
-# 11.1 Criar o script de configuração no diretório scripts do utilizador
-echo "  -> Criando o script de configuração do Git em $HOME_DIR/scripts/config_git.sh"
-su - "$USER_NAME" -c "
-cat << 'GIT_CONFIG_EOF' > \"\$HOME_DIR/scripts/config_git.sh\"
-#!/bin/bash
-echo \"\"
-echo \"--- Configuração Global do Git ---\"
-echo \"Por favor, introduza a informação para a identificação das suas contribuições.\"
+# configure git
+echo "Configure git..."
+./scripts/git_config.sh
 
-read -r -p \"Introduza o seu Nome Completo: \" GIT_NAME
-if [ -z \"\$GIT_NAME\" ]; then
-    echo \"Nome não fornecido. A configuração do Git foi cancelada.\"
-    exit 1
-fi
-
-read -r -p \"Introduza o seu Email: \" GIT_EMAIL
-if [ -z \"\$GIT_EMAIL\" ]; then
-    echo \"Email não fornecido. A configuração do Git foi cancelada.\"
-    exit 1
-fi
-
-git config --global user.name \"\$GIT_NAME\"
-echo \"✅ Nome de utilizador Git configurado: \$GIT_NAME\"
-
-git config --global user.email \"\$GIT_EMAIL\"
-echo \"✅ Email Git configurado: \$GIT_EMAIL\"
-
-git config --global core.editor \"nvim\"
-echo \"✅ Editor Git configurado para Neovim.\"
-
-echo \"--- Configuração Git Concluída ---\"
-GIT_CONFIG_EOF
-chmod +x \"\$HOME_DIR/scripts/config_git.sh\"
-"
-
-# 11.2 Executar o script de configuração do Git (interativo - REQUER INPUT)
-echo ""
-echo "!!! ATENÇÃO: INÍCIO DA CONFIGURAÇÃO INTERATIVA DO GIT !!!"
-echo "Por favor, introduza o seu Nome Completo e Email quando solicitado."
-echo "----------------------------------------------------------------------------------"
-su - "$USER_NAME" -c "$HOME_DIR/scripts/config_git.sh"
-echo "----------------------------------------------------------------------------------"
-
-# 12. Finalização
-echo "---------------------------------------------------------"
-echo "✅ Instalação e Configuração concluída! 🎉"
-echo ""
-echo "!!! AVISO IMPORTANTE !!!"
-echo "Para que as permissões do Docker, o novo ambiente ZSH e o NVM entrem em vigor,"
-echo "o utilizador $USER_NAME deve fazer **LOGOUT e LOGIN** ou **REINICIAR** a máquina."
-echo ""
-echo "Recomendação: Reinicie a máquina (shutdown -r now) para garantir que tudo inicia corretamente."
-
-exit 0

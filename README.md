@@ -5,7 +5,9 @@
 # After install Debian 13 minimal run the following with sudo
 
 ```bash
-wget -O - https://raw.githubusercontent.com/pedrosanto90/.dotfiles_v2/refs/heads/main/install.sh | sudo sh
+git clone https://github.com/pedrosanto90/.dotfiles_v2.git
+cd .dotfiles_v2
+./install.sh
 ```
 
 # The script will install all the necessary dependecies for all the software
