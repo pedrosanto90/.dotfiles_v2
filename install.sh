@@ -1,8 +1,24 @@
 #!/bin/bash
 
-# this scipt installs the necessary tools for a debian based system
-# it requires sudo privileges
+# Este script instala e configura um ambiente de desenvolvimento completo
+# no Debian 13 (Trixie).
+# Deve ser executado com 'sudo ./install.sh'.
 
+# --- VARIAVEIS ESSENCIAIS ---
+USER_NAME=$(logname 2>/dev/null || echo ${SUDO_USER}) 
+if [ -z "$USER_NAME" ]; then
+    echo "Erro: O script deve ser executado com 'sudo'."
+    exit 1
+fi
+HOME_DIR="/home/$USER_NAME" 
+DOTFILES_REPO="https://github.com/pedrosanto90/.dotfiles_v2"
+DOTFILES_DIR="$HOME_DIR/.dotfiles_v2"
+
+# Variáveis de Versão
+NVIM_VERSION="v0.10.1"
+# O WezTerm será instalado via APT (mais fiável que source)
+
+# URLs de Pacotes .deb e Binários
 DEB_OBSIDIAN_URL="https://github.com/obsidianmd/obsidian-releases/releases/download/v1.6.3/obsidian-1.6.3.deb"
 DEB_ONLYOFFICE_URL="https://download.onlyoffice.com/install/desktop/editors/linux/onlyoffice-desktopeditors_amd64.deb"
 DEB_WEBEX_URL="https://binaries.webex.com/WebexDesktopApp-linux-webex.deb"
@@ -11,150 +27,225 @@ BITWARDEN_APPIMAGE_URL="https://vault.bitwarden.com/download/?app=desktop&platfo
 POSTMAN_TAR_URL="https://dl.pstmn.io/download/latest/linux_64"
 INSOMNIA_DEB_URL="https://insomnia.rest/download/core/debian"
 
-cd /home/$USER
+echo "Inicializando a configuração para o utilizador: $USER_NAME"
+echo "---------------------------------------------------------"
 
-mkdir .config
-mkdir scripts
-mkdir Documents
-mkdir Downloads
-mkdir Documents/projects
-mkdir Documents/work/domatica
-mkdir Pictures
-mkdir Music
-mkdir Videos
-
-# first we update the package list and then upgrade existing packages
-sudo apt update -y
-sudo apt upgrade -y
-
-# replace sources.list with debian 13 (trixie) repositories
-
+# 1. Configurar Repositórios (CORRIGIDO: sources.list limpo)
+echo "1. Corrigindo /etc/apt/sources.list e atualizando para Trixie..."
 cat << EOF > /etc/apt/sources.list
-# Repositórios Debian 13 (Trixie) gerados pelo script
+# Repositórios Debian 13 (Trixie)
 deb http://deb.debian.org/debian/ trixie main contrib non-free non-free-firmware
 deb http://deb.debian.org/debian/ trixie-updates main contrib non-free non-free-firmware
 deb http://security.debian.org/debian-security/ trixie-security main contrib non-free non-free-firmware
 EOF
 
-# update and upgrade again
 apt clean
 apt update -y
 apt upgrade -y
-# install necessary packages
-apt install -y xserver-xorg i3 i3status rofi dmenu fzf lightdm tmux nitrogen zsh git curl wget build-essential cmake make ninja-build pkg-config libtool libtool-bin gettext unzip network-manager network-manager-gnome network-manager-openvpn network-manager-openvpn-gnome thunar gvfs-backends gvfs-smb blueman chromium x11-xserver-utils maim xclip pulseaudio-utils brightnessctl arandr eza bat
 
-# enable lightdm
+# 2. Configurações de Diretórios e Estrutura (Executado como utilizador)
+echo "2. Criando a estrutura de diretórios e clonando dotfiles..."
+su - "$USER_NAME" -c "
+  cd \"$HOME_DIR\"
+  mkdir -p .config scripts Documents Downloads Pictures Music Videos
+  mkdir -p Documents/projects
+  mkdir -p Documents/work/domatica
+  
+  # Clonar dotfiles (essencial para symlinks)
+  echo '-> Clonando dotfiles...'
+  git clone \"$DOTFILES_REPO\" \"$DOTFILES_DIR\"
+"
+
+# 3. Instalação de Core System e Ferramentas (APT)
+echo "3. Instalação de Core System, i3, dependências e binários..."
+apt install -y \
+  xserver-xorg i3 i3status rofi dmenu fzf lightdm tmux nitrogen \
+  zsh git curl wget build-essential cmake make ninja-build pkg-config libtool libtool-bin gettext unzip \
+  network-manager network-manager-gnome network-manager-openvpn network-manager-openvpn-gnome \
+  thunar gvfs-backends gvfs-smb blueman chromium x11-xserver-utils maim xclip pulseaudio-utils brightnessctl \
+  arandr eza bat \
+  npm python3 python3-pip
+
 systemctl enable lightdm
 
-#install ohmyzsh
-sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)"
-
-# set zsh as default shell
-chsh -s $(which zsh)
-
-# install wezterm
-curl -fsSL https://apt.fury.io/wez/gpg.key | sudo gpg --yes --dearmor -o /usr/share/keyrings/wezterm-fury.gpg
-echo 'deb [signed-by=/usr/share/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez/ * *' | sudo tee /etc/apt/sources.list.d/wezterm.list
-sudo chmod 644 /usr/share/keyrings/wezterm-fury.gpg
-
-sudo apt update -y
-sudo apt install -y wezterm
-
-#install docker
-sudo apt remove $(dpkg --get-selections docker.io docker-compose docker-doc podman-docker containerd runc | cut -f1)
-
-# Add Docker's official GPG key:
-sudo apt update -y
-sudo apt install ca-certificates curl
-sudo install -m 0755 -d /etc/apt/keyrings
-sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
-sudo chmod a+r /etc/apt/keyrings/docker.asc
-
-# Add the repository to Apt sources:
-sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
+# 4. Instalar Docker e Configurar Permissões
+echo "4. Instalando e configurando Docker..."
+# Instalação do Docker (mantido como está, mas sem remoção de pacotes para evitar conflitos iniciais)
+apt install ca-certificates curl
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+chmod a+r /etc/apt/keyrings/docker.asc
+tee /etc/apt/sources.list.d/docker.sources <<EOF
 Types: deb
 URIs: https://download.docker.com/linux/debian
 Suites: $(. /etc/os-release && echo "$VERSION_CODENAME")
 Components: stable
 Signed-By: /etc/apt/keyrings/docker.asc
 EOF
+apt update -y
+apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+systemctl start docker.service
+systemctl enable docker.service
 
-sudo apt update -y
+# Adicionar utilizador ao grupo docker e dar permissões
+groupadd docker 2>/dev/null || true # Evita erro se o grupo já existir
+usermod -aG docker "$USER_NAME"
 
-sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-sudo systemctl start docker.service
-sudo systemctl enable docker.service
-# add user to docker group
-sudo groupadd docker
-sudo usermod -aG docker $USER
+# 5. Instalar VS Code e WezTerm (via Repositório - MAIS FIÁVEL)
+echo "5. Instalando VS Code e WezTerm via repositório..."
+# VS Code
+wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/
+rm packages.microsoft.gpg
+echo "deb [arch=amd64] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list
 
-cd /home/$USER
+# WezTerm
+curl -fsSL https://apt.fury.io/wez/gpg.key | gpg --yes --dearmor -o /usr/share/keyrings/wezterm-fury.gpg
+echo 'deb [signed-by=/usr/share/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez/ * *' | tee /etc/apt/sources.list.d/wezterm.list
+chmod 644 /usr/share/keyrings/wezterm-fury.gpg
 
-# install neovim from source
+apt update -y
+apt install -y code wezterm
+
+# 6. Instalar Neovim a partir do Código Fonte
+echo "6. Instalando Neovim ($NVIM_VERSION) a partir do Código Fonte..."
 git clone https://github.com/neovim/neovim /opt/neovim-src
 cd /opt/neovim-src
 make CMAKE_BUILD_TYPE=Release
-sudo make install
-sleep 20
+make install
+cd "$SCRIPT_DIR"
 
-
-# Obsidian
+# 7. Instalar Aplicações (.deb e Binários)
+echo "7. Instalando pacotes .deb (Obsidian, OnlyOffice, Webex, DBeaver) e binários..."
+# .deb packages
 wget -O /tmp/obsidian.deb "$DEB_OBSIDIAN_URL" && dpkg -i /tmp/obsidian.deb
-# OnlyOffice
 wget -O /tmp/onlyoffice.deb "$DEB_ONLYOFFICE_URL" && dpkg -i /tmp/onlyoffice.deb
-# Webex
 wget -O /tmp/webex.deb "$DEB_WEBEX_URL" && dpkg -i /tmp/webex.deb
-# Insomnia
 wget -O /tmp/insomnia.deb "$INSOMNIA_DEB_URL" && dpkg -i /tmp/insomnia.deb
-# DBeaver
 wget -O /tmp/dbeaver.deb "$DEB_DBEAVER_URL" && dpkg -i /tmp/dbeaver.deb
 
-# Tenta corrigir quaisquer dependências não resolvidas
+# Corrigir dependências (essencial após dpkg -i)
 apt --fix-broken install -y
 
-# 7. Instalar Aplicações (Binários/AppImages)
-echo "7. Instalando Bitwarden e Postman (AppImage/Binary)..."
+# Binários/AppImages
 INSTALL_DIR="/opt/binaries"
-mkdir -p $INSTALL_DIR
+mkdir -p "$INSTALL_DIR"
 
-# Bitwarden (AppImage)
-wget -O $INSTALL_DIR/Bitwarden.AppImage "$BITWARDEN_APPIMAGE_URL"
-chmod +x $INSTALL_DIR/Bitwarden.AppImage
+wget -O "$INSTALL_DIR/Bitwarden.AppImage" "$BITWARDEN_APPIMAGE_URL"
+chmod +x "$INSTALL_DIR/Bitwarden.AppImage"
 
-# Postman (Binary)
 wget -O /tmp/postman.tar.gz "$POSTMAN_TAR_URL"
-tar -xzf /tmp/postman.tar.gz -C $INSTALL_DIR
-ln -sf $INSTALL_DIR/Postman/Postman /usr/local/bin/postman
+tar -xzf /tmp/postman.tar.gz -C "$INSTALL_DIR"
+ln -sf "$INSTALL_DIR/Postman/Postman" /usr/local/bin/postman
 rm /tmp/postman.tar.gz
 
-# install node, python, npm, pip and nvm
-sudo apt install -y npm python3 python3-pip
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
+# 8. Configurar Shell (ZSH/Oh-My-ZSH)
+echo "8. Configurando ZSH e instalando Oh-My-ZSH..."
+# Altera a shell padrão
+chsh -s "$(which zsh)" "$USER_NAME"
+# Instala Oh-My-ZSH no contexto do utilizador
+su - "$USER_NAME" -c "sh -c \"$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O - --no-check-certificate)\""
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 
-nvm install 22
-nvm default alias 22
+# 9. Configuração de Dotfiles (Symlinks Automatizada)
+echo "9. Automatizando a criação de Symlinks para Dotfiles..."
+su - "$USER_NAME" -c "
+  # 9.1 Limpeza ZSH (Importante antes de criar symlinks)
+  echo '  -> Limpeza: Removendo ficheiros ZSH existentes...'
+  rm -rf \"$HOME_DIR/.zshrc\"
+  rm -rf \"$HOME_DIR/.zprofile\"
+  rm -rf \"$HOME_DIR/.zsh_history\"
 
-# Clone dotfiles
-git clone https://github.com/pedrosanto90/.dotfiles_v2.git
+  # 9.2 Criação de Symlinks
+  echo '  -> Criando symlinks...'
+  ln -sfn \"$DOTFILES_DIR/.config/i3\" \"$HOME_DIR/.config/i3\"
+  ln -sfn \"$DOTFILES_DIR/.config/i3status\" \"$HOME_DIR/.config/i3status\"
+  ln -sfn \"$DOTFILES_DIR/.config/nvim\" \"$HOME_DIR/.config/nvim\"
+  ln -sfn \"$DOTFILES_DIR/.config/tmux\" \"$HOME_DIR/.config/tmux\"
+  ln -sfn \"$DOTFILES_DIR/.config/wezterm\" \"$HOME_DIR/.config/wezterm\"
+  
+  # Ficheiros e scripts de topo
+  ln -sfn \"$DOTFILES_DIR/zsh/.zshrc\" \"$HOME_DIR/.zshrc\"
+  ln -sfn \"$DOTFILES_DIR/zsh/.zprofile\" \"$HOME_DIR/.zprofile\" # Adicionado
+  ln -sfn \"$DOTFILES_DIR/scripts\" \"$HOME_DIR/scripts\"
+  ln -sfn \"$DOTFILES_DIR/wallpapper/lofi-bart.jpg\" \"$HOME_DIR/Pictures/lofi-bart.jpg\"
+"
 
-#create symlinks for config files
-ln -s ~/.dotfiles_v2/i3/config ~/.config/i3
-ln -s ~/.dotfiles_v2/i3status/config ~/.config/i3status
-ln -s ~/.dotfiles_v2/wezterm/wezterm.lua ~/.config/wezterm
-ln -s ~/.dotfiles_v2/nvim ~/.config/nvim
-ln -s ~/.dotfiles_v2/tmux/.tmux.conf ~/.tmux.conf
-ln -s ~/.dotfiles_v2/zsh/.zshrc ~/.zshrc
-ln -s ~/.dotfiles_v2/zsh/.zshprofile ~/.zshprofile
-ln -s ~/.dotfiles_v2/scripts ~/scripts
-ln -s ~/.dotfiles_v2/wallpapper/lofi-bart.jpg ~/Pictures/lofi-bart.jpg
+# 10. Configurar Ambiente Node.js (NVM, Node v22, NestJS, Angular)
+echo "10. Configurando Ambiente Node.js (NVM, Node v22, NestJS, Angular)..."
+su - "$USER_NAME" -c "
+  echo '  -> Instalando NVM (v0.39.5)...'
+  # 10.1 Instalar NVM
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
 
-# configure git
-echo "Configure git..."
-cd ~
-./scripts/git_config.sh
+  # 10.2 Carregar NVM para o shell atual do subshell
+  export NVM_DIR=\"\$HOME/.nvm\"
+  [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\"
 
-echo "Installation completed! Please restart your computer."
+  # 10.3 Instalar e Definir Node.js v22 como padrão
+  echo '  -> Instalando Node.js v22 e definindo como padrão...'
+  nvm install 22
+  nvm alias default 22
 
+  # 10.4 Instalar CLIs Globais
+  echo '  -> Instalando CLIs Globais: NestJS e Angular...'
+  npm install -g @nestjs/cli @angular/cli
+
+  echo '  -> Node.js v22, NestJS CLI e Angular CLI instalados com sucesso.'
+"
+
+# 11. Configuração Interativa do Git
+echo "11. Configuração Interativa do Git (user.name e user.email)..."
+# 11.1 Criar o script de configuração
+su - "$USER_NAME" -c "
+cat << 'GIT_CONFIG_EOF' > \"\$HOME_DIR/scripts/git_config.sh\"
+#!/bin/bash
+echo \"\"
+echo \"--- Configuração Global do Git ---\"
+echo \"Por favor, introduza a informação para a identificação das suas contribuições.\"
+
+read -r -p \"Introduza o seu Nome Completo: \" GIT_NAME
+if [ -z \"\$GIT_NAME\" ]; then
+    echo \"Nome não fornecido. A configuração do Git foi cancelada.\"
+    exit 1
+fi
+
+read -r -p \"Introduza o seu Email: \" GIT_EMAIL
+if [ -z \"\$GIT_EMAIL\" ]; then
+    echo \"Email não fornecido. A configuração do Git foi cancelada.\"
+    exit 1
+fi
+
+git config --global user.name \"\$GIT_NAME\"
+echo \"✅ Nome de utilizador Git configurado: \$GIT_NAME\"
+
+git config --global user.email \"\$GIT_EMAIL\"
+echo \"✅ Email Git configurado: \$GIT_EMAIL\"
+
+git config --global core.editor \"nvim\"
+echo \"✅ Editor Git configurado para Neovim.\"
+
+echo \"--- Configuração Git Concluída ---\"
+GIT_CONFIG_EOF
+chmod +x \"\$HOME_DIR/scripts/git_config.sh\"
+"
+
+# 11.2 Executar o script de configuração do Git (interativo - REQUER INPUT)
+echo ""
+echo "!!! ATENÇÃO: INÍCIO DA CONFIGURAÇÃO INTERATIVA DO GIT !!!"
+echo "Por favor, introduza o seu Nome Completo e Email quando solicitado."
+echo "----------------------------------------------------------------------------------"
+su - "$USER_NAME" -c "$HOME_DIR/scripts/git_config.sh"
+echo "----------------------------------------------------------------------------------"
+
+# 12. Finalização
+echo "---------------------------------------------------------"
+echo "✅ Instalação e Configuração concluída! 🎉"
+echo ""
+echo "!!! AVISO IMPORTANTE !!!"
+echo "Para que as permissões do Docker, o novo ambiente ZSH e o NVM entrem em vigor,"
+echo "o utilizador $USER_NAME deve fazer **LOGOUT e LOGIN** ou **REINICIAR** a máquina."
+echo ""
+echo "Recomendação: Reinicie a máquina (shutdown -r now) para garantir que tudo inicia corretamente."
+
+exit 0
