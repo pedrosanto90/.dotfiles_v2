@@ -11,15 +11,15 @@ BITWARDEN_APPIMAGE_URL="https://vault.bitwarden.com/download/?app=desktop&platfo
 POSTMAN_TAR_URL="https://dl.pstmn.io/download/latest/linux_64"
 INSOMNIA_DEB_URL="https://insomnia.rest/download/core/debian"
 
-mkdir -p \"\$HOME_DIR/.config\"
-mkdir -p \"\$HOME_DIR/scripts\"
-mkdir -p \"\$HOME_DIR/Documents\"
-mkdir -p \"\$HOME_DIR/Downloads\"
-mkdir -p \"\$HOME_DIR/Documents/projects\"
-mkdir -p \"\$HOME_DIR/Documents/work/domatica\"
-mkdir -p \"\$HOME_DIR/Pictures\"
-mkdir -p \"\$HOME_DIR/Music\"
-mkdir -p \"\$HOME_DIR/Videos\"
+mkdir -p ~/.config
+mkdir -p ~/scripts
+mkdir -p ~/Documents
+mkdir -p ~/Downloads
+mkdir -p ~/Documents/projects
+mkdir -p ~/Documents/work/domatica
+mkdir -p ~/Pictures
+mkdir -p ~/Music
+mkdir -p ~/Videos
 
 # first we update the package list and then upgrade existing packages
 sudo apt update -y
