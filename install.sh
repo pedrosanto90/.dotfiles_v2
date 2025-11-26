@@ -16,12 +16,9 @@ apt clean
 apt update -y
 apt upgrade -y
 
-su - "$USER_NAME" -c "
-  cd \"$HOME_DIR\"
-  mkdir -p .config scripts Documents Downloads Pictures Music Videos
-  mkdir -p Documents/projects
-  mkdir -p Documents/work/domatica
-"
+mkdir -p .config scripts Documents Downloads Pictures Music Videos
+mkdir -p Documents/projects
+mkdir -p Documents/work/domatica
 
 #core packages
 apt install -y \
@@ -68,7 +65,7 @@ apt install -y /tmp/vscode.deb
 
 #nvim
 git clone https://github.com/neovim/neovim
-cd noevim
+cd neovim
 make CMAKE_BUILD_TYPE=RelWithDebInfo
 make install
 cd
