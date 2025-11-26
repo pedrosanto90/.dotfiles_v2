@@ -11,6 +11,8 @@ BITWARDEN_APPIMAGE_URL="https://vault.bitwarden.com/download/?app=desktop&platfo
 POSTMAN_TAR_URL="https://dl.pstmn.io/download/latest/linux_64"
 INSOMNIA_DEB_URL="https://insomnia.rest/download/core/debian"
 
+cd ~
+
 mkdir -p ~/.config
 mkdir -p ~/scripts
 mkdir -p ~/Documents
