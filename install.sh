@@ -22,7 +22,7 @@ mkdir -p \"\$HOME_DIR/Music\"
 mkdir -p \"\$HOME_DIR/Videos\"
 
 # first we update the package list and then upgrade existing packages
-sudo apt update
+sudo apt update -y
 sudo apt upgrade -y
 
 # replace sources.list with debian 13 (trixie) repositories
@@ -36,10 +36,10 @@ EOF
 
 # update and upgrade again
 apt clean
-apt update
+apt update -y
 apt upgrade -y
 # install necessary packages
-apt install -y xserver-xorg i3 i3status rofi dmenu fzf lightdm tmux nitrogen zsh git curl wget build-essential cmake ninja-build pkg-config libtool libtool-bin gettext unzip network-manager network-manager-gnome network-manager-openvpn network-manager-openvpn-gnome thunar gvfs-backends gvfs-smb blueman chromium x11-xserver-utils maim xclip pulseaudio-utils brightnessctl arandr
+apt install -y xserver-xorg i3 i3status rofi dmenu fzf lightdm tmux nitrogen zsh git curl wget build-essential cmake make ninja-build pkg-config libtool libtool-bin gettext unzip network-manager network-manager-gnome network-manager-openvpn network-manager-openvpn-gnome thunar gvfs-backends gvfs-smb blueman chromium x11-xserver-utils maim xclip pulseaudio-utils brightnessctl arandr
 
 # enable lightdm
 systemctl enable lightdm
@@ -55,14 +55,14 @@ curl -fsSL https://apt.fury.io/wez/gpg.key | sudo gpg --yes --dearmor -o /usr/sh
 echo 'deb [signed-by=/usr/share/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez/ * *' | sudo tee /etc/apt/sources.list.d/wezterm.list
 sudo chmod 644 /usr/share/keyrings/wezterm-fury.gpg
 
-sudo apt update
+sudo apt update -y
 sudo apt install -y wezterm
 
 #install docker
 sudo apt remove $(dpkg --get-selections docker.io docker-compose docker-doc podman-docker containerd runc | cut -f1)
 
 # Add Docker's official GPG key:
-sudo apt update
+sudo apt update -y
 sudo apt install ca-certificates curl
 sudo install -m 0755 -d /etc/apt/keyrings
 sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
@@ -77,9 +77,9 @@ Components: stable
 Signed-By: /etc/apt/keyrings/docker.asc
 EOF
 
-sudo apt update
+sudo apt update -y
 
-sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 sudo systemctl start docker.service
 sudo systemctl enable docker.service
 # add user to docker group
@@ -150,4 +150,6 @@ ln -s ~/.dotfiles_v2/wallpapper/lofi-bart.jpg ~/Pictures/lofi-bart.jpg
 # configure git
 echo "Configure git..."
 ./scripts/git_config.sh
+
+echo "Installation completed! Please restart your computer."
 
