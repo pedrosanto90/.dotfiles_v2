@@ -16,8 +16,6 @@ DOTFILES_REPO="https://github.com/pedrosanto90/.dotfiles_v2"
 DOTFILES_DIR="$HOME_DIR/.dotfiles_v2" # Diretório local do repositório clonado
 
 SCRIPT_DIR=$(pwd)
-NVIM_VERSION="v0.10.1" 
-WEZTERM_VERSION="20241118-081016-f36b8e3a" 
 
 DEB_OBSIDIAN_URL="https://github.com/obsidianmd/obsidian-releases/releases/download/v1.6.3/obsidian-1.6.3.deb"
 DEB_ONLYOFFICE_URL="https://download.onlyoffice.com/install/desktop/editors/linux/onlyoffice-desktopeditors_amd64.deb"
@@ -53,105 +51,62 @@ apt upgrade -y
 
 # 2. Instalar Core System e Ferramentas (apt)
 echo "2. Instalando Core System, i3, ZSH e Utilidades essenciais..."
-apt install -y \
-  xserver-xorg \
-  i3 \
-  i3status \
-  rofi \
-  dmenu \
-  fzf \
-  lightdm \
-  tmux \
-  nitrogen \
-  zsh \
-  git \
-  curl \
-  wget \
-  build-essential \
-  cmake \
-  ninja-build \
-  pkg-config \
-  libtool \
-  libtool-bin \
-  gettext \
-  unzip \
-  network-manager \
-  network-manager-gnome \
-  network-manager-openvpn \
-  network-manager-openvpn-gnome \
-  thunar \
-  gvfs-backends \
-  gvfs-smb \
-  blueman \
-  chromium \
-  x11-xserver-utils \
-  maim \
-  xclip \
-  pulseaudio-utils \
-  brightnessctl \
-  arandr
+apt install -y xserver-xorg i3 i3status rofi dmenu fzf lightdm tmux nitrogen zsh git curl wget build-essential cmake ninja-build pkg-config libtool libtool-bin gettext unzip network-manager network-manager-gnome network-manager-openvpn network-manager-openvpn-gnome thunar gvfs-backends gvfs-smb blueman chromium x11-xserver-utils maim xclip pulseaudio-utils brightnessctl arandr
 
 # 3. Configurar Repositórios Externos (VSCode, NordVPN e Docker)
 echo "3. Configurando repositórios externos e instalando VS Code e NordVPN..."
 # VSCode - CORRIGIDO: Usando o repo em vez do deb direto para atualizações mais fáceis.
-echo '3.1. Adicionando repositório e instalando VS Code...'
-wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
-install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/
-rm packages.microsoft.gpg
-echo "deb [arch=amd64] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list
+wget -O vscode.deb https://go.microsoft.com/fwlink/?LinkID=760868
+sudo apt install -y ./vscode.deb
+rm vscode.deb
 
 # NordVPN - CORRIGIDO: Usando o repo em vez do script pipeline
-echo '3.2. Adicionando repositório e instalando NordVPN...'
-wget -qO- https://repo.nordvpn.com/gpg/nordvpn_public.asc | gpg --dearmor > nordvpn.gpg
-install -o root -g root -m 644 nordvpn.gpg /etc/apt/trusted.gpg.d/
-rm nordvpn.gpg
-echo "deb [arch=amd64] https://repo.nordvpn.com/debian stable main" > /etc/apt/sources.list.d/nordvpn.list
+wget -qO - https://downloads.nordcdn.com/apps/linux/install.sh | sudo sh
+sudo usermod -aG nordvpn $USER
 
 # Docker
-echo "3.3. Adicionando repositório do Docker..."
-apt install -y ca-certificates gnupg lsb-release
-install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-chmod a+r /etc/apt/keyrings/docker.gpg
-echo \
-  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
-  "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
-  tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt remove $(dpkg --get-selections docker.io docker-compose docker-doc podman-docker containerd runc | cut -f1)
+# Add Docker's official GPG key:
+sudo apt update
+sudo apt install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
 
-# Atualiza e instala
-apt update
-echo "3.4. Instalando Docker Engine e Docker Compose..."
-apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+# Add the repository to Apt sources:
+sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/debian
+Suites: $(. /etc/os-release && echo "$VERSION_CODENAME")
+Components: stable
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
 
-# 3.5 Configurar Permissões do Docker
-echo "3.5. Adicionando o utilizador $USER_NAME ao grupo docker (necessário logout/login)..."
-usermod -aG docker $USER_NAME
-
-# Instalar pacotes via repositório (VSCode e NordVPN)
-echo "3.6. Instalando VS Code e NordVPN via apt..."
-apt install -y code nordvpn
-
+sudo apt update
+sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+# ensure Docker starts on boot
+sudo systemctl start docker
+# permissions
+sudo groupadd docker
+sudo usermod -aG docker $USER
 # 4. Instalar Neovim a partir do Código Fonte
-echo "4. Instalando Neovim ($NVIM_VERSION) a partir do Código Fonte..."
+echo "4. Instalando Neovim a partir do Código Fonte..."
 git clone https://github.com/neovim/neovim /opt/neovim-src
 cd /opt/neovim-src
-git checkout $NVIM_VERSION
 make CMAKE_BUILD_TYPE=Release
 make install
 cd $SCRIPT_DIR
 
 # 5. Instalar WezTerm a partir do Código Fonte (inclui Rust)
-echo "5. Instalando Rust e compilando WezTerm a partir do Código Fonte..."
-su - $USER_NAME -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
+curl -fsSL https://apt.fury.io/wez/gpg.key | sudo gpg --yes --dearmor -o /usr/share/keyrings/wezterm-fury.gpg
+echo 'deb [signed-by=/usr/share/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez/ * *' | sudo tee /etc/apt/sources.list.d/wezterm.list
+chmod 644 /usr/share/keyrings/wezterm-fury.gpg
+apt uddate
+apt install wezterm
 
 # Instalação das dependências de build do WezTerm
 apt install -y fontconfig libfreetype6-dev libxcb-xfixes0-dev libxkbcommon-dev libssl-dev
 
-git clone https://github.com/wez/wezterm.git /opt/wezterm-src
-cd /opt/wezterm-src
-git checkout $WEZTERM_VERSION
-su - $USER_NAME -c "cd /opt/wezterm-src && PATH=\$HOME/.cargo/bin:\$PATH cargo build --release"
-cp target/release/wezterm /usr/local/bin/wezterm
 cd $SCRIPT_DIR
 
 # 6. Instalar Outras Aplicações (Pacotes .deb)
@@ -193,57 +148,53 @@ su - $USER_NAME -c "sh -c \"$(wget -O- https://raw.githubusercontent.com/ohmyzsh
 # 9. Configuração de Dotfiles (Criação de Symlinks Automatizada)
 echo "9. Automatizando a criação de Symlinks para Dotfiles..."
 # CLONAGEM CORRIGIDA: Clonar o repositório para o $HOME_DIR para ser acessível pelo utilizador
-su - $USER_NAME -c "git clone $DOTFILES_REPO $DOTFILES_DIR"
+git clone $DOTFILES_REPO $DOTFILES_DIR
 
-su - $USER_NAME -c "
-  mkdir -p \"\$HOME_DIR/.config\"
-  mkdir -p \"\$HOME_DIR/scripts\" # Garante que o diretório scripts existe
-  
-  # 9.1 Limpeza ZSH: Remover ficheiros de configuração ZSH existentes
-  echo '  -> Limpeza: Removendo ficheiros ZSH existentes (.zshrc, .zprofile, etc)...'
-  rm -rf \"\$HOME_DIR/.zshrc\"
-  rm -rf \"\$HOME_DIR/.zprofile\"
-  rm -rf \"\$HOME_DIR/.zsh_history\"
+mkdir -p \"\$HOME_DIR/.config\"
+mkdir -p \"\$HOME_DIR/scripts\" # Garante que o diretório scripts existe
 
-  # 9.2 Symlinks para ~/.config/
-  echo '  -> Criando symlinks em \$HOME_DIR/.config/...'
-  ln -sfn \"$DOTFILES_DIR/.config/nvim\" \"\$HOME_DIR/.config/nvim\"
-  ln -sfn \"$DOTFILES_DIR/.config/tmux\" \"\$HOME_DIR/.config/tmux\"
-  ln -sfn \"$DOTFILES_DIR/.config/i3\" \"\$HOME_DIR/.config/i3\"
-  ln -sfn \"$DOTFILES_DIR/.config/i3status\" \"\$HOME_DIR/.config/i3status\"
-  ln -sfn \"$DOTFILES_DIR/.config/wezterm\" \"\$HOME_DIR/.config/wezterm\"
+# 9.1 Limpeza ZSH: Remover ficheiros de configuração ZSH existentes
+echo '  -> Limpeza: Removendo ficheiros ZSH existentes (.zshrc, .zprofile, etc)...'
+rm -rf \"\$HOME_DIR/.zshrc\"
+rm -rf \"\$HOME_DIR/.zprofile\"
+rm -rf \"\$HOME_DIR/.zsh_history\"
 
-  # 9.3 Symlinks para o diretório Home (~)
-  echo '  -> Criando symlinks na \$HOME_DIR/ (dotfiles ZSH)...'
-  ln -sfn \"$DOTFILES_DIR/zsh/.zshrc\" \"\$HOME_DIR/.zshrc\"
+# 9.2 Symlinks para ~/.config/
+echo '  -> Criando symlinks em \$HOME_DIR/.config/...'
+ln -sfn \"$DOTFILES_DIR/.config/nvim\" \"\$HOME_DIR/.config/nvim\"
+ln -sfn \"$DOTFILES_DIR/.config/tmux\" \"\$HOME_DIR/.config/tmux\"
+ln -sfn \"$DOTFILES_DIR/.config/i3\" \"\$HOME_DIR/.config/i3\"
+ln -sfn \"$DOTFILES_DIR/.config/i3status\" \"\$HOME_DIR/.config/i3status\"
+ln -sfn \"$DOTFILES_DIR/.config/wezterm\" \"\$HOME_DIR/.config/wezterm\"
 
-  # 9.4 Symlink para o diretório scripts
-  echo '  -> Criando symlink para \$HOME_DIR/scripts...'
-  ln -sfn \"$DOTFILES_DIR/scripts\" \"\$HOME_DIR/scripts\"
-"
+# 9.3 Symlinks para o diretório Home (~)
+echo '  -> Criando symlinks na \$HOME_DIR/ (dotfiles ZSH)...'
+ln -sfn \"$DOTFILES_DIR/zsh/.zshrc\" \"\$HOME_DIR/.zshrc\"
+
+# 9.4 Symlink para o diretório scripts
+echo '  -> Criando symlink para \$HOME_DIR/scripts...'
+ln -sfn \"$DOTFILES_DIR/scripts\" \"\$HOME_DIR/scripts\"
 
 # 10. Configurar Ambiente Node.js (NVM, Node v22, NestJS, Angular)
 echo "10. Configurando Ambiente Node.js (NVM, Node v22, NestJS, Angular)..."
-su - $USER_NAME -c "
-  echo '  -> Instalando NVM (v0.39.7)...'
-  # 10.1 Instalar NVM
-  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+echo '  -> Instalando NVM (v0.39.7)...'
+# 10.1 Instalar NVM
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 
-  # 10.2 Carregar NVM para o shell atual do subshell
-  export NVM_DIR=\"\$HOME/.nvm\"
-  [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\"
+# 10.2 Carregar NVM para o shell atual do subshell
+export NVM_DIR=\"\$HOME/.nvm\"
+[ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\"
 
-  # 10.3 Instalar e Definir Node.js v22 como padrão
-  echo '  -> Instalando Node.js v22 e definindo como padrão...'
-  nvm install 22
-  nvm alias default 22
+# 10.3 Instalar e Definir Node.js v22 como padrão
+echo '  -> Instalando Node.js v22 e definindo como padrão...'
+nvm install 22
+nvm alias default 22
 
-  # 10.4 Instalar CLIs Globais
-  echo '  -> Instalando CLIs Globais: NestJS e Angular...'
-  npm install -g @nestjs/cli @angular/cli
+# 10.4 Instalar CLIs Globais
+echo '  -> Instalando CLIs Globais: NestJS e Angular...'
+npm install -g @nestjs/cli @angular/cli
 
-  echo '  -> Node.js v22, NestJS CLI e Angular CLI instalados com sucesso.'
-"
+echo '  -> Node.js v22, NestJS CLI e Angular CLI instalados com sucesso.'
 
 # 11. Configuração Interativa do Git
 echo "11. Configuração Interativa do Git (user.name e user.email)..."
