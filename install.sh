@@ -127,7 +127,7 @@ cd /home/$USER_NAME
 source /home/$USER_NAME/.zshrc
 
 # configure to use node 22
-nvm isntall 22
+nvm install 22
 nvm alias default 22
 
 # install angular cli
@@ -135,6 +135,9 @@ npm install -g @angular/cli
 
 # install nestjs cli
 npm i -g @nestjs/cli
+
+cd /home/$USER_NAME
+source /home/$USER_NAME/.zshrc
 
 # configure git
 cd /home/$USER_NAME
