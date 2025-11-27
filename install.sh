@@ -27,7 +27,14 @@ apt install -y \
   network-manager network-manager-gnome network-manager-openvpn network-manager-openvpn-gnome \
   gvfs-backends blueman chromium x11-xserver-utils maim xclip pulseaudio-utils brightnessctl \
   arandr eza bat \
-  npm python3 python3-pip snapd golang
+  npm python3 python3-pip snapd golang nautilus cifs-utils nautilus-share strongswan xl2tpd network-manager-l2tp network-manager-l2tp-gnome 
+
+wget -P ~/.local/share/fonts https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip \
+&& cd ~/.local/share/fonts \
+&& unzip JetBrainsMono.zip \
+&& rm JetBrainsMono.zip \
+&& fc-cache -fv
+cd /home/$USER_NAME
 
 #docker
 # Add Docker's official GPG key:
@@ -112,13 +119,13 @@ ln -s /home/$USER_NAME/.dotfiles_v2/wezterm /home/$USER_NAME/.config/wezterm
 ln -s /home/$USER_NAME/.dotfiles_v2/nvim /home/$USER_NAME/.config/nvim
 
 # tmux -> ~
-ln -s /home/$USER_NAME/.dotfiles_v2/tmux/* /home/$USER_NAME/
+ln -s /home/$USER_NAME/.dotfiles_v2/tmux /home/$USER_NAME/.config/tmux
 
 # scripts -> ~/scripts
 ln -s /home/$USER_NAME/.dotfiles_v2/scripts/* /home/$USER_NAME/scripts/
 
 # wallpaper -> ~/Pictures
-ln -s /home/$USER_NAME/.dotfiles_v2/wallpaper/* /home/$USER_NAME/Pictures/
+ln -s /home/$USER_NAME/.dotfiles_v2/wallpaper /home/$USER_NAME/Pictures/wallpaper
 
 # zsh -> ~
 ln -s /home/$USER_NAME/.dotfiles_v2/zsh/.* /home/$USER_NAME/
