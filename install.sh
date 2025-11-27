@@ -27,7 +27,7 @@ apt install -y \
   network-manager network-manager-gnome network-manager-openvpn network-manager-openvpn-gnome \
   gvfs-backends blueman chromium x11-xserver-utils maim xclip pulseaudio-utils brightnessctl \
   arandr eza bat \
-  npm python3 python3-pip snapd
+  npm python3 python3-pip snapd golang
 
 #docker
 # Add Docker's official GPG key:
@@ -87,16 +87,12 @@ snap install onlyoffice-desktopeditors
 #postman
 snap install postman
 
+#firefox
+snap install firefox
 
 #nvm
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
 
-export NVM_DIR=\"\$HOME/.nvm\"
-[ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\"
-
-# configure to use node 22
-nvm isntall 22
-nvm alias default 22
 
 #webex
 wget -O /tmp/webex.deb https://binaries.webex.com/WebexDesktop-Ubuntu-Official-Package/Webex.deb
@@ -126,6 +122,19 @@ ln -s /home/$USER_NAME/.dotfiles_v2/wallpaper/* /home/$USER_NAME/Pictures/
 
 # zsh -> ~
 ln -s /home/$USER_NAME/.dotfiles_v2/zsh/.* /home/$USER_NAME/
+
+cd /home/$USER_NAME
+source /home/$USER_NAME/.zshrc
+
+# configure to use node 22
+nvm isntall 22
+nvm alias default 22
+
+# install angular cli
+npm install -g @angular/cli
+
+# install nestjs cli
+npm i -g @nestjs/cli
 
 # configure git
 cd /home/$USER_NAME
