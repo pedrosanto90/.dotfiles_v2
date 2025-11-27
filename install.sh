@@ -108,8 +108,6 @@ rm -rf .zshrc
 rm -rf .zprofile
 rm -rf .zsh_history
 
-git clone https://pedrosanto90/.dotfiles_v2.git
-
 #create symlinks to dotfiles
 # i3, i3status, wezterm, nvim -> ~/.config
 ln -s /home/$USER_NAME/.dotfiles_v2/i3 /home/$USER_NAME/.config/i3
