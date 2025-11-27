@@ -123,6 +123,7 @@ ln -s /home/$USER_NAME/.dotfiles_v2/wallpaper/* /home/$USER_NAME/Pictures/
 # zsh -> ~
 ln -s /home/$USER_NAME/.dotfiles_v2/zsh/.* /home/$USER_NAME/
 
+chsh -s "$(command -v zsh)" "$USER_NAME"
 cd /home/$USER_NAME
 source /home/$USER_NAME/.zshrc
 
@@ -179,6 +180,5 @@ echo "--- Configuração Git Concluída ---"
 
 #oh my zsh
 sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)"
-
 echo '-----------------------------------'
 echo "Installation completed! Please restart your computer with 'sudo shutdown -r now'"
