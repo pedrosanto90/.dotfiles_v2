@@ -112,22 +112,22 @@ git clone https://pedrosanto90/.dotfiles_v2.git
 
 #create symlinks to dotfiles
 # i3, i3status, wezterm, nvim -> ~/.config
-ln -s ~/.dotfiles_v2/i3 ~/.config/i3
-ln -s ~/.dotfiles_v2/i3status ~/.config/i3status
-ln -s ~/.dotfiles_v2/wezterm ~/.config/wezterm
-ln -s ~/.dotfiles_v2/nvim ~/.config/nvim
+ln -s /home/$USER_NAME/.dotfiles_v2/i3 /home/$USER_NAME/.config/i3
+ln -s /home/$USER_NAME/.dotfiles_v2/i3status /home/$USER_NAME/.config/i3status
+ln -s /home/$USER_NAME/.dotfiles_v2/wezterm /home/$USER_NAME/.config/wezterm
+ln -s /home/$USER_NAME/.dotfiles_v2/nvim /home/$USER_NAME/.config/nvim
 
 # tmux -> ~
-ln -s ~/.dotfiles_v2/tmux/* ~
+ln -s /home/$USER_NAME/.dotfiles_v2/tmux/* /home/$USER_NAME/
 
 # scripts -> ~/scripts
-ln -s ~/.dotfiles_v2/scripts/* ~/scripts/
+ln -s /home/$USER_NAME/.dotfiles_v2/scripts/* /home/$USER_NAME/scripts/
 
 # wallpaper -> ~/Pictures
-ln -s ~/.dotfiles_v2/wallpaper/* ~/Pictures/
+ln -s /home/$USER_NAME/.dotfiles_v2/wallpaper/* /home/$USER_NAME/Pictures/
 
 # zsh -> ~
-ln -s ~/.dotfiles_v2/zsh/.* ~
+ln -s /home/$USER_NAME/.dotfiles_v2/zsh/.* /home/$USER_NAME/
 
 # configure git
 cd /home/$USER_NAME
