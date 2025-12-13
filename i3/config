@@ -50,6 +50,7 @@ bindsym $mod+t exec firefox
 
 #crop-area screenshot by pressing Mod + printscreen
 bindsym $mod+p exec maim -s --format=png /dev/stdout | xclip -selection clipboard -t image/png -i
+bindsym Print exec flameshot gui
 
 # kill focused window
 # bindsym $mod+space exec "/home/theprimeagen/dotfiles/awesome-streamerrc/ThePrimeagen/tmux2"

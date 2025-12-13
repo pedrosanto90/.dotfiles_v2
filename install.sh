@@ -1,11 +1,11 @@
 #!/bin/bash
 
-USER_NAME=$(logname 2>/dev/null || echo ${SUDO_USER}) 
-HOME_DIR="/home/$USER_NAME" 
+USER_NAME=$(logname 2>/dev/null || echo ${SUDO_USER})
+HOME_DIR="/home/$USER_NAME"
 
 cd /home/$USER_NAME
 
-cat << EOF > /etc/apt/sources.list
+cat <<EOF >/etc/apt/sources.list
 # Repositórios Debian 13 (Trixie)
 deb http://deb.debian.org/debian/ trixie main contrib non-free non-free-firmware
 deb http://deb.debian.org/debian/ trixie-updates main contrib non-free non-free-firmware
@@ -22,19 +22,19 @@ mkdir -p Documents/work/domatica
 
 #core packages
 apt install -y \
-  xserver-xorg i3 i3status rofi dmenu fzf lightdm tmux nitrogen \
-  zsh git curl wget build-essential cmake make ninja-build pkg-config libtool libtool-bin gettext unzip \
-  network-manager network-manager-gnome network-manager-openvpn network-manager-openvpn-gnome \
-  gvfs-backends blueman chromium x11-xserver-utils maim xclip pulseaudio-utils brightnessctl \
-  arandr eza bat \
-  npm python3 python3-pip snapd golang nautilus cifs-utils \
-  nautilus-share strongswan xl2tpd network-manager-l2tp network-manager-l2tp-gnome 
+    xserver-xorg i3 i3status rofi dmenu fzf lightdm tmux nitrogen \
+    zsh git curl wget build-essential cmake make ninja-build pkg-config libtool libtool-bin gettext unzip \
+    network-manager network-manager-gnome network-manager-openvpn network-manager-openvpn-gnome \
+    gvfs-backends blueman chromium x11-xserver-utils maim xclip pulseaudio-utils brightnessctl \
+    arandr eza bat \
+    npm python3 python3-pip snapd golang nautilus cifs-utils \
+    nautilus-share strongswan xl2tpd network-manager-l2tp network-manager-l2tp-gnome flameshot
 
-wget -P ~/.local/share/fonts https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip \
-&& cd ~/.local/share/fonts \
-&& unzip JetBrainsMono.zip \
-&& rm JetBrainsMono.zip \
-&& fc-cache -fv
+wget -P ~/.local/share/fonts https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip &&
+    cd ~/.local/share/fonts &&
+    unzip JetBrainsMono.zip &&
+    rm JetBrainsMono.zip &&
+    fc-cache -fv
 cd /home/$USER_NAME
 
 #docker
@@ -67,7 +67,7 @@ sudo chmod 644 /usr/share/keyrings/wezterm-fury.gpg
 sudo apt update
 sudo apt install -y wezterm
 
-#vs code 
+#vs code
 wget -O /tmp/vscode.deb https://go.microsoft.com/fwlink/?LinkID=760868
 apt install -y /tmp/vscode.deb
 
@@ -78,7 +78,7 @@ make CMAKE_BUILD_TYPE=RelWithDebInfo
 make install
 cd /home/$USER_NAME
 
-#dbeaver 
+#dbeaver
 sudo wget -O /usr/share/keyrings/dbeaver.gpg.key https://dbeaver.io/debs/dbeaver.gpg.key
 echo "deb [signed-by=/usr/share/keyrings/dbeaver.gpg.key] https://dbeaver.io/debs/dbeaver-ce /" | sudo tee /etc/apt/sources.list.d/dbeaver.list
 sudo apt-get update && sudo apt-get install dbeaver-ce -y
@@ -101,7 +101,6 @@ snap install firefox
 #nvm
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
 
-
 #webex
 wget -O /tmp/webex.deb https://binaries.webex.com/WebexDesktop-Ubuntu-Official-Package/Webex.deb
 
@@ -111,6 +110,13 @@ cd /home/$USER_NAME
 rm -rf .zshrc
 rm -rf .zprofile
 rm -rf .zsh_history
+
+#oh my zsh - instalar ANTES dos symlinks para não sobrescrever
+echo "Installing oh-my-zsh..."
+sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+
+# Remover o .zshrc padrão criado pelo oh-my-zsh
+rm -f /home/$USER_NAME/.zshrc
 
 #create symlinks to dotfiles
 # i3, i3status, wezterm, nvim -> ~/.config
@@ -128,7 +134,7 @@ ln -s /home/$USER_NAME/.dotfiles_v2/scripts/* /home/$USER_NAME/scripts/
 # wallpaper -> ~/Pictures
 ln -s /home/$USER_NAME/.dotfiles_v2/wallpaper /home/$USER_NAME/Pictures/wallpaper
 
-# zsh -> ~
+# zsh -> ~ (agora com oh-my-zsh já instalado)
 ln -s /home/$USER_NAME/.dotfiles_v2/zsh/.* /home/$USER_NAME/
 
 chsh -s "$(command -v zsh)" "$USER_NAME"
@@ -186,7 +192,5 @@ echo "✅ Editor Git configurado para Neovim."
 
 echo "--- Configuração Git Concluída ---"
 
-#oh my zsh
-sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)"
 echo '-----------------------------------'
 echo "Installation completed! Please restart your computer with 'sudo shutdown -r now'"
