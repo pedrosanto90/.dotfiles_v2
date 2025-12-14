@@ -28,7 +28,8 @@ apt install -y \
     gvfs-backends blueman chromium x11-xserver-utils flameshot pulseaudio-utils brightnessctl \
     arandr eza bat \
     npm python3 python3-pip snapd golang nautilus cifs-utils \
-    nautilus-share strongswan xl2tpd network-manager-l2tp network-manager-l2tp-gnome flameshot
+    nautilus-share strongswan xl2tpd network-manager-l2tp network-manager-l2tp-gnome flameshot \
+    btop fastfetch
 
 mkdir -p /home/$USER_NAME/.local/share/fonts
 wget -P /home/$USER_NAME/.local/share/fonts https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
@@ -137,7 +138,7 @@ ln -s /home/$USER_NAME/.dotfiles_v2/tmux /home/$USER_NAME/.config/tmux
 ln -s /home/$USER_NAME/.dotfiles_v2/scripts/* /home/$USER_NAME/scripts/
 
 # wallpaper -> ~/Pictures
-ln -s /home/$USER_NAME/.dotfiles_v2/wallpaper /home/$USER_NAME/Pictures/wallpaper
+ln -s /home/$USER_NAME/.dotfiles_v2/wallpaper/lofi-bart.jpg /home/$USER_NAME/Pictures/lofi-bart.jpg
 
 # zsh -> ~ (agora com oh-my-zsh já instalado)
 ln -s /home/$USER_NAME/.dotfiles_v2/zsh/.zshrc /home/$USER_NAME/.zshrc
