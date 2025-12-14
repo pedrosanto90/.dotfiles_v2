@@ -157,6 +157,9 @@ npm install -g @angular/cli
 # install nestjs cli
 npm i -g @nestjs/cli
 
+# install github copilot cli
+npm install -g @github/copilot
+
 cd /home/$USER_NAME
 source /home/$USER_NAME/.zshrc
 
