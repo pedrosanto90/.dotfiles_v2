@@ -115,10 +115,10 @@ rm -rf .zsh_history
 
 #oh my zsh - instalar ANTES dos symlinks para não sobrescrever
 echo "Installing oh-my-zsh..."
-sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+su - "$USER_NAME" -c 'sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended'
 
 #p10k
-git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
+su - "$USER_NAME" -c 'git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"'
 
 # Remover o .zshrc padrão criado pelo oh-my-zsh
 rm -f /home/$USER_NAME/.zshrc
