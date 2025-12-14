@@ -25,16 +25,18 @@ apt install -y \
     xserver-xorg i3 i3status rofi dmenu fzf lightdm tmux nitrogen \
     zsh git curl wget build-essential cmake make ninja-build pkg-config libtool libtool-bin gettext unzip \
     network-manager network-manager-gnome network-manager-openvpn network-manager-openvpn-gnome \
-    gvfs-backends blueman chromium x11-xserver-utils maim xclip pulseaudio-utils brightnessctl \
+    gvfs-backends blueman chromium x11-xserver-utils flameshot pulseaudio-utils brightnessctl \
     arandr eza bat \
     npm python3 python3-pip snapd golang nautilus cifs-utils \
     nautilus-share strongswan xl2tpd network-manager-l2tp network-manager-l2tp-gnome flameshot
 
-wget -P ~/.local/share/fonts https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip &&
-    cd ~/.local/share/fonts &&
-    unzip JetBrainsMono.zip &&
-    rm JetBrainsMono.zip &&
-    fc-cache -fv
+mkdir -p /home/$USER_NAME/.local/share/fonts
+wget -P /home/$USER_NAME/.local/share/fonts https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+cd /home/$USER_NAME/.local/share/fonts
+unzip JetBrainsMono.zip
+rm JetBrainsMono.zip
+chown -R $USER_NAME:$USER_NAME /home/$USER_NAME/.local
+fc-cache -fv
 cd /home/$USER_NAME
 
 #docker
@@ -115,6 +117,9 @@ rm -rf .zsh_history
 echo "Installing oh-my-zsh..."
 sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 
+#p10k
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
+
 # Remover o .zshrc padrão criado pelo oh-my-zsh
 rm -f /home/$USER_NAME/.zshrc
 
@@ -135,7 +140,8 @@ ln -s /home/$USER_NAME/.dotfiles_v2/scripts/* /home/$USER_NAME/scripts/
 ln -s /home/$USER_NAME/.dotfiles_v2/wallpaper /home/$USER_NAME/Pictures/wallpaper
 
 # zsh -> ~ (agora com oh-my-zsh já instalado)
-ln -s /home/$USER_NAME/.dotfiles_v2/zsh/.* /home/$USER_NAME/
+ln -s /home/$USER_NAME/.dotfiles_v2/zsh/.zshrc /home/$USER_NAME/.zshrc
+ln -s /home/$USER_NAME/.dotfiles_v2/zsh/.p10k.zsh /home/$USER_NAME/.p10k.zsh
 
 chsh -s "$(command -v zsh)" "$USER_NAME"
 cd /home/$USER_NAME

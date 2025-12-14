@@ -45,8 +45,8 @@ floating_modifier $mod
 # start a terminal
 # bindsym $mod+Return exec i3-sensible-terminal
 # bindsym $mod+Return exec gnome-terminal
-bindsym $mod+Return exec --no-startup-id flatpak run org.wezfurlong.wezterm
-bindsym $mod+t exec firefox
+bindsym $mod+Return exec --no-startup-id wezterm
+bindsym $mod+t exec --no-startup-id firefox
 
 #crop-area screenshot by pressing Mod + printscreen
 bindsym $mod+p exec maim -s --format=png /dev/stdout | xclip -selection clipboard -t image/png -i
@@ -58,7 +58,7 @@ bindsym Print exec flameshot gui
 bindsym $mod+Shift+q kill
 
 # exec --no-startup-id compton
-exec --no-startup-id nitrogen --set-auto /home/pedro/Pictures/lofi-bart.jpg --head=0 && nitrogen --set-auto /home/pedro/Pictures/lofi-bart.jpg --head=1 && nitrogen --set-auto /home/pedro/Pictures/lofi-bart.jpg --head=2
+exec --no-startup-id nitrogen --set-auto /home/pedro/Pictures/wallpaper/lofi-bart.jpg --head=0 && nitrogen --set-auto /home/pedro/Pictures/wallpaper/lofi-bart.jpg --head=1 && nitrogen --set-auto /home/pedro/Pictures/wallpaper/lofi-bart.jpg --head=2
 
 
 # start dmenu (a program launcher)
