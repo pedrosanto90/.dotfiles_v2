@@ -26,6 +26,7 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 - An updated Debian 13 Stable (`trixie`) installation
 - A regular user with `sudo` access
 - An Internet connection
+- Git installed from the Debian repositories to clone this project
 - A working systemd user session
 - Approximately 7 GB of free space while Ghostty and Neovim are built
 - `amd64` or `arm64` hardware for the complete environment. Go supports more official architectures, but the complete Ghostty/Yazi installation is limited to these two.
@@ -35,6 +36,8 @@ The project installs and configures `greetd` with the graphical `wlgreet` fronte
 ## Installation
 
 ```bash
+sudo apt update
+sudo apt install git
 git clone <THIS-REPOSITORY-URL> debian-sway-dev
 cd debian-sway-dev
 ./install.sh
