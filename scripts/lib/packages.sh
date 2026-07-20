@@ -9,7 +9,12 @@ readonly DEBIAN_PACKAGES=(
   thunar thunar-archive-plugin gvfs gvfs-backends
   wl-clipboard cliphist grim slurp swappy
   pipewire pipewire-pulse wireplumber pavucontrol playerctl
-  network-manager network-manager-gnome bluez blueman
+  network-manager network-manager-gnome nm-connection-editor
+  network-manager-openvpn-gnome openvpn
+  network-manager-openconnect-gnome openconnect
+  network-manager-l2tp-gnome network-manager-strongswan
+  network-manager-vpnc-gnome network-manager-sstp-gnome wireguard-tools
+  bluez blueman
   policykit-1 mate-polkit
   xdg-desktop-portal xdg-desktop-portal-wlr xdg-desktop-portal-gtk xdg-utils desktop-file-utils
   upower power-profiles-daemon udisks2 udiskie brightnessctl

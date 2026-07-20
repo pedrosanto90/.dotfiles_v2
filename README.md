@@ -13,7 +13,7 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 - Latest stable Neovim built from official source, with a modular Tokyo Night configuration
 - Node.js LTS through NVM, npm, Corepack, pnpm, and Yarn
 - Official stable Go toolchain and Python with venv, pip, and pipx
-- PipeWire/WirePlumber, NetworkManager, Bluetooth, and PolicyKit
+- PipeWire/WirePlumber, NetworkManager, multi-protocol VPN support, Bluetooth, and PolicyKit
 - Wayland portals for screen sharing, Flatpak, and Electron applications
 - Brave exclusively from its official repository, launched through Ozone/Wayland
 - Bruno REST client, Visual Studio Code, and DBeaver Community from official distribution channels
@@ -90,7 +90,7 @@ An existing Go tree is never deleted. During an upgrade, `/usr/local/go` moves t
 
 ## Installed software
 
-Debian packages cover Sway, greetd/wlgreet, Waybar, Wofi, Mako, Zsh, fzf, zoxide, tmux, Git, lazygit, ripgrep, fd (`fdfind`), bat (`batcat`), eza, jq, btop, fastfetch, the C/C++ toolchain, Python, Thunar/GVFS, wl-clipboard, cliphist, grim/slurp/swappy, PipeWire, WirePlumber, pavucontrol, playerctl, NetworkManager, Blueman, BlueZ, mate-polkit, XDG portals, UPower, power-profiles-daemon, udisks2, udiskie, brightnessctl, Papirus, and nwg-look.
+Debian packages cover Sway, greetd/wlgreet, Waybar, Wofi, Mako, Zsh, fzf, zoxide, tmux, Git, lazygit, ripgrep, fd (`fdfind`), bat (`batcat`), eza, jq, btop, fastfetch, the C/C++ toolchain, Python, Thunar/GVFS, wl-clipboard, cliphist, grim/slurp/swappy, PipeWire, WirePlumber, pavucontrol, playerctl, NetworkManager with VPN plugins, Blueman, BlueZ, mate-polkit, XDG portals, UPower, power-profiles-daemon, udisks2, udiskie, brightnessctl, Papirus, and nwg-look.
 
 The installer defines `fd` and `bat` aliases because Debian names those binaries `fdfind` and `batcat`.
 
@@ -137,6 +137,7 @@ Global TypeScript packages are intentionally omitted. Prefer `corepack pnpm add 
 | `Super + D` | Open Wofi |
 | `Super + B` | Open Brave on Wayland |
 | `Super + E` | Open Thunar |
+| `Super + Shift + N` | Open the network and VPN connection editor |
 | `Super + Shift + Q` | Close the focused window |
 | `Super + Shift + C` | Reload Sway |
 | `Super + Shift + E` | Confirm and end the session |
@@ -172,6 +173,38 @@ swaymsg -t get_inputs | jq '.[] | select(.type == "keyboard") | {identifier, nam
 
 If the reported Elora name differs, update `ELORA_KEYBOARD_NAME` in `~/.local/bin/sway-keyboard-layout` and its source file under `scripts/bin/`.
 
+## VPN support
+
+VPN connections are managed by NetworkManager and appear in `nm-applet` in the Waybar tray. Press `Super + Shift + N` to create, import, or edit a connection graphically. The installer adds official Debian plugins and clients for:
+
+| VPN type | NetworkManager support |
+|---|---|
+| OpenVPN | OpenVPN plugin and `.ovpn` import |
+| Cisco AnyConnect / Meraki AnyConnect | OpenConnect plugin |
+| Meraki Client VPN | L2TP over IPsec and IKEv2/IPsec plugins |
+| WireGuard | Native NetworkManager support and `wireguard-tools` |
+| Cisco IPsec/XAuth | VPNC plugin |
+| Microsoft SSTP | SSTP plugin |
+
+Import OpenVPN and WireGuard profiles from the terminal with:
+
+```bash
+nmcli connection import type openvpn file company.ovpn
+nmcli connection import type wireguard file company.conf
+```
+
+List, connect, and disconnect configured VPNs without exposing credentials on the command line:
+
+```bash
+nmcli connection show
+nmcli connection up id "Company VPN" --ask
+nmcli connection down id "Company VPN"
+```
+
+For a traditional Meraki Client VPN, create an L2TP connection and enter the gateway, user credentials, and IPsec pre-shared key supplied by the administrator. For a Meraki AnyConnect endpoint, create an OpenConnect connection using the AnyConnect protocol and the provided hostname. Some corporate deployments that require Cisco posture or proprietary modules may still require the licensed Cisco Secure Client supplied by the organization.
+
+No VPN profile, certificate, password, or pre-shared key is included in this repository. NetworkManager stores imported profiles outside the project and requests secrets through its authentication agent.
+
 ## Updating
 
 ```bash
@@ -201,7 +234,11 @@ User-modified files remain in place. Backups, packages, and external tools are a
 To remove the main Debian packages, inspect the simulation first and tailor the list to your system:
 
 ```bash
-sudo apt-get --simulate remove greetd wlgreet sway waybar wofi mako brave-browser bruno code dbeaver-ce
+sudo apt-get --simulate remove \
+  greetd wlgreet sway waybar wofi mako brave-browser bruno code dbeaver-ce \
+  network-manager-openvpn-gnome network-manager-openconnect-gnome \
+  network-manager-l2tp-gnome network-manager-strongswan \
+  network-manager-vpnc-gnome network-manager-sstp-gnome wireguard-tools
 ```
 
 The locally built Ghostty is not an APT package; its files are under `~/.local`. Source-built Neovim is installed under `/usr/local/bin/nvim` and `/usr/local/share/nvim`. NVM/Node live under `~/.nvm`, Yazi/Starship under `~/.local/bin`, the Nerd Font under `~/.local/share/fonts/JetBrainsMonoNerd`, and backups under `~/.local/state/debian-sway-dev`.
@@ -217,6 +254,7 @@ command -v nvim                    # expected: /usr/local/bin/nvim
 nvim --version | head -n 1
 journalctl --user -b --unit pipewire --unit wireplumber
 systemctl status NetworkManager bluetooth power-profiles-daemon
+nmcli connection show
 systemctl status greetd
 ```
 
@@ -227,6 +265,10 @@ If screen sharing does not appear in an application, fully close that applicatio
 - [Debian 13 trixie](https://www.debian.org/releases/trixie/)
 - [greetd manual](https://manpages.debian.org/trixie/greetd/greetd.1.en.html)
 - [Debian wlgreet package](https://packages.debian.org/trixie/wlgreet)
+- [Debian NetworkManager OpenVPN plugin](https://packages.debian.org/trixie/network-manager-openvpn-gnome)
+- [Debian NetworkManager OpenConnect plugin](https://packages.debian.org/trixie/network-manager-openconnect-gnome)
+- [Debian NetworkManager L2TP plugin](https://packages.debian.org/trixie/network-manager-l2tp-gnome)
+- [Cisco Meraki Client VPN overview](https://documentation.meraki.com/SASE_and_SD-WAN/MX/Design_and_Configure/Configuration_Guides/Client_VPN/Client_VPN_Overview)
 - [Installing Brave on Linux](https://brave.com/linux/)
 - [Installing Bruno](https://docs.usebruno.com/v2/get-started/bruno-basics/download)
 - [Installing Visual Studio Code on Linux](https://code.visualstudio.com/docs/setup/linux)
