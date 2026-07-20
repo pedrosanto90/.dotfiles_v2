@@ -1,3 +1,5 @@
+-- @keybind neovim|Comments|G C / G B|Comment using line or block motions
+-- @keybind neovim|Comments|G C C / G B C|Toggle a line or block comment
 return {
 	{
 		"JoosepAlviste/nvim-ts-context-commentstring",

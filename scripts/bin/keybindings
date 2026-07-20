@@ -1,0 +1,158 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly MARKER='@keybind '
+mode="auto"
+scope=""
+source_root=""
+
+usage() {
+  cat <<'EOF'
+Usage: keybindings [OPTIONS]
+
+Show the keybindings defined by Debian Sway Dev.
+
+Options:
+  -s, --scope NAME   Filter by scope: sway, tmux, or neovim
+  -t, --terminal     Use the fzf terminal interface
+  -l, --list         Print the catalog without an interactive interface
+      --root PATH    Read configs from a project checkout instead of ~/.config
+  -h, --help         Show this help
+EOF
+}
+
+die() {
+  printf 'keybindings: %s\n' "$*" >&2
+  exit 1
+}
+
+while (($#)); do
+  case "$1" in
+    -s|--scope)
+      (($# >= 2)) || die "$1 requires a value"
+      scope=$2
+      shift 2
+      ;;
+    -t|--terminal)
+      mode="terminal"
+      shift
+      ;;
+    -l|--list)
+      mode="list"
+      shift
+      ;;
+    --root)
+      (($# >= 2)) || die "$1 requires a value"
+      source_root=$2
+      shift 2
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      die "unknown option: $1"
+      ;;
+  esac
+done
+
+declare -a sources=()
+
+add_source() {
+  [[ -e $1 ]] && sources+=("$1")
+}
+
+discover_sources() {
+  local config_home script_dir checkout_root
+
+  if [[ -n $source_root ]]; then
+    [[ -d $source_root/configs ]] || die "project configs not found under: $source_root"
+    add_source "$source_root/configs/sway"
+    add_source "$source_root/configs/tmux/tmux.conf"
+    add_source "$source_root/configs/nvim"
+    return
+  fi
+
+  config_home=${XDG_CONFIG_HOME:-"${HOME}/.config"}
+  add_source "$config_home/sway"
+  add_source "${HOME}/.tmux.conf"
+  add_source "$config_home/nvim"
+
+  ((${#sources[@]})) && return
+
+  script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+  checkout_root=$(cd -- "$script_dir/../.." && pwd)
+  if [[ -d $checkout_root/configs ]]; then
+    add_source "$checkout_root/configs/sway"
+    add_source "$checkout_root/configs/tmux/tmux.conf"
+    add_source "$checkout_root/configs/nvim"
+  fi
+}
+
+build_catalog() {
+  local records
+
+  records=$(
+    rg --no-heading --no-filename --only-matching \
+      "${MARKER}[^[:cntrl:]]+" "${sources[@]}" |
+      sed "s/^${MARKER}//" |
+      sort -t '|' -k1,1f -k2,2f -k3,3f
+  )
+
+  [[ -n $records ]] || die "no annotated keybindings were found"
+
+  if ! awk -F '|' 'NF != 4 { exit 1 }' <<<"$records"; then
+    die "an @keybind annotation does not contain exactly four fields"
+  fi
+
+  if [[ -n $scope ]]; then
+    records=$(awk -F '|' -v wanted="$scope" 'tolower($1) == tolower(wanted)' <<<"$records")
+    [[ -n $records ]] || die "unknown or empty scope: $scope"
+  fi
+
+  awk -F '|' '
+    NF == 4 {
+      scope = toupper(substr($1, 1, 1)) substr($1, 2)
+      printf "%-8s  %-18s  %-25s  %s\n", scope, $2, $3, $4
+    }
+  ' <<<"$records"
+}
+
+show_terminal() {
+  local catalog=$1
+  if command -v fzf >/dev/null 2>&1; then
+    printf '%s\n' "$catalog" |
+      fzf --no-sort --layout=reverse --border \
+        --prompt='Keybindings > ' --header='Scope     Category            Keys                       Action' \
+        >/dev/null || true
+  else
+    printf '%s\n' "$catalog"
+  fi
+}
+
+show_wofi() {
+  local catalog=$1
+  printf '%s\n' "$catalog" |
+    wofi --dmenu --insensitive --prompt 'Keybindings' \
+      --width 1100 --height 700 >/dev/null || true
+}
+
+discover_sources
+((${#sources[@]})) || die "no installed or project configuration was found"
+catalog=$(build_catalog)
+
+case "$mode" in
+  list)
+    printf '%s\n' "$catalog"
+    ;;
+  terminal)
+    show_terminal "$catalog"
+    ;;
+  auto)
+    if [[ -n ${WAYLAND_DISPLAY:-} ]] && command -v wofi >/dev/null 2>&1; then
+      show_wofi "$catalog"
+    else
+      show_terminal "$catalog"
+    fi
+    ;;
+esac

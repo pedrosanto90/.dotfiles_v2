@@ -1,3 +1,9 @@
+-- @keybind neovim|Telescope|Space P F|Find files
+-- @keybind neovim|Telescope|Space P S|Search file contents
+-- @keybind neovim|Telescope|Space B|Find open buffers
+-- @keybind neovim|Telescope|Space P Shift+W S|Search for the word under the cursor
+-- @keybind neovim|Themes|Space T H S|Open the theme selector
+-- @keybind neovim|Telescope (insert)|Ctrl+K / Ctrl+J|Move the selection up or down
 return {
 	"nvim-telescope/telescope.nvim",
 	branch = "master", -- using master to fix issues with deprecated to definition warnings

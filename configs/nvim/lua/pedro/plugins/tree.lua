@@ -1,3 +1,15 @@
+-- @keybind neovim|Neo-tree|Backspace|Navigate to the parent directory
+-- @keybind neovim|Neo-tree|.|Set the current directory as the root
+-- @keybind neovim|Neo-tree|Shift+H|Toggle hidden files
+-- @keybind neovim|Neo-tree|/|Open the fuzzy finder
+-- @keybind neovim|Neo-tree|Shift+D|Find a directory
+-- @keybind neovim|Neo-tree|#|Open the fuzzy sorter
+-- @keybind neovim|Neo-tree|F / Ctrl+X|Apply or clear a filter
+-- @keybind neovim|Neo-tree|[ G / ] G|Go to the previous or next Git change
+-- @keybind neovim|Neo-tree|O C/D/G/M/N/S/T|Sort the tree
+-- @keybind neovim|Neo-tree finder|Arrows or Ctrl+N/P|Move through results
+-- @keybind neovim|Neo-tree finder|Escape|Close the finder
+-- @keybind neovim|Neo-tree buffers|B D|Delete the selected buffer
 return {
 	"nvim-neo-tree/neo-tree.nvim",
 	branch = "v3.x",

@@ -1,3 +1,16 @@
+-- @keybind neovim|LSP|G R|Show references
+-- @keybind neovim|LSP|G Shift+D|Go to the declaration
+-- @keybind neovim|LSP|G D|Go to the definition
+-- @keybind neovim|LSP|G I|Show implementations
+-- @keybind neovim|LSP|G T|Show type definitions
+-- @keybind neovim|LSP|Space V C A|Show code actions
+-- @keybind neovim|LSP|Space R N|Rename the symbol
+-- @keybind neovim|Diagnostics|Space Shift+D|Show buffer diagnostics
+-- @keybind neovim|Diagnostics|Space D|Show line diagnostics
+-- @keybind neovim|LSP|Shift+K|Show hover documentation
+-- @keybind neovim|LSP|Space R S|Restart the LSP client
+-- @keybind neovim|LSP (insert)|Ctrl+H|Show signature help
+-- @keybind neovim|LSP|Space T H|Toggle inlay hints
 return {
 	"neovim/nvim-lspconfig",
 	dependencies = {

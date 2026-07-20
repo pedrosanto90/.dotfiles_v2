@@ -1,3 +1,4 @@
+-- @keybind neovim|Completion (insert)|Ctrl+Z|Accept the selected completion
 return {
   {
     "saghen/blink.compat",

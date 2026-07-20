@@ -1,5 +1,8 @@
 -- List of favorite files/marks per project
 -- Harpoon 2 configuration
+-- @keybind neovim|Harpoon|Space H A|Add the current file
+-- @keybind neovim|Harpoon|Space H F|Open the quick menu
+-- @keybind neovim|Harpoon|Space H 1…9|Open marked file 1…9
 return {
 	-- https://github.com/ThePrimeagen/harpoon
 	"ThePrimeagen/harpoon",

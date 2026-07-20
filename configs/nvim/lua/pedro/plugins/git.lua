@@ -1,3 +1,15 @@
+-- @keybind neovim|Git|] C / [ C|Go to the next or previous hunk
+-- @keybind neovim|Git|Space H S / Space H R|Stage or reset the current hunk
+-- @keybind neovim|Git|Space H Shift+S / Space H Shift+R|Stage or reset the buffer
+-- @keybind neovim|Git|Space H P|Preview the current hunk
+-- @keybind neovim|Git|Space H B|Show blame for the current line
+-- @keybind neovim|Git|Space H D|Diff the current file
+-- @keybind neovim|Git|Space G D|Open the diff view
+-- @keybind neovim|Git|Space G Shift+D|Open the staged diff view
+-- @keybind neovim|Git|Space G H|Show the current file history
+-- @keybind neovim|Git|Space G Shift+H|Show the repository history
+-- @keybind neovim|Git|Space G Q|Close the diff view
+-- @keybind neovim|Git|Space G G|Open Neogit status
 return {
   {
     "lewis6991/gitsigns.nvim",

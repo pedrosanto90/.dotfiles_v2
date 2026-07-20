@@ -18,6 +18,7 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 - Brave exclusively from its official repository, launched through Ozone/Wayland
 - Bruno REST client, Visual Studio Code, and DBeaver Community from official distribution channels
 - Thunar, Yazi, persistent clipboard history, screenshots, and USB automounting
+- Searchable Sway, tmux, and Neovim keybinding reference
 - Tokyo Night palette, Papirus icons, and JetBrainsMono Nerd Font
 
 ## Requirements
@@ -133,6 +134,7 @@ Global TypeScript packages are intentionally omitted. Prefer `corepack pnpm add 
 
 | Keybinding | Action |
 |---|---|
+| `Super + F1` | Open the searchable project keybinding reference |
 | `Super + Enter` | Open Ghostty |
 | `Super + D` | Open Wofi |
 | `Super + B` | Open Brave on Wayland |
@@ -160,6 +162,31 @@ Global TypeScript packages are intentionally omitted. Prefer `corepack pnpm add 
 | Brightness keys | Increase or decrease brightness by 5% |
 
 The tmux prefix is `Ctrl+A`. Follow it with `h/j/k/l` to navigate panes or `r` to reload the configuration.
+
+### Searchable keybinding reference
+
+Press `Super + F1` or run `keybindings` to open the complete project-defined keybinding catalog in Wofi. Search by key, action, category, or application. Selecting an entry never executes it; the menu is reference-only.
+
+```bash
+keybindings                         # Wofi in Sway, fzf in a terminal
+keybindings --terminal              # force the fzf interface
+keybindings --list                  # print a non-interactive list
+keybindings --scope sway            # sway, tmux, or neovim only
+```
+
+The utility reads the active files under `~/.config/sway`, `~/.config/nvim`, and `~/.tmux.conf`. During project development, inspect the repository copies directly with:
+
+```bash
+scripts/bin/keybindings --root . --list
+```
+
+The catalog is generated from structured `@keybind` comments stored next to the real mappings. This keeps the documentation local to each configuration instead of maintaining a second keybinding database. Add new entries using four pipe-separated fields, with all user-facing text in English:
+
+```text
+# @keybind sway|Category|Super+Key|Action description
+```
+
+Only mappings explicitly defined by this project are included. Built-in application shortcuts and plugin defaults remain in their respective application documentation.
 
 ### Per-device keyboard layouts
 
@@ -248,6 +275,7 @@ The locally built Ghostty is not an APT package; its files are under `~/.local`.
 ```bash
 bash -n install.sh scripts/lib/*.sh scripts/bin/* scripts/uninstall.sh
 sh -n scripts/system/debian-sway-session
+scripts/bin/keybindings --root . --list
 sway --validate --config ~/.config/sway/config
 jq empty ~/.config/waybar/config.jsonc
 command -v nvim                    # expected: /usr/local/bin/nvim

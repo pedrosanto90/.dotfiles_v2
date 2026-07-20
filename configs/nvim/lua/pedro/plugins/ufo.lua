@@ -1,3 +1,5 @@
+-- @keybind neovim|Folds|Z Shift+R|Open all folds
+-- @keybind neovim|Folds|Z Shift+M|Close all folds
 return {
     -- Setup Folding with nvim-ufo
     {

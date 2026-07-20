@@ -1,4 +1,5 @@
 -- Emmet
+-- @keybind neovim|Editing|Space X E|Wrap with an Emmet abbreviation
 return {
   "olrtg/nvim-emmet",
   config = function()
