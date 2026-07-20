@@ -146,7 +146,7 @@ Global TypeScript packages are intentionally omitted. Prefer `corepack pnpm add 
 | `Super + Shift + Q` | Close the focused window |
 | `Super + Shift + C` | Reload Sway |
 | `Super + Shift + E` | Confirm and end the session |
-| `Super + L` | Lock the session |
+| `Super + Ctrl + L` | Lock the session |
 | `Super + H/J/K/L` | Move focus |
 | `Super + Shift + H/J/K/L` | Move the focused window |
 | `Super + 1…0` | Switch to workspace 1…10 |
