@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 readonly DEBIAN_PACKAGES=(
-  sway swaybg swayidle swaylock waybar wofi mako greetd wlgreet
+  sway swaybg swayidle swaylock waybar wofi mako-notifier greetd wlgreet
   zsh fzf zoxide tmux
   git lazygit curl wget unzip zip jq ripgrep fd-find bat eza tree htop btop file fastfetch
   openssh-client build-essential pkg-config cmake make ninja-build gettext xz-utils
@@ -15,7 +15,7 @@ readonly DEBIAN_PACKAGES=(
   network-manager-l2tp-gnome network-manager-strongswan
   network-manager-vpnc-gnome network-manager-sstp-gnome wireguard-tools
   bluez blueman
-  policykit-1 mate-polkit
+  polkitd pkexec lxpolkit
   xdg-desktop-portal xdg-desktop-portal-wlr xdg-desktop-portal-gtk xdg-utils desktop-file-utils
   upower power-profiles-daemon udisks2 udiskie brightnessctl
   papirus-icon-theme nwg-look fontconfig libnotify-bin

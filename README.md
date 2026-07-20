@@ -94,7 +94,7 @@ An existing Go tree is never deleted. During an upgrade, `/usr/local/go` moves t
 
 ## Installed software
 
-Debian packages cover Sway, greetd/wlgreet, Waybar, Wofi, Mako, Zsh, fzf, zoxide, tmux, Git, lazygit, ripgrep, fd (`fdfind`), bat (`batcat`), eza, jq, btop, fastfetch, the C/C++ toolchain, Python, Thunar/GVFS, wl-clipboard, cliphist, grim/slurp/swappy, PipeWire, WirePlumber, pavucontrol, playerctl, NetworkManager with VPN plugins, Blueman, BlueZ, mate-polkit, XDG portals, UPower, power-profiles-daemon, udisks2, udiskie, brightnessctl, Papirus, and nwg-look.
+Debian packages cover Sway, greetd/wlgreet, Waybar, Wofi, Mako, Zsh, fzf, zoxide, tmux, Git, lazygit, ripgrep, fd (`fdfind`), bat (`batcat`), eza, jq, btop, fastfetch, the C/C++ toolchain, Python, Thunar/GVFS, wl-clipboard, cliphist, grim/slurp/swappy, PipeWire, WirePlumber, pavucontrol, playerctl, NetworkManager with VPN plugins, Blueman, BlueZ, lxpolkit, XDG portals, UPower, power-profiles-daemon, udisks2, udiskie, brightnessctl, Papirus, and nwg-look.
 
 The installer defines `fd` and `bat` aliases because Debian names those binaries `fdfind` and `batcat`.
 
@@ -116,7 +116,7 @@ Software outside Debian and its source:
 | Node.js | Latest LTS resolved by NVM |
 | Go | Tarball and checksum from `go.dev` |
 | Neovim | Latest stable Git tag built locally with the official CMake/Make procedure and installed in `/usr/local` |
-| Ghostty | Signed `release.files.ghostty.org` tarball, built locally |
+| Ghostty | Pinned signed `release.files.ghostty.org` tarball, built locally |
 | Yazi | Official `sxyazi/yazi` release binary |
 | Starship | Official installer targeting `~/.local/bin` |
 | JetBrainsMono Nerd Font | Official `ryanoasis/nerd-fonts` release |
@@ -265,7 +265,7 @@ To remove the main Debian packages, inspect the simulation first and tailor the 
 
 ```bash
 sudo apt-get --simulate remove \
-  greetd wlgreet sway waybar wofi mako brave-browser bruno code dbeaver-ce \
+  greetd wlgreet sway waybar wofi mako-notifier brave-browser bruno code dbeaver-ce \
   network-manager-openvpn-gnome network-manager-openconnect-gnome \
   network-manager-l2tp-gnome network-manager-strongswan \
   network-manager-vpnc-gnome network-manager-sstp-gnome wireguard-tools

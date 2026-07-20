@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+readonly GHOSTTY_VERSION="1.3.1"
+
 install_brave() {
   local key_tmp sources_tmp repository_changed=0
   key_tmp=$(mktemp "${CACHE_HOME}/brave-key.XXXXXX")
@@ -226,10 +228,8 @@ zig_arch() {
 }
 
 install_ghostty() {
-  local tag version source_archive signature source_dir zig_version zarch zig_archive zig_dir build_root current=''
+  local version="${GHOSTTY_VERSION}" source_archive signature source_dir zig_version zarch zig_archive zig_dir build_root current=''
   command -v ghostty >/dev/null 2>&1 && current=$(ghostty +version 2>/dev/null | head -n1 | awk '{print $2}')
-  tag=$(github_latest_tag ghostty-org/ghostty)
-  version=${tag#v}
   [[ ${current} == "${version}" ]] && { log_info "Ghostty ${version} is already installed."; return; }
   source_archive="${CACHE_HOME}/ghostty-${version}.tar.gz"
   signature="${source_archive}.minisig"
