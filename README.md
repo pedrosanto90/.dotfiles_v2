@@ -43,7 +43,7 @@ Do not run the installer with `sudo`. It requests elevated privileges only for A
 
 After installation:
 
-1. Review `~/.config/sway/config.d/input.conf`. Its default keyboard layout is Portuguese (`pt`).
+1. Review `~/.config/sway/config.d/input.conf`. Keyboards default to US and can switch to Brazilian ABNT2.
 2. Adapt `~/.config/sway/config.d/output.conf` using the output names reported by `swaymsg -t get_outputs`.
 3. Optionally make Zsh your login shell with `chsh -s "$(command -v zsh)"`.
 4. Reboot the machine.
@@ -147,7 +147,8 @@ Global TypeScript packages are intentionally omitted. Prefer `corepack pnpm add 
 | `Super + Shift + 1…0` | Move a window to a workspace |
 | `Super + F` | Toggle fullscreen |
 | `Super + Shift + Space` | Toggle floating |
-| `Super + Space` | Switch tiled/floating focus |
+| `Super + Space` | Switch keyboard layouts on all keyboards |
+| `Super + Ctrl + Space` | Switch tiled/floating focus |
 | `Super + Shift + -` | Send a window to the scratchpad |
 | `Super + -` | Show the scratchpad |
 | `Super + R` | Enter resize mode; `Esc` exits |
@@ -158,6 +159,18 @@ Global TypeScript packages are intentionally omitted. Prefer `corepack pnpm add 
 | Brightness keys | Increase or decrease brightness by 5% |
 
 The tmux prefix is `Ctrl+A`. Follow it with `h/j/k/l` to navigate panes or `r` to reload the configuration.
+
+### Per-device keyboard layouts
+
+The built-in `AT Translated Set 2 keyboard` starts in US, while `splitkb.com Elora` and `splitkb.com Elora Keyboard` start in Brazilian ABNT2. Both devices retain US and Brazilian ABNT2 as selectable layouts, so `Super + Space` switches them while preserving their opposite defaults.
+
+`sway-keyboard-layout watch` starts with the session, configures keyboards already connected, and listens for Sway input events so an Elora connected later is configured automatically. It matches the human-readable device name instead of a vendor/product identifier, which can vary with firmware. Inspect the names detected by Sway with:
+
+```bash
+swaymsg -t get_inputs | jq '.[] | select(.type == "keyboard") | {identifier, name}'
+```
+
+If the reported Elora name differs, update `ELORA_KEYBOARD_NAME` in `~/.local/bin/sway-keyboard-layout` and its source file under `scripts/bin/`.
 
 ## Updating
 

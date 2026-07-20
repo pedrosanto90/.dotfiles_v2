@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly INTERNAL_KEYBOARD_NAME="at translated set 2 keyboard"
+readonly ELORA_KEYBOARD_NAME="splitkb.com elora"
+
+log() {
+  printf '[sway-keyboard-layout] %s\n' "$*" >&2
+}
+
+configure_keyboard() {
+  local identifier=$1
+  local name=$2
+  local normalized_name=${2,,}
+  local layouts variants
+
+  # Accept both Sway's human-readable names and Hyprland-style sanitized names.
+  normalized_name=${normalized_name//[_-]/ }
+
+  case "${normalized_name}" in
+    "${INTERNAL_KEYBOARD_NAME}")
+      layouts="us,br"
+      variants=",abnt2"
+      ;;
+    "${ELORA_KEYBOARD_NAME}"|"${ELORA_KEYBOARD_NAME} keyboard")
+      layouts="br,us"
+      variants="abnt2,"
+      ;;
+    *)
+      return 0
+      ;;
+  esac
+
+  swaymsg input "${identifier}" xkb_layout "${layouts}" >/dev/null
+  swaymsg input "${identifier}" xkb_variant "${variants}" >/dev/null
+  log "Configured ${name}: ${layouts}"
+}
+
+configure_connected_keyboards() {
+  while IFS=$'\t' read -r identifier name; do
+    [[ -n "${identifier}" ]] || continue
+    configure_keyboard "${identifier}" "${name}"
+  done < <(
+    swaymsg -r -t get_inputs |
+      jq -r '.[] | select(.type == "keyboard") | [.identifier, .name] | @tsv'
+  )
+}
+
+watch_keyboards() {
+  configure_connected_keyboards
+
+  swaymsg -m -t subscribe '["input"]' |
+    jq --unbuffered -r \
+      'select(.change == "added" and .input.type == "keyboard") |
+       [.input.identifier, .input.name] | @tsv' |
+    while IFS=$'\t' read -r identifier name; do
+      configure_keyboard "${identifier}" "${name}"
+    done
+}
+
+case "${1:-apply}" in
+  apply)
+    configure_connected_keyboards
+    ;;
+  watch)
+    watch_keyboards
+    ;;
+  *)
+    printf 'Usage: %s [apply|watch]\n' "${0##*/}" >&2
+    exit 2
+    ;;
+esac
