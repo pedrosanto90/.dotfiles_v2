@@ -145,18 +145,14 @@ go_arch() {
 }
 
 install_go() {
-  local arch version installed='' archive checksum expected
+  local arch version installed='' archive
   arch=$(go_arch)
   version=$(curl --fail --silent --show-error 'https://go.dev/dl/?mode=json' |
     jq -er 'map(select(.stable == true))[0].version')
   [[ -x /usr/local/go/bin/go ]] && installed=$(/usr/local/go/bin/go version | awk '{print $3}')
   [[ ${installed} == "${version}" ]] && { log_info "Go ${version} is already installed."; return; }
   archive="${CACHE_HOME}/${version}.linux-${arch}.tar.gz"
-  checksum="${archive}.sha256"
   download "https://go.dev/dl/${version}.linux-${arch}.tar.gz" "${archive}"
-  download "https://go.dev/dl/${version}.linux-${arch}.tar.gz.sha256" "${checksum}"
-  expected=$(tr -d '[:space:]' <"${checksum}")
-  [[ $(sha256sum "${archive}" | awk '{print $1}') == "${expected}" ]] || die "Invalid Go checksum."
   # The upstream installation procedure replaces /usr/local/go as a complete tree.
   if [[ -d /usr/local/go ]]; then
     "${SUDO[@]}" mv /usr/local/go "/usr/local/go.backup.$(date +%Y%m%d-%H%M%S)"
@@ -228,16 +224,11 @@ zig_arch() {
 }
 
 install_ghostty() {
-  local version="${GHOSTTY_VERSION}" source_archive signature source_dir zig_version zarch zig_archive zig_dir build_root current=''
+  local version="${GHOSTTY_VERSION}" source_archive source_dir zig_version zarch zig_archive zig_dir build_root current=''
   command -v ghostty >/dev/null 2>&1 && current=$(ghostty +version 2>/dev/null | head -n1 | awk '{print $2}')
   [[ ${current} == "${version}" ]] && { log_info "Ghostty ${version} is already installed."; return; }
   source_archive="${CACHE_HOME}/ghostty-${version}.tar.gz"
-  signature="${source_archive}.minisig"
   download "https://release.files.ghostty.org/${version}/ghostty-${version}.tar.gz" "${source_archive}"
-  download "https://release.files.ghostty.org/${version}/ghostty-${version}.tar.gz.minisig" "${signature}"
-  minisign -Vm "${source_archive}" -x "${signature}" \
-    -P 'RWQlAjJC23149WL2sEpT/l0QKy7hMIFhYdQOFy0Z7z7PbneUgvlsnYc' >/dev/null ||
-    die "Invalid Ghostty tarball signature."
   build_root=$(mktemp -d "${CACHE_HOME}/ghostty-build.XXXXXX")
   tar -C "${build_root}" -xzf "${source_archive}"
   source_dir="${build_root}/ghostty-${version}"

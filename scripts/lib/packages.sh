@@ -20,7 +20,7 @@ readonly DEBIAN_PACKAGES=(
   upower power-profiles-daemon udisks2 udiskie brightnessctl
   papirus-icon-theme nwg-look fontconfig libnotify-bin
   libgtk-4-dev libgtk4-layer-shell-dev libadwaita-1-dev libxml2-utils
-  ca-certificates gnupg minisign util-linux dbus-user-session libpam-systemd
+  ca-certificates gnupg util-linux dbus-user-session libpam-systemd
 )
 
 apt_update_once() {

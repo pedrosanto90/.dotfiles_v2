@@ -65,7 +65,7 @@ Only then is it replaced atomically. The managed-file manifest lives at `~/.loca
 
 Existing system-level greetd files are backed up under `/var/backups/debian-sway-dev/` before replacement. The installer enables greetd for the next boot instead of starting it immediately, preventing a second display manager from disrupting the current graphical session.
 
-An existing Go tree is never deleted. During an upgrade, `/usr/local/go` moves to `/usr/local/go.backup.<timestamp>`. Ghostty is checked against the project's published Minisign signature, and Go is checked against its official SHA-256 digest.
+An existing Go tree is never deleted. During an upgrade, `/usr/local/go` moves to `/usr/local/go.backup.<timestamp>`.
 
 ## Project layout
 
@@ -114,9 +114,9 @@ Software outside Debian and its source:
 | DBeaver Community | Official DBeaver APT repository |
 | NVM | Latest tag from the official `nvm-sh/nvm` repository |
 | Node.js | Latest LTS resolved by NVM |
-| Go | Tarball and checksum from `go.dev` |
+| Go | Official tarball from `go.dev` |
 | Neovim | Latest stable Git tag built locally with the official CMake/Make procedure and installed in `/usr/local` |
-| Ghostty | Pinned signed `release.files.ghostty.org` tarball, built locally |
+| Ghostty | Pinned official `release.files.ghostty.org` tarball, built locally |
 | Yazi | Official `sxyazi/yazi` release binary |
 | Starship | Official installer targeting `~/.local/bin` |
 | JetBrainsMono Nerd Font | Official `ryanoasis/nerd-fonts` release |
