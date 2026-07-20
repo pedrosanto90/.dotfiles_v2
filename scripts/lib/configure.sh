@@ -50,11 +50,20 @@ configure_browser() {
 }
 
 configure_shell() {
+  local current_user current_shell zsh_path
   mkdir -p "${HOME}/.local/bin" "${HOME}/.local/share" "${HOME}/go/bin"
   if command -v pipx >/dev/null 2>&1; then
     PIPX_BIN_DIR="${HOME}/.local/bin" pipx ensurepath >/dev/null || true
   fi
-  if command -v getent >/dev/null 2>&1 && [[ $(getent passwd "${USER}" | cut -d: -f7) != "$(command -v zsh)" ]]; then
-    log_warn "The default shell was not changed automatically. To use zsh: chsh -s $(command -v zsh)"
+  require_command getent
+  require_command zsh
+  current_user=$(id -un)
+  current_shell=$(getent passwd "${current_user}" | cut -d: -f7)
+  zsh_path=$(command -v zsh)
+  if [[ ${current_shell} != "${zsh_path}" ]]; then
+    "${SUDO[@]}" usermod --shell "${zsh_path}" "${current_user}"
+    [[ $(getent passwd "${current_user}" | cut -d: -f7) == "${zsh_path}" ]] ||
+      die "Could not set ${zsh_path} as the login shell for ${current_user}."
+    log_info "Set ${zsh_path} as the login shell for ${current_user}."
   fi
 }

@@ -49,7 +49,7 @@ After installation:
 
 1. Review `~/.config/sway/config.d/input.conf`. Keyboards default to US and can switch to Brazilian ABNT2.
 2. Adapt `~/.config/sway/config.d/output.conf` using the output names reported by `swaymsg -t get_outputs`.
-3. Optionally make Zsh your login shell with `chsh -s "$(command -v zsh)"`.
+3. Zsh is set as your login shell automatically; the change takes effect at the next login.
 4. Reboot the machine.
 5. Enter your username and password in the Tokyo Night wlgreet screen. Sway starts automatically after authentication.
 
