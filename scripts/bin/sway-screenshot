@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+mode=${1:-area}
+directory="${XDG_PICTURES_DIR:-${HOME}/Pictures}/Screenshots"
+file="${directory}/$(date +%Y-%m-%d_%H-%M-%S).png"
+mkdir -p "${directory}"
+
+case ${mode} in
+  area)
+    geometry=$(slurp) || exit 0
+    grim -g "${geometry}" "${file}"
+    ;;
+  output) grim -o "$(swaymsg -t get_outputs -r | jq -r '.[] | select(.focused).name')" "${file}" ;;
+  edit)
+    geometry=$(slurp) || exit 0
+    grim -g "${geometry}" - | swappy -f -
+    exit 0
+    ;;
+  *) printf 'Usage: %s {area|output|edit}\n' "$0" >&2; exit 2 ;;
+esac
+
+wl-copy <"${file}"
+notify-send 'Screenshot saved' "${file}"

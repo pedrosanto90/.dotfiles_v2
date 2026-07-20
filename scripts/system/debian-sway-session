@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+
+# Ensure user-local tools installed by this project are available to Sway.
+export PATH="${HOME}/.local/bin:/usr/local/bin:/usr/bin:/bin"
+export XDG_CURRENT_DESKTOP=sway
+export XDG_SESSION_DESKTOP=sway
+export XDG_SESSION_TYPE=wayland
+export MOZ_ENABLE_WAYLAND=1
+export NIXOS_OZONE_WL=1
+export ELECTRON_OZONE_PLATFORM_HINT=auto
+export GTK_USE_PORTAL=1
+
+if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
+  exec dbus-run-session -- sway
+fi
+exec sway

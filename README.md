@@ -1,1 +1,226 @@
-# .dotfiles_v2
+# Debian Sway Dev
+
+A complete, minimalist, keyboard-first development environment for **Debian 13 Stable (trixie)**. It provides a coherent Wayland session without a full desktop environment and preserves every pre-existing user configuration through automatic backups.
+
+> The installer supports the current Debian Stable release only: Debian 13. Do not run it on Ubuntu, derivatives, Debian testing/unstable, or older Debian releases.
+
+## Features
+
+- Modular Sway configuration with Waybar, Wofi, Mako, locking, and idle handling
+- Native Wayland graphical login through greetd and wlgreet
+- Ghostty built from the official release tarball when unavailable in Debian
+- Framework-free Zsh with Starship, fzf, zoxide, and a small alias set
+- Latest stable Neovim built from official source, with a modular Tokyo Night configuration
+- Node.js LTS through NVM, npm, Corepack, pnpm, and Yarn
+- Official stable Go toolchain and Python with venv, pip, and pipx
+- PipeWire/WirePlumber, NetworkManager, Bluetooth, and PolicyKit
+- Wayland portals for screen sharing, Flatpak, and Electron applications
+- Brave exclusively from its official repository, launched through Ozone/Wayland
+- Bruno REST client, Visual Studio Code, and DBeaver Community from official distribution channels
+- Thunar, Yazi, persistent clipboard history, screenshots, and USB automounting
+- Tokyo Night palette, Papirus icons, and JetBrainsMono Nerd Font
+
+## Requirements
+
+- An updated Debian 13 Stable (`trixie`) installation
+- A regular user with `sudo` access
+- An Internet connection
+- A working systemd user session
+- Approximately 7 GB of free space while Ghostty and Neovim are built
+- `amd64` or `arm64` hardware for the complete environment. Go supports more official architectures, but the complete Ghostty/Yazi installation is limited to these two.
+
+The project installs and configures `greetd` with the graphical `wlgreet` frontend. After reboot, authentication starts the prepared Sway session directly; no TTY command or desktop environment is required.
+
+## Installation
+
+```bash
+git clone <THIS-REPOSITORY-URL> debian-sway-dev
+cd debian-sway-dev
+./install.sh
+```
+
+Do not run the installer with `sudo`. It requests elevated privileges only for APT, `/usr/local`, the Brave repository, greetd configuration, and system services. Ghostty compilation, NVM, Node, Yazi, fonts, and user configuration run without elevation.
+
+After installation:
+
+1. Review `~/.config/sway/config.d/input.conf`. Its default keyboard layout is Portuguese (`pt`).
+2. Adapt `~/.config/sway/config.d/output.conf` using the output names reported by `swaymsg -t get_outputs`.
+3. Optionally make Zsh your login shell with `chsh -s "$(command -v zsh)"`.
+4. Reboot the machine.
+5. Enter your username and password in the Tokyo Night wlgreet screen. Sway starts automatically after authentication.
+
+### Safety and idempotency
+
+Every destination is compared before deployment. Identical files remain untouched. A different existing file is first copied to:
+
+```text
+~/.local/state/debian-sway-dev/backups/YYYYmmdd-HHMMSS/
+```
+
+Only then is it replaced atomically. The managed-file manifest lives at `~/.local/state/debian-sway-dev/installed-files.tsv`. The installer detects installed packages, current tool versions, and enabled services, so it is safe to run repeatedly.
+
+Existing system-level greetd files are backed up under `/var/backups/debian-sway-dev/` before replacement. The installer enables greetd for the next boot instead of starting it immediately, preventing a second display manager from disrupting the current graphical session.
+
+An existing Go tree is never deleted. During an upgrade, `/usr/local/go` moves to `/usr/local/go.backup.<timestamp>`. Ghostty is checked against the project's published Minisign signature, and Go is checked against its official SHA-256 digest.
+
+## Project layout
+
+```text
+.
+├── install.sh                  # installation orchestrator
+├── configs/
+│   ├── sway/config.d/          # appearance, bindings, input, output, and autostart
+│   ├── waybar/                 # config.jsonc and CSS
+│   ├── ghostty/                # terminal
+│   ├── greetd/                 # graphical Wayland login
+│   ├── mako/                   # notifications
+│   ├── nvim/                   # editor and plugin configuration
+│   ├── starship/               # Tokyo Night shell prompt
+│   ├── tmux/                   # multiplexer
+│   ├── wofi/                   # launcher
+│   └── zsh/                    # zshrc and zprofile
+├── scripts/
+│   ├── lib/                    # reusable installer modules
+│   ├── bin/                    # helpers deployed to ~/.local/bin
+│   ├── system/                 # system-level Sway session wrapper
+│   └── uninstall.sh            # conservative configuration removal
+├── wallpapers/                 # included Tokyo Night background
+└── assets/                     # desktop integration and official APT repository definitions
+```
+
+## Installed software
+
+Debian packages cover Sway, greetd/wlgreet, Waybar, Wofi, Mako, Zsh, fzf, zoxide, tmux, Git, lazygit, ripgrep, fd (`fdfind`), bat (`batcat`), eza, jq, btop, fastfetch, the C/C++ toolchain, Python, Thunar/GVFS, wl-clipboard, cliphist, grim/slurp/swappy, PipeWire, WirePlumber, pavucontrol, playerctl, NetworkManager, Blueman, BlueZ, mate-polkit, XDG portals, UPower, power-profiles-daemon, udisks2, udiskie, brightnessctl, Papirus, and nwg-look.
+
+The installer defines `fd` and `bat` aliases because Debian names those binaries `fdfind` and `batcat`.
+
+### Neovim is source-only
+
+The `neovim` Debian package is intentionally absent from the APT package list. `install.sh` explicitly calls `install_neovim_from_source`, which resolves the latest stable tag from the official `neovim/neovim` repository, clones that exact tag, builds it with `CMAKE_BUILD_TYPE=RelWithDebInfo`, verifies the resulting version, and runs the upstream `make install` target. The resulting editor is installed under `/usr/local`, which takes precedence over Debian's `/usr/bin` in the standard `PATH`.
+
+The source build is skipped only when `/usr/local/bin/nvim` matches the latest stable tag and `~/.local/state/debian-sway-dev/neovim-source-version` confirms it was installed by this project. An older Debian package may remain on disk, but it is never selected or installed by this project.
+
+Software outside Debian and its source:
+
+| Software | Installation method |
+|---|---|
+| Brave | Official Brave APT repository |
+| Bruno | Official Bruno APT repository on `amd64`; checksummed official release package on `arm64` |
+| Visual Studio Code | Official Microsoft APT repository |
+| DBeaver Community | Official DBeaver APT repository |
+| NVM | Latest tag from the official `nvm-sh/nvm` repository |
+| Node.js | Latest LTS resolved by NVM |
+| Go | Tarball and checksum from `go.dev` |
+| Neovim | Latest stable Git tag built locally with the official CMake/Make procedure and installed in `/usr/local` |
+| Ghostty | Signed `release.files.ghostty.org` tarball, built locally |
+| Yazi | Official `sxyazi/yazi` release binary |
+| Starship | Official installer targeting `~/.local/bin` |
+| JetBrainsMono Nerd Font | Official `ryanoasis/nerd-fonts` release |
+
+`nwg-look` is installed but does not apply a GTK theme automatically. Use it to select Papirus and a compatible Tokyo Night GTK theme if desired. The login screen, Sway, Waybar, Wofi, Mako, Ghostty, Starship, tmux, and Neovim already use the Tokyo Night palette.
+
+## Languages
+
+- **Node.js/TypeScript:** NVM loads from `.zshrc`; the installer runs `nvm install --lts`, updates npm, enables Corepack, and makes pnpm/Yarn available.
+- **Python:** `python3`, development headers, pip, venv, and pipx. pipx binaries live in `~/.local/bin`.
+- **Go:** `GOROOT=/usr/local/go`, `GOPATH=~/go`, and both binary directories are added to `PATH`.
+
+Global TypeScript packages are intentionally omitted. Prefer `corepack pnpm add -D typescript` inside each project for reproducible builds.
+
+## Sway keybindings
+
+`Super` means the Mod4 key.
+
+| Keybinding | Action |
+|---|---|
+| `Super + Enter` | Open Ghostty |
+| `Super + D` | Open Wofi |
+| `Super + B` | Open Brave on Wayland |
+| `Super + E` | Open Thunar |
+| `Super + Shift + Q` | Close the focused window |
+| `Super + Shift + C` | Reload Sway |
+| `Super + Shift + E` | Confirm and end the session |
+| `Super + L` | Lock the session |
+| `Super + H/J/K/L` | Move focus |
+| `Super + Shift + H/J/K/L` | Move the focused window |
+| `Super + 1…0` | Switch to workspace 1…10 |
+| `Super + Shift + 1…0` | Move a window to a workspace |
+| `Super + F` | Toggle fullscreen |
+| `Super + Shift + Space` | Toggle floating |
+| `Super + Space` | Switch tiled/floating focus |
+| `Super + Shift + -` | Send a window to the scratchpad |
+| `Super + -` | Show the scratchpad |
+| `Super + R` | Enter resize mode; `Esc` exits |
+| `Print` | Capture an area and copy it to the clipboard |
+| `Shift + Print` | Capture the active output |
+| `Super + Print` | Capture an area in Swappy |
+| Media keys | Volume, mute, microphone, and playback controls |
+| Brightness keys | Increase or decrease brightness by 5% |
+
+The tmux prefix is `Ctrl+A`. Follow it with `h/j/k/l` to navigate panes or `r` to reload the configuration.
+
+## Updating
+
+```bash
+git pull --ff-only
+./install.sh
+```
+
+This reapplies the current project configuration, installs missing external tools, and rebuilds Neovim when a newer stable upstream release is available. Update Debian packages separately:
+
+```bash
+sudo apt update
+sudo apt full-upgrade
+```
+
+The installer deliberately does not run `full-upgrade`, leaving that system-level decision under user control.
+
+## Removal
+
+Remove only managed files that still match the project copies:
+
+```bash
+./scripts/uninstall.sh
+```
+
+User-modified files remain in place. Backups, packages, and external tools are also preserved deliberately so they can be reviewed before manual removal.
+
+To remove the main Debian packages, inspect the simulation first and tailor the list to your system:
+
+```bash
+sudo apt-get --simulate remove greetd wlgreet sway waybar wofi mako brave-browser bruno code dbeaver-ce
+```
+
+The locally built Ghostty is not an APT package; its files are under `~/.local`. Source-built Neovim is installed under `/usr/local/bin/nvim` and `/usr/local/share/nvim`. NVM/Node live under `~/.nvm`, Yazi/Starship under `~/.local/bin`, the Nerd Font under `~/.local/share/fonts/JetBrainsMonoNerd`, and backups under `~/.local/state/debian-sway-dev`.
+
+## Diagnostics
+
+```bash
+bash -n install.sh scripts/lib/*.sh scripts/bin/* scripts/uninstall.sh
+sh -n scripts/system/debian-sway-session
+sway --validate --config ~/.config/sway/config
+jq empty ~/.config/waybar/config.jsonc
+command -v nvim                    # expected: /usr/local/bin/nvim
+nvim --version | head -n 1
+journalctl --user -b --unit pipewire --unit wireplumber
+systemctl status NetworkManager bluetooth power-profiles-daemon
+systemctl status greetd
+```
+
+If screen sharing does not appear in an application, fully close that application after starting Sway and verify the portal with `systemctl --user status xdg-desktop-portal-wlr`.
+
+## Official references
+
+- [Debian 13 trixie](https://www.debian.org/releases/trixie/)
+- [greetd manual](https://manpages.debian.org/trixie/greetd/greetd.1.en.html)
+- [Debian wlgreet package](https://packages.debian.org/trixie/wlgreet)
+- [Installing Brave on Linux](https://brave.com/linux/)
+- [Installing Bruno](https://docs.usebruno.com/v2/get-started/bruno-basics/download)
+- [Installing Visual Studio Code on Linux](https://code.visualstudio.com/docs/setup/linux)
+- [Downloading DBeaver Community](https://dbeaver.io/download/)
+- [NVM](https://github.com/nvm-sh/nvm)
+- [Official Go installation](https://go.dev/doc/install)
+- [Building Neovim](https://neovim.io/doc/build/)
+- [Building and installing Ghostty](https://ghostty.org/docs/install/build)
+- [Installing Yazi](https://yazi-rs.github.io/docs/installation/)
+- [Nerd Fonts](https://github.com/ryanoasis/nerd-fonts)

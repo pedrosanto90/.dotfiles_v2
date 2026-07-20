@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+deploy_tree() {
+  local source_root=$1 destination_root=$2 source relative mode
+  while IFS= read -r -d '' source; do
+    relative=${source#"${source_root}"/}
+    mode=0644
+    [[ -x ${source} ]] && mode=0755
+    deploy_file "${source}" "${destination_root}/${relative}" "${mode}"
+  done < <(find "${source_root}" -type f -print0 | sort -z)
+}
+
+deploy_configs() {
+  local directory
+  for directory in sway waybar mako ghostty wofi nvim; do
+    deploy_tree "${PROJECT_ROOT}/configs/${directory}" "${HOME}/.config/${directory}"
+  done
+  deploy_file "${PROJECT_ROOT}/configs/tmux/tmux.conf" "${HOME}/.tmux.conf"
+  deploy_file "${PROJECT_ROOT}/configs/starship/starship.toml" "${HOME}/.config/starship.toml"
+  deploy_file "${PROJECT_ROOT}/configs/code-flags.conf" "${HOME}/.config/code-flags.conf"
+  deploy_file "${PROJECT_ROOT}/configs/zsh/zshrc" "${HOME}/.zshrc"
+  deploy_file "${PROJECT_ROOT}/configs/zsh/zprofile" "${HOME}/.zprofile"
+  deploy_tree "${PROJECT_ROOT}/scripts/bin" "${HOME}/.local/bin"
+  deploy_tree "${PROJECT_ROOT}/wallpapers" "${HOME}/.local/share/wallpapers/debian-sway-dev"
+  deploy_file "${PROJECT_ROOT}/assets/brave-browser.desktop" "${HOME}/.local/share/applications/brave-browser.desktop"
+}
+
+configure_login_manager() {
+  log_info "Configuring the native Wayland graphical login manager (greetd + wlgreet)."
+  sudo_deploy_config "${PROJECT_ROOT}/configs/greetd/config.toml" /etc/greetd/config.toml
+  sudo_deploy_config "${PROJECT_ROOT}/configs/greetd/sway-config" /etc/greetd/sway-config
+  sudo_deploy_config "${PROJECT_ROOT}/configs/greetd/wlgreet.toml" /etc/greetd/wlgreet.toml
+  sudo_deploy_config "${PROJECT_ROOT}/scripts/system/debian-sway-session" \
+    /usr/local/bin/debian-sway-session 0755
+
+  # Do not start a second display manager inside the current graphical session.
+  # --force updates display-manager.service if another manager owned the alias.
+  "${SUDO[@]}" systemctl enable --force greetd.service
+  "${SUDO[@]}" systemctl set-default graphical.target
+}
+
+configure_browser() {
+  if command -v xdg-settings >/dev/null 2>&1; then
+    xdg-settings set default-web-browser brave-browser.desktop ||
+      log_warn "Could not set the browser outside a graphical session; run: xdg-settings set default-web-browser brave-browser.desktop"
+  fi
+  xdg-mime default brave-browser.desktop x-scheme-handler/http
+  xdg-mime default brave-browser.desktop x-scheme-handler/https
+  xdg-mime default brave-browser.desktop text/html
+}
+
+configure_shell() {
+  mkdir -p "${HOME}/.local/bin" "${HOME}/.local/share" "${HOME}/go/bin"
+  if command -v pipx >/dev/null 2>&1; then
+    PIPX_BIN_DIR="${HOME}/.local/bin" pipx ensurepath >/dev/null || true
+  fi
+  if command -v getent >/dev/null 2>&1 && [[ $(getent passwd "${USER}" | cut -d: -f7) != "$(command -v zsh)" ]]; then
+    log_warn "The default shell was not changed automatically. To use zsh: chsh -s $(command -v zsh)"
+  fi
+}

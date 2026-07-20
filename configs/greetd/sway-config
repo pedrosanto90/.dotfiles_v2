@@ -1,0 +1,6 @@
+# Minimal compositor session used only to display wlgreet.
+font pango:monospace 11
+output * bg #1a1b26 solid_color
+input type:keyboard xkb_layout pt
+seat * hide_cursor 3000
+exec "/usr/sbin/wlgreet; /usr/bin/swaymsg exit"

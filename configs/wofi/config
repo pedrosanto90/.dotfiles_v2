@@ -1,0 +1,10 @@
+show=drun
+width=520
+height=360
+location=center
+allow_images=true
+insensitive=true
+matching=fuzzy
+prompt=Run
+term=ghostty
+hide_scroll=true

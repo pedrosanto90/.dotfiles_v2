@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=Brave Web Browser
+GenericName=Web Browser
+Comment=Browse the Web natively on Wayland
+Exec=brave-browser --ozone-platform=wayland --enable-features=UseOzonePlatform %U
+Terminal=false
+Type=Application
+Icon=brave-browser
+Categories=Network;WebBrowser;
+MimeType=text/html;text/xml;application/xhtml+xml;application/xml;application/pdf;x-scheme-handler/http;x-scheme-handler/https;
+StartupNotify=true
+StartupWMClass=brave-browser

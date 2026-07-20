@@ -1,0 +1,63 @@
+{
+  "layer": "top",
+  "position": "top",
+  "height": 30,
+  "spacing": 4,
+  "modules-left": ["sway/workspaces", "sway/window"],
+  "modules-center": ["clock"],
+  "modules-right": ["cpu", "memory", "disk", "network", "bluetooth", "pulseaudio", "battery", "tray"],
+  "sway/workspaces": {
+    "disable-scroll": true,
+    "all-outputs": true,
+    "format": "{name}"
+  },
+  "sway/window": {
+    "max-length": 60,
+    "rewrite": { "(.*) — Brave": "  $1" }
+  },
+  "clock": {
+    "format": "  {:%H:%M}",
+    "format-alt": "  {:%A, %d %B %Y}",
+    "tooltip-format": "<tt><small>{calendar}</small></tt>"
+  },
+  "cpu": {
+    "format": "  {usage}%",
+    "interval": 5
+  },
+  "memory": {
+    "format": "  {percentage}%",
+    "interval": 5
+  },
+  "disk": {
+    "path": "/",
+    "format": "  {percentage_used}%",
+    "interval": 30
+  },
+  "network": {
+    "format-wifi": "  {signalStrength}%",
+    "format-ethernet": "󰈀  {ipaddr}",
+    "format-disconnected": "󰖪",
+    "tooltip-format": "{ifname}: {ipaddr}/{cidr}"
+  },
+  "bluetooth": {
+    "format": "",
+    "format-connected": " {num_connections}",
+    "format-disabled": "󰂲",
+    "on-click": "blueman-manager"
+  },
+  "pulseaudio": {
+    "format": "{icon} {volume}%",
+    "format-muted": "󰖁 muted",
+    "format-icons": { "default": ["", "", ""] },
+    "on-click": "pavucontrol",
+    "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+  },
+  "battery": {
+    "states": { "warning": 30, "critical": 15 },
+    "format": "{icon} {capacity}%",
+    "format-charging": "󰂄 {capacity}%",
+    "format-plugged": " {capacity}%",
+    "format-icons": ["󰁺", "󰁻", "󰁽", "󰁿", "󰂁", "󰁹"]
+  },
+  "tray": { "spacing": 8 }
+}

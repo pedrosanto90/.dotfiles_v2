@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+exec swaylock --daemonize --color 1a1b26ff --inside-color 292e42ee --ring-color 7aa2f7ff \
+  --key-hl-color 9ece6aff --line-color 00000000 --separator-color 00000000

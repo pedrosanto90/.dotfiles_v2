@@ -1,0 +1,8 @@
+# Debian Sway Dev — modular main configuration.
+# Edit files under config.d; validate with: sway --validate
+include ~/.config/sway/config.d/variables.conf
+include ~/.config/sway/config.d/appearance.conf
+include ~/.config/sway/config.d/input.conf
+include ~/.config/sway/config.d/output.conf
+include ~/.config/sway/config.d/bindings.conf
+include ~/.config/sway/config.d/autostart.conf
