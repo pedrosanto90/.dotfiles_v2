@@ -20,6 +20,7 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 - Thunar, Yazi, persistent clipboard history, screenshots, and USB automounting
 - Searchable Sway, tmux, and Neovim keybinding reference
 - Tokyo Night palette, Papirus icons, and JetBrainsMono Nerd Font
+- Tokyo Night GTK theme with dark appearance and Papirus Dark icons by default
 
 ## Requirements
 
@@ -117,11 +118,12 @@ Software outside Debian and its source:
 | Go | Official tarball from `go.dev` |
 | Neovim | Latest stable Git tag built locally with the official CMake/Make procedure and installed in `/usr/local` |
 | Ghostty | Pinned official `release.files.ghostty.org` tarball, built locally |
+| Tokyonight GTK | `Fausto-Korpsvart/Tokyonight-GTK-Theme`, installed for the current user |
 | Yazi | Official `sxyazi/yazi` release binary |
 | Starship | Official installer targeting `~/.local/bin` |
 | JetBrainsMono Nerd Font | Official `ryanoasis/nerd-fonts` release |
 
-`nwg-look` is installed but does not apply a GTK theme automatically. Use it to select Papirus and a compatible Tokyo Night GTK theme if desired. The login screen, Sway, Waybar, Wofi, Mako, Ghostty, Starship, tmux, and Neovim already use the Tokyo Night palette.
+The installer applies `Tokyonight-Dark` to GTK 3 and GTK 4 applications, requests the system-wide dark color scheme for the user, and selects Papirus Dark icons. `nwg-look` remains available for later visual adjustments. The login screen, Sway, Waybar, Wofi, Mako, Ghostty, Starship, tmux, and Neovim also use the Tokyo Night palette.
 
 ## Languages
 
@@ -164,7 +166,7 @@ Global TypeScript packages are intentionally omitted. Prefer `corepack pnpm add 
 | Media keys | Volume, mute, microphone, and playback controls |
 | Brightness keys | Increase or decrease brightness by 5% |
 
-The tmux prefix is `Ctrl+A`. Follow it with `h/j/k/l` to navigate panes or `r` to reload the configuration.
+The tmux prefix is `Ctrl+J`. Follow it with `h/j/k/l` to navigate panes, `r` to reload the configuration, or `f` to open the session selector. From the Zsh prompt, `Ctrl+F` opens the same selector directly.
 
 ### Searchable keybinding reference
 

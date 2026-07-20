@@ -244,6 +244,22 @@ install_ghostty() {
   (cd "${source_dir}" && "${zig_dir}/zig" build -p "${HOME}/.local" -Doptimize=ReleaseFast)
 }
 
+install_tokyonight_gtk_theme() {
+  local theme_dir="${HOME}/.local/share/themes/Tokyonight-Dark" source_dir
+  if [[ -f ${theme_dir}/gtk-3.0/gtk.css ]]; then
+    log_info "Tokyonight-Dark GTK theme is already installed."
+    return
+  fi
+
+  source_dir=$(mktemp -d "${CACHE_HOME}/tokyonight-gtk.XXXXXX")
+  git clone --depth 1 https://github.com/Fausto-Korpsvart/Tokyonight-GTK-Theme.git "${source_dir}"
+  (
+    cd "${source_dir}"
+    bash ./install.sh --dest "${HOME}/.local/share/themes" --name Tokyonight --color dark --libadwaita
+  )
+  [[ -f ${theme_dir}/gtk-3.0/gtk.css ]] || die "Tokyonight-Dark GTK theme installation failed."
+}
+
 install_nerd_font() {
   local font_dir="${HOME}/.local/share/fonts/JetBrainsMonoNerd" tag archive temp_dir
   if find "${font_dir}" -type f -name '*.ttf' -print -quit 2>/dev/null | grep -q .; then

@@ -37,6 +37,7 @@ main() {
   # The Debian neovim package must never be used by this project.
   install_neovim_from_source
   install_ghostty
+  install_tokyonight_gtk_theme
   install_nerd_font
 
   log_step "Deploy configurations with backups"
@@ -44,6 +45,7 @@ main() {
   configure_login_manager
   configure_browser
   configure_shell
+  configure_gtk_theme
 
   log_step "Enable services"
   enable_services

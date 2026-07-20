@@ -28,6 +28,9 @@ HISTSIZE=10000
 SAVEHIST=10000
 mkdir -p "${HISTFILE:h}"
 
+# Open the tmux session selector with Ctrl+F.
+bindkey -s '^f' 'tmux-se\n'
+
 alias v='nvim'
 alias g='git'
 alias lg='lazygit'

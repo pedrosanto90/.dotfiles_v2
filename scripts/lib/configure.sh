@@ -12,7 +12,7 @@ deploy_tree() {
 
 deploy_configs() {
   local directory
-  for directory in sway waybar mako ghostty wofi nvim; do
+  for directory in sway waybar mako ghostty wofi nvim gtk-3.0 gtk-4.0; do
     deploy_tree "${PROJECT_ROOT}/configs/${directory}" "${HOME}/.config/${directory}"
   done
   deploy_file "${PROJECT_ROOT}/configs/tmux/tmux.conf" "${HOME}/.tmux.conf"
@@ -65,5 +65,18 @@ configure_shell() {
     [[ $(getent passwd "${current_user}" | cut -d: -f7) == "${zsh_path}" ]] ||
       die "Could not set ${zsh_path} as the login shell for ${current_user}."
     log_info "Set ${zsh_path} as the login shell for ${current_user}."
+  fi
+}
+
+configure_gtk_theme() {
+  if command -v gsettings >/dev/null 2>&1; then
+    gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' ||
+      log_warn "Could not set the desktop dark color preference through GSettings."
+    gsettings set org.gnome.desktop.interface gtk-theme 'Tokyonight-Dark' ||
+      log_warn "Could not set the GTK theme through GSettings."
+    gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark' ||
+      log_warn "Could not set the icon theme through GSettings."
+  else
+    log_warn "gsettings is unavailable; GTK settings.ini files will still request the dark theme."
   fi
 }
