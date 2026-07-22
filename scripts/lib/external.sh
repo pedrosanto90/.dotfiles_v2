@@ -3,6 +3,49 @@
 readonly GHOSTTY_VERSION="1.3.1"
 readonly TOKYONIGHT_GTK_COMMIT="6c340e058e84c1975a038a8e5d1e384477225dc0"
 
+install_docker_engine() {
+  local architecture key_tmp sources_tmp repository_changed=0 package packages_missing=0
+  local -a conflicts=(docker.io docker-compose docker-doc podman-docker containerd runc)
+  local -a packages=(docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin)
+
+  for package in "${conflicts[@]}"; do
+    if dpkg-query -W -f='${db:Status-Abbrev}' "${package}" 2>/dev/null | grep -q '^ii '; then
+      die "Docker package conflict detected: ${package}. Remove the conflicting package before rerunning the installer."
+    fi
+  done
+
+  architecture=$(dpkg --print-architecture)
+  key_tmp=$(mktemp "${CACHE_HOME}/docker-key.XXXXXX")
+  sources_tmp=$(mktemp "${CACHE_HOME}/docker-sources.XXXXXX")
+  download 'https://download.docker.com/linux/debian/gpg' "${key_tmp}"
+  printf '%s\n' \
+    'Types: deb' \
+    'URIs: https://download.docker.com/linux/debian' \
+    'Suites: trixie' \
+    'Components: stable' \
+    "Architectures: ${architecture}" \
+    'Signed-By: /etc/apt/keyrings/docker.asc' >"${sources_tmp}"
+
+  cmp -s "${key_tmp}" /etc/apt/keyrings/docker.asc || repository_changed=1
+  cmp -s "${sources_tmp}" /etc/apt/sources.list.d/docker.sources || repository_changed=1
+  sudo_install_file "${key_tmp}" /etc/apt/keyrings/docker.asc 0644
+  sudo_install_file "${sources_tmp}" /etc/apt/sources.list.d/docker.sources 0644
+  for package in "${packages[@]}"; do
+    if ! dpkg-query -W -f='${db:Status-Abbrev}' "${package}" 2>/dev/null | grep -q '^ii '; then
+      packages_missing=1
+    fi
+  done
+  if ((repository_changed == 1 || packages_missing == 1)); then
+    "${SUDO[@]}" apt-get update
+  fi
+
+  if ((packages_missing == 0)); then
+    log_info "Docker Engine, CLI, Buildx, and Compose are already installed."
+    return
+  fi
+  "${SUDO[@]}" apt-get install --no-install-recommends --yes "${packages[@]}"
+}
+
 install_brave() {
   local key_tmp sources_tmp repository_changed=0
   key_tmp=$(mktemp "${CACHE_HOME}/brave-key.XXXXXX")

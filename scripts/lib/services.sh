@@ -22,7 +22,18 @@ enable_services() {
   enable_system_service power-profiles-daemon.service
   enable_system_service upower.service
   enable_system_service udisks2.service
+  enable_system_service containerd.service
+  enable_system_service docker.service
   enable_user_service pipewire.socket
   enable_user_service pipewire-pulse.socket
   enable_user_service wireplumber.service
+}
+
+verify_docker_installation() {
+  require_command docker
+  require_command sg
+  docker compose version >/dev/null
+  docker buildx version >/dev/null
+  sg docker -c 'docker info --format "Docker Engine {{.ServerVersion}} is ready"'
+  log_success "Docker Engine, CLI, Buildx, and Compose work without sudo."
 }

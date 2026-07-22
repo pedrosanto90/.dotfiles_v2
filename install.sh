@@ -27,6 +27,7 @@ main() {
   require_command jq
 
   log_step "Install software from official upstream sources"
+  install_docker_engine
   install_brave
   install_developer_gui_apps
   install_starship
@@ -46,9 +47,11 @@ main() {
   configure_browser
   configure_shell
   configure_gtk_theme
+  configure_docker_access
 
   log_step "Enable services"
   enable_services
+  verify_docker_installation
 
   log_success "Installation complete"
   printf '\nReboot, then sign in through the graphical wlgreet screen. Backups: %s\n' "${BACKUP_ROOT}"

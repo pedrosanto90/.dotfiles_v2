@@ -80,3 +80,17 @@ configure_gtk_theme() {
     log_warn "gsettings is unavailable; GTK settings.ini files will still request the dark theme."
   fi
 }
+
+configure_docker_access() {
+  local current_user
+  current_user=$(id -un)
+  if ! getent group docker >/dev/null 2>&1; then
+    "${SUDO[@]}" groupadd --system docker
+  fi
+  if ! id -nG "${current_user}" | tr ' ' '\n' | grep -qx docker; then
+    "${SUDO[@]}" usermod --append --groups docker "${current_user}"
+    log_info "Added ${current_user} to the docker group; the new membership applies after the next login."
+  else
+    log_info "${current_user} already belongs to the docker group."
+  fi
+}

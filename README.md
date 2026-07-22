@@ -11,6 +11,7 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 - Ghostty built from the official release tarball when unavailable in Debian
 - Framework-free Zsh with Starship, fzf, zoxide, and a small alias set
 - Latest stable Neovim built from official source, with a modular Tokyo Night configuration
+- Docker Engine with CLI, Buildx, and Compose; no Docker Desktop and no `sudo` for daily use
 - Node.js LTS through NVM, npm, Corepack, pnpm, and Yarn
 - Official stable Go toolchain and Python with venv, pip, and pipx
 - PipeWire/WirePlumber, NetworkManager, multi-protocol VPN support, Bluetooth, and PolicyKit
@@ -119,11 +120,14 @@ Software outside Debian and its source:
 | Neovim | Latest stable Git tag built locally with the official CMake/Make procedure and installed in `/usr/local` |
 | Ghostty | Pinned official `release.files.ghostty.org` tarball, built locally |
 | Tokyonight GTK | Pinned commit from `Fausto-Korpsvart/Tokyonight-GTK-Theme`, installed for the current user |
+| Docker | Official Docker APT repository; Engine, CLI, containerd, Buildx, and Compose plugin |
 | Yazi | Official `sxyazi/yazi` release binary |
 | Starship | Official installer targeting `~/.local/bin` |
 | JetBrainsMono Nerd Font | Official `ryanoasis/nerd-fonts` release |
 
 The installer applies `Tokyonight-Dark` to GTK 3 and GTK 4 applications by default and provides a Waybar button that switches GTK, icons, Waybar, Ghostty, and Neovim between the Tokyo Night light and dark variants. `nwg-look` remains available for later visual adjustments. The login screen, Sway, Wofi, Mako, Starship, and tmux also use the Tokyo Night palette.
+
+Docker Engine starts automatically at boot. The installer adds the current user to the `docker` group and verifies Engine, Buildx, and Compose through that group. The membership is visible to normal applications after the reboot requested at the end of installation. Membership of the `docker` group grants root-level control over the machine; only trusted users should be added to it.
 
 ## Languages
 
