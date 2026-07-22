@@ -20,7 +20,7 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 - Thunar, Yazi, persistent clipboard history, screenshots, and USB automounting
 - Searchable Sway, tmux, and Neovim keybinding reference
 - Tokyo Night palette, Papirus icons, and JetBrainsMono Nerd Font
-- Tokyo Night GTK theme with dark appearance and Papirus Dark icons by default
+- Synchronized Tokyo Night light/dark themes for GTK, Waybar, Ghostty, and Neovim
 
 ## Requirements
 
@@ -123,7 +123,7 @@ Software outside Debian and its source:
 | Starship | Official installer targeting `~/.local/bin` |
 | JetBrainsMono Nerd Font | Official `ryanoasis/nerd-fonts` release |
 
-The installer applies `Tokyonight-Dark` to GTK 3 and GTK 4 applications, requests the system-wide dark color scheme for the user, and selects Papirus Dark icons. `nwg-look` remains available for later visual adjustments. The login screen, Sway, Waybar, Wofi, Mako, Ghostty, Starship, tmux, and Neovim also use the Tokyo Night palette.
+The installer applies `Tokyonight-Dark` to GTK 3 and GTK 4 applications by default and provides a Waybar button that switches GTK, icons, Waybar, Ghostty, and Neovim between the Tokyo Night light and dark variants. `nwg-look` remains available for later visual adjustments. The login screen, Sway, Wofi, Mako, Starship, and tmux also use the Tokyo Night palette.
 
 ## Languages
 

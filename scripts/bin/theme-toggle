@@ -123,6 +123,21 @@ apply_mode() {
   mv -f -- "${temporary}" "${state_file}"
 }
 
+refresh_neovim() {
+  local socket socket_dir="${runtime_dir}/debian-sway-dev-nvim"
+  command -v nvim >/dev/null 2>&1 && [[ -d ${socket_dir} ]] || return 0
+
+  shopt -s nullglob
+  for socket in "${socket_dir}"/*.sock; do
+    if ! timeout 2 nvim --server "${socket}" \
+      --remote-expr 'luaeval("require(\"pedro.core.desktop-theme\").apply()")' \
+      >/dev/null 2>&1; then
+      rm -f -- "${socket}"
+    fi
+  done
+  shopt -u nullglob
+}
+
 stop_waybar() {
   local attempt
   pkill -TERM -x waybar 2>/dev/null || true
@@ -182,6 +197,7 @@ case ${1:-status} in
     flock -n 9 || exit 0
     mode=$(select_mode "$1")
     apply_mode "${mode}"
+    refresh_neovim
     restart_waybar
     ;;
   *)
