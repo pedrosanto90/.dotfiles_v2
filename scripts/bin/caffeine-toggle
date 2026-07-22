@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+readonly pid_file="${runtime_dir}/debian-sway-dev-caffeine.pid"
+readonly icon_off='󰛊'
+readonly icon_on='󰅶'
+
+is_active() {
+  local pid
+  [[ -r ${pid_file} ]] || return 1
+  read -r pid <"${pid_file}"
+  [[ ${pid} =~ ^[0-9]+$ ]] && kill -0 "${pid}" 2>/dev/null
+}
+
+refresh_waybar() {
+  pkill -RTMIN+8 -x waybar 2>/dev/null || true
+}
+
+enable_caffeine() {
+  is_active && return
+  rm -f -- "${pid_file}"
+
+  setsid systemd-inhibit \
+    --what=sleep:idle \
+    --who='Waybar caffeine' \
+    --why='Caffeine mode is keeping the session awake' \
+    --mode=block \
+    sleep infinity &
+  printf '%s\n' "$!" >"${pid_file}"
+
+  # Keep swayidle alive but pause its lock and suspend timers.
+  pkill -STOP -x swayidle 2>/dev/null || true
+}
+
+disable_caffeine() {
+  local pid=''
+  if [[ -r ${pid_file} ]]; then
+    read -r pid <"${pid_file}"
+  fi
+  if [[ ${pid} =~ ^[0-9]+$ ]]; then
+    # setsid gives the inhibitor and its sleep child a private process group.
+    kill -- "-${pid}" 2>/dev/null || kill "${pid}" 2>/dev/null || true
+  fi
+  rm -f -- "${pid_file}"
+  pkill -CONT -x swayidle 2>/dev/null || true
+}
+
+print_status() {
+  if is_active; then
+    printf '{"text":"%s","class":"active","tooltip":"Cafeína ativa — bloqueio automático e suspensão desativados"}\n' "${icon_on}"
+  else
+    # A stale pid file must not leave swayidle paused after an inhibitor crash.
+    if [[ -e ${pid_file} ]]; then
+      rm -f -- "${pid_file}"
+      pkill -CONT -x swayidle 2>/dev/null || true
+    fi
+    printf '{"text":"%s","class":"inactive","tooltip":"Cafeína desativada — clique para manter o computador acordado"}\n' "${icon_off}"
+  fi
+}
+
+case "${1:-status}" in
+  toggle)
+    if is_active; then
+      disable_caffeine
+    else
+      enable_caffeine
+    fi
+    refresh_waybar
+    ;;
+  status)
+    print_status
+    ;;
+  *)
+    printf 'Usage: %s [status|toggle]\n' "${0##*/}" >&2
+    exit 2
+    ;;
+esac

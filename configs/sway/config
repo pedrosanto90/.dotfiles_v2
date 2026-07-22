@@ -6,3 +6,7 @@ include ~/.config/sway/config.d/input.conf
 include ~/.config/sway/config.d/output.conf
 include ~/.config/sway/config.d/bindings.conf
 include ~/.config/sway/config.d/autostart.conf
+
+# Persistent monitor layout and workspace assignments managed by nwg-displays.
+include ~/.config/sway/outputs
+include ~/.config/sway/workspaces

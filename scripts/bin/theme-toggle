@@ -1,0 +1,191 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly state_home="${XDG_STATE_HOME:-${HOME}/.local/state}/debian-sway-dev"
+readonly runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+readonly state_file="${state_home}/theme"
+readonly lock_file="${runtime_dir}/debian-sway-dev-theme.lock"
+readonly themes_dir="${HOME}/.local/share/themes"
+readonly waybar_dir="${HOME}/.config/waybar"
+
+current_mode() {
+  local mode=''
+  if [[ -r ${state_file} ]]; then
+    read -r mode <"${state_file}"
+  fi
+  if [[ ${mode} == light || ${mode} == dark ]]; then
+    printf '%s\n' "${mode}"
+    return
+  fi
+
+  if command -v gsettings >/dev/null 2>&1; then
+    mode=$(gsettings get org.gnome.desktop.interface color-scheme 2>/dev/null || true)
+    [[ ${mode} == *prefer-light* ]] && mode=light || mode=dark
+  else
+    mode=dark
+  fi
+  printf '%s\n' "${mode}"
+}
+
+print_status() {
+  if [[ $(current_mode) == light ]]; then
+    printf '{"text":"%s","class":"light","tooltip":"Tema claro — clique para ativar o tema escuro"}\n' '󰖨'
+  else
+    printf '{"text":"%s","class":"dark","tooltip":"Tema escuro — clique para ativar o tema claro"}\n' '󰖔'
+  fi
+}
+
+notify_error() {
+  command -v notify-send >/dev/null 2>&1 &&
+    notify-send --urgency=critical 'Não foi possível mudar o tema' "$1" || true
+}
+
+write_gtk_settings() {
+  local destination=$1 theme=$2 icons=$3 prefer_dark=$4 temporary
+  mkdir -p "$(dirname -- "${destination}")"
+  temporary=$(mktemp "$(dirname -- "${destination}")/.settings.ini.XXXXXX")
+  printf '[Settings]\ngtk-theme-name=%s\ngtk-icon-theme-name=%s\ngtk-application-prefer-dark-theme=%s\n' \
+    "${theme}" "${icons}" "${prefer_dark}" >"${temporary}"
+  mv -f -- "${temporary}" "${destination}"
+}
+
+replace_symlink() {
+  local target=$1 link=$2 temporary
+  if [[ -e ${link} && ! -L ${link} ]]; then
+    printf 'Refusing to replace non-symlink path: %s\n' "${link}" >&2
+    return 1
+  fi
+  temporary="${link}.theme-toggle.$$"
+  ln -s -- "${target}" "${temporary}"
+  mv -Tf -- "${temporary}" "${link}"
+}
+
+apply_mode() {
+  local mode=$1 gtk_theme icon_theme prefer_dark color_scheme palette theme_dir temporary link
+  case ${mode} in
+    dark)
+      gtk_theme='Tokyonight-Dark'
+      icon_theme='Papirus-Dark'
+      prefer_dark=1
+      color_scheme='prefer-dark'
+      palette='colors-dark.css'
+      ;;
+    light)
+      gtk_theme='Tokyonight-Light'
+      icon_theme='Papirus-Light'
+      prefer_dark=0
+      color_scheme='prefer-light'
+      palette='colors-light.css'
+      ;;
+    *)
+      printf 'Unknown theme mode: %s\n' "${mode}" >&2
+      return 2
+      ;;
+  esac
+
+  theme_dir="${themes_dir}/${gtk_theme}"
+  [[ -f ${theme_dir}/gtk-3.0/gtk.css && -f ${theme_dir}/gtk-4.0/gtk.css ]] || {
+    notify_error "O tema ${gtk_theme} não está instalado."
+    return 1
+  }
+  [[ -f ${waybar_dir}/${palette} ]] || {
+    notify_error "A paleta ${palette} da Waybar não está instalada."
+    return 1
+  }
+  for link in \
+    "${HOME}/.config/gtk-4.0/assets" \
+    "${HOME}/.config/gtk-4.0/gtk.css" \
+    "${HOME}/.config/gtk-4.0/gtk-dark.css"; do
+    if [[ -e ${link} && ! -L ${link} ]]; then
+      notify_error "O caminho ${link} existe e não é uma ligação simbólica."
+      return 1
+    fi
+  done
+
+  write_gtk_settings "${HOME}/.config/gtk-3.0/settings.ini" "${gtk_theme}" "${icon_theme}" "${prefer_dark}"
+  write_gtk_settings "${HOME}/.config/gtk-4.0/settings.ini" "${gtk_theme}" "${icon_theme}" "${prefer_dark}"
+  replace_symlink "${theme_dir}/gtk-4.0/assets" "${HOME}/.config/gtk-4.0/assets"
+  replace_symlink "${theme_dir}/gtk-4.0/gtk.css" "${HOME}/.config/gtk-4.0/gtk.css"
+  replace_symlink "${theme_dir}/gtk-4.0/gtk-dark.css" "${HOME}/.config/gtk-4.0/gtk-dark.css"
+
+  if command -v gsettings >/dev/null 2>&1; then
+    gsettings set org.gnome.desktop.interface color-scheme "${color_scheme}" || true
+    gsettings set org.gnome.desktop.interface gtk-theme "${gtk_theme}" || true
+    gsettings set org.gnome.desktop.interface icon-theme "${icon_theme}" || true
+  fi
+
+  temporary=$(mktemp "${waybar_dir}/.colors.css.XXXXXX")
+  printf '@import "%s";\n' "${palette}" >"${temporary}"
+  mv -f -- "${temporary}" "${waybar_dir}/colors.css"
+  mkdir -p "${state_home}"
+  temporary=$(mktemp "${state_home}/.theme.XXXXXX")
+  printf '%s\n' "${mode}" >"${temporary}"
+  mv -f -- "${temporary}" "${state_file}"
+}
+
+stop_waybar() {
+  local attempt
+  pkill -TERM -x waybar 2>/dev/null || true
+  for attempt in {1..40}; do
+    pgrep -x waybar >/dev/null 2>&1 || return 0
+    sleep 0.05
+  done
+  pkill -KILL -x waybar 2>/dev/null || true
+  for attempt in {1..20}; do
+    pgrep -x waybar >/dev/null 2>&1 || return 0
+    sleep 0.05
+  done
+  return 1
+}
+
+restart_waybar() {
+  local attempt count
+  command -v swaymsg >/dev/null 2>&1 && [[ -n ${SWAYSOCK:-} ]] || {
+    notify_error 'Não existe uma sessão Sway ativa para reiniciar a Waybar.'
+    return 1
+  }
+
+  for attempt in 1 2; do
+    stop_waybar || break
+    swaymsg exec waybar >/dev/null
+    for _ in {1..60}; do
+      count=$(pgrep -xc waybar 2>/dev/null || true)
+      [[ ${count} == 1 ]] && return 0
+      [[ ${count} -gt 1 ]] && break
+      sleep 0.05
+    done
+  done
+
+  # Never leave duplicate bars behind when startup behaves unexpectedly.
+  stop_waybar || true
+  notify_error 'A Waybar não reiniciou com uma única instância.'
+  return 1
+}
+
+select_mode() {
+  local requested=$1 mode
+  if [[ ${requested} == toggle ]]; then
+    mode=$(current_mode)
+    [[ ${mode} == dark ]] && printf 'light\n' || printf 'dark\n'
+  else
+    printf '%s\n' "${requested}"
+  fi
+}
+
+case ${1:-status} in
+  status)
+    print_status
+    ;;
+  toggle | dark | light)
+    mkdir -p "${runtime_dir}"
+    exec 9>"${lock_file}"
+    flock -n 9 || exit 0
+    mode=$(select_mode "$1")
+    apply_mode "${mode}"
+    restart_waybar
+    ;;
+  *)
+    printf 'Usage: %s [status|toggle|dark|light]\n' "${0##*/}" >&2
+    exit 2
+    ;;
+esac

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 readonly DEBIAN_PACKAGES=(
-  sway swaybg swayidle swaylock waybar wofi mako-notifier greetd wlgreet
+  sway swaybg swayidle swaylock waybar wofi nwg-displays mako-notifier greetd wlgreet
   zsh fzf zoxide tmux
   git lazygit curl wget unzip zip jq ripgrep fd-find bat eza tree htop btop file fastfetch
   openssh-client build-essential pkg-config cmake make ninja-build gettext xz-utils
@@ -21,7 +21,7 @@ readonly DEBIAN_PACKAGES=(
   papirus-icon-theme nwg-look fontconfig libnotify-bin
   sassc gtk2-engines-murrine gnome-themes-extra
   libgtk-4-dev libgtk4-layer-shell-dev libadwaita-1-dev libxml2-utils
-  ca-certificates gnupg util-linux dbus-user-session libpam-systemd
+  ca-certificates gnupg util-linux procps dbus-user-session libpam-systemd
 )
 
 apt_update_once() {

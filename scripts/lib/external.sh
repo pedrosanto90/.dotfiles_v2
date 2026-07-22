@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 readonly GHOSTTY_VERSION="1.3.1"
+readonly TOKYONIGHT_GTK_COMMIT="6c340e058e84c1975a038a8e5d1e384477225dc0"
 
 install_brave() {
   local key_tmp sources_tmp repository_changed=0
@@ -245,19 +246,23 @@ install_ghostty() {
 }
 
 install_tokyonight_gtk_theme() {
-  local theme_dir="${HOME}/.local/share/themes/Tokyonight-Dark" source_dir
-  if [[ -f ${theme_dir}/gtk-3.0/gtk.css ]]; then
-    log_info "Tokyonight-Dark GTK theme is already installed."
+  local dark_theme_dir="${HOME}/.local/share/themes/Tokyonight-Dark"
+  local light_theme_dir="${HOME}/.local/share/themes/Tokyonight-Light" source_dir
+  if [[ -f ${dark_theme_dir}/gtk-3.0/gtk.css && -f ${light_theme_dir}/gtk-3.0/gtk.css ]]; then
+    log_info "Tokyonight light and dark GTK themes are already installed."
     return
   fi
 
   source_dir=$(mktemp -d "${CACHE_HOME}/tokyonight-gtk.XXXXXX")
-  git clone --depth 1 https://github.com/Fausto-Korpsvart/Tokyonight-GTK-Theme.git "${source_dir}"
-  (
-    cd "${source_dir}"
-    bash ./install.sh --dest "${HOME}/.local/share/themes" --name Tokyonight --color dark --libadwaita
-  )
-  [[ -f ${theme_dir}/gtk-3.0/gtk.css ]] || die "Tokyonight-Dark GTK theme installation failed."
+  git -C "${source_dir}" init --quiet
+  git -C "${source_dir}" remote add origin \
+    https://github.com/Fausto-Korpsvart/Tokyonight-GTK-Theme.git
+  git -C "${source_dir}" fetch --depth 1 origin "${TOKYONIGHT_GTK_COMMIT}"
+  git -C "${source_dir}" checkout --quiet --detach FETCH_HEAD
+  bash "${source_dir}/themes/install.sh" \
+    --dest "${HOME}/.local/share/themes" --name Tokyonight --color light dark --libadwaita
+  [[ -f ${dark_theme_dir}/gtk-3.0/gtk.css ]] || die "Tokyonight-Dark GTK theme installation failed."
+  [[ -f ${light_theme_dir}/gtk-3.0/gtk.css ]] || die "Tokyonight-Light GTK theme installation failed."
 }
 
 install_nerd_font() {

@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly LOCK='󰌾  Lock'
+readonly SUSPEND='󰒲  Suspend'
+readonly REBOOT='󰜉  Reboot'
+readonly POWEROFF='  Power off'
+
+selection=$(
+  printf '%s\n' "${LOCK}" "${SUSPEND}" "${REBOOT}" "${POWEROFF}" |
+    wofi --dmenu --insensitive --prompt 'Power' --width 360 --height 280
+) || exit 0
+
+case "${selection}" in
+  "${LOCK}")
+    "${HOME}/.local/bin/sway-lock"
+    ;;
+  "${SUSPEND}")
+    "${HOME}/.local/bin/sway-lock"
+    systemctl suspend
+    ;;
+  "${REBOOT}")
+    systemctl reboot
+    ;;
+  "${POWEROFF}")
+    systemctl poweroff
+    ;;
+esac

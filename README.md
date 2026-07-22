@@ -49,7 +49,7 @@ Do not run the installer with `sudo`. It requests elevated privileges only for A
 After installation:
 
 1. Review `~/.config/sway/config.d/input.conf`. Keyboards default to US and can switch to Brazilian ABNT2.
-2. Adapt `~/.config/sway/config.d/output.conf` using the output names reported by `swaymsg -t get_outputs`.
+2. Press `Super+Shift+M` to arrange monitors graphically with nwg-displays. Saved layouts and workspace assignments are restored automatically on login.
 3. Zsh is set as your login shell automatically; the change takes effect at the next login.
 4. Reboot the machine.
 5. Enter your username and password in the Tokyo Night wlgreet screen. Sway starts automatically after authentication.
@@ -118,7 +118,7 @@ Software outside Debian and its source:
 | Go | Official tarball from `go.dev` |
 | Neovim | Latest stable Git tag built locally with the official CMake/Make procedure and installed in `/usr/local` |
 | Ghostty | Pinned official `release.files.ghostty.org` tarball, built locally |
-| Tokyonight GTK | `Fausto-Korpsvart/Tokyonight-GTK-Theme`, installed for the current user |
+| Tokyonight GTK | Pinned commit from `Fausto-Korpsvart/Tokyonight-GTK-Theme`, installed for the current user |
 | Yazi | Official `sxyazi/yazi` release binary |
 | Starship | Official installer targeting `~/.local/bin` |
 | JetBrainsMono Nerd Font | Official `ryanoasis/nerd-fonts` release |
@@ -145,6 +145,9 @@ Global TypeScript packages are intentionally omitted. Prefer `corepack pnpm add 
 | `Super + B` | Open Brave on Wayland |
 | `Super + E` | Open Thunar |
 | `Super + Shift + N` | Open the network and VPN connection editor |
+| `Super + Shift + M` | Open the graphical monitor manager |
+| `Super + Ctrl + arrows` | Focus the monitor in that direction |
+| `Super + Ctrl + Shift + arrows` | Move the current workspace to another monitor |
 | `Super + Shift + Q` | Close the focused window |
 | `Super + Shift + C` | Reload Sway |
 | `Super + Shift + E` | Confirm and end the session |

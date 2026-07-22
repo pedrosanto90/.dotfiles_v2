@@ -1,4 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
-exec swaylock --daemonize --color 1a1b26ff --inside-color 292e42ee --ring-color 7aa2f7ff \
-  --key-hl-color 9ece6aff --line-color 00000000 --separator-color 00000000
+
+readonly lock_background="${HOME}/.local/share/wallpapers/debian-sway-dev/lock-screen.png"
+
+exec swaylock --daemonize --image "${lock_background}" --scaling fill \
+  --show-failed-attempts --indicator-idle-visible --indicator-radius 46 --indicator-thickness 7 \
+  --font 'JetBrainsMono Nerd Font' --font-size 18 --text-color c0caf5ff \
+  --inside-color 1a1b26cc --inside-clear-color 1a1b26cc --inside-ver-color 1a1b26cc \
+  --inside-wrong-color 1a1b26cc --ring-color 7aa2f7ff --ring-clear-color 7dcfffff \
+  --ring-ver-color bb9af7ff --ring-wrong-color f7768eff --key-hl-color 9ece6aff \
+  --bs-hl-color f7768eff --line-color 00000000 --separator-color 00000000
