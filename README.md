@@ -127,6 +127,8 @@ Software outside Debian and its source:
 
 The installer applies `Tokyonight-Dark` to GTK 3 and GTK 4 applications by default and provides a Waybar button that switches GTK, icons, Waybar, Ghostty, and Neovim between the Tokyo Night light and dark variants. `nwg-look` remains available for later visual adjustments. The login screen, Sway, Wofi, Mako, Starship, and tmux also use the Tokyo Night palette.
 
+VS Code follows the same system preference with `Tokyo Night Light` and `Tokyo Night`. The installer changes only the three VS Code settings that select and automatically switch the color theme; every other VS Code setting, keybinding, extension, and profile remains owned by Settings Sync after sign-in.
+
 Docker Engine starts automatically at boot. The installer adds the current user to the `docker` group and verifies Engine, Buildx, and Compose through that group. The membership is visible to normal applications after the reboot requested at the end of installation. Membership of the `docker` group grants root-level control over the machine; only trusted users should be added to it.
 
 ## Languages

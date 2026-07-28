@@ -18,6 +18,7 @@ return {
 				"javascript",
 				"typescript",
 				"tsx",
+        "jsc",
 				"css",
 				"scss",
 				"json",

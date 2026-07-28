@@ -81,6 +81,23 @@ configure_gtk_theme() {
   fi
 }
 
+configure_vscode_theme() {
+  local settings="${HOME}/.config/Code/User/settings.json" temporary mode=0644
+  temporary=$(mktemp "${CACHE_HOME}/vscode-settings.XXXXXX")
+  node "${PROJECT_ROOT}/scripts/lib/vscode-theme-settings.mjs" "${settings}" "${temporary}"
+  if [[ -f ${settings} ]] && cmp -s "${temporary}" "${settings}"; then
+    log_info "VS Code already follows the system light/dark theme."
+    return
+  fi
+
+  [[ ! -e ${settings} ]] || mode=$(stat -c '%a' "${settings}")
+  backup_file "${settings}"
+  mkdir -p "$(dirname -- "${settings}")"
+  chmod "${mode}" "${temporary}"
+  mv -f -- "${temporary}" "${settings}"
+  log_info "Configured only VS Code's system theme preferences; Settings Sync owns all other settings."
+}
+
 configure_docker_access() {
   local current_user
   current_user=$(id -un)

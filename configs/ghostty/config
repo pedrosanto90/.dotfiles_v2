@@ -1,6 +1,6 @@
 # Ghostty — understated Tokyo Night profile for development.
 font-family = JetBrainsMono Nerd Font
-font-size = 16
+font-size = 14
 theme = light:TokyoNight Day,dark:TokyoNight Night
 background-opacity = 0.80
 cursor-style = block

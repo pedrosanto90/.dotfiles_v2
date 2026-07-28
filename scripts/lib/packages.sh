@@ -22,6 +22,7 @@ readonly DEBIAN_PACKAGES=(
   sassc gtk2-engines-murrine gnome-themes-extra
   libgtk-4-dev libgtk4-layer-shell-dev libadwaita-1-dev libxml2-utils
   ca-certificates gnupg util-linux procps dbus-user-session libpam-systemd
+  tree-sitter-cli
 )
 
 apt_update_once() {
