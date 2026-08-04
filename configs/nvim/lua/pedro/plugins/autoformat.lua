@@ -16,14 +16,14 @@ return {
 			htmlangular = { "prettier" },
 			css = { "prettier" },
 			htmldjango = { "djlint" },
-			-- go = { "gofmt" },
+			go = { "gofmt" },
 			-- php = { "duster" },
 			json = { "prettier" },
 		},
-		-- format_on_save = {
-		-- 	-- These options will be passed to conform.format()
-		-- 	timeout_ms = 500,
-		-- 	lsp_format = "fallback",
-		-- },
+		format_on_save = {
+			-- These options will be passed to conform.format()
+			timeout_ms = 500,
+			lsp_format = "fallback",
+		},
 	},
 }

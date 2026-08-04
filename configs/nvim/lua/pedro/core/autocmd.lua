@@ -46,3 +46,10 @@ vim.api.nvim_create_autocmd("BufWritePost", {
       vim.fn.jobstart({"./mvnw", "compile", "-o", "-q"}, { detach = true })
     end,
   })
+
+-- format onsave
+vim.api.nvim_create_autocmd('BufWritePre', {
+  callback = function()
+    vim.lsp.buf.format({ async = false })
+  end,
+})
