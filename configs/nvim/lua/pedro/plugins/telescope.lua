@@ -21,6 +21,7 @@ return {
 
 		telescope.load_extension("fzf")
 		telescope.load_extension("themes")
+		telescope.load_extension("dbout")
 
 		telescope.setup({
 			defaults = {
@@ -53,6 +54,10 @@ return {
 			local word = vim.fn.expand("<cWORD>")
 			builtin.grep_string({ search = word })
 		end, { desc = "Find Connected Words under cursor" })
+
+		vim.keymap.set("n", "<leader>db", function()
+			require("telescope").extensions.dbout.dbout()
+		end, { desc = "Open the database connection picker" })
 
 		vim.keymap.set(
 			"n",
