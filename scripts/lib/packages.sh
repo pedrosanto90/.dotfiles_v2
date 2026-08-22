@@ -8,7 +8,7 @@ readonly DEBIAN_PACKAGES=(
   python3 python3-pip python3-venv python3-dev pipx
   thunar thunar-archive-plugin gvfs gvfs-backends
   wl-clipboard cliphist grim slurp swappy
-  pipewire pipewire-pulse wireplumber pavucontrol playerctl
+  pipewire pipewire-pulse wireplumber libspa-0.2-bluetooth pavucontrol playerctl
   network-manager network-manager-gnome nm-connection-editor
   network-manager-openvpn-gnome openvpn
   network-manager-openconnect-gnome openconnect
