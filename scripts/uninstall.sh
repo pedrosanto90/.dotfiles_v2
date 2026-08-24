@@ -11,6 +11,8 @@ while IFS=$'\t' read -r destination project_root; do
   [[ -n ${destination} ]] || continue
   relative=''
   case ${destination} in
+    "${HOME}/.config/Code/User/settings.json") relative='configs/vscode/settings.json' ;;
+    "${HOME}/.config/Code/User/keybindings.json") relative='configs/vscode/keybindings.json' ;;
     "${HOME}/.config/starship.toml") relative='configs/starship/starship.toml' ;;
     "${HOME}/.config/code-flags.conf") relative='configs/code-flags.conf' ;;
     "${HOME}/.config/"*) relative="configs/${destination#"${HOME}/.config/"}" ;;

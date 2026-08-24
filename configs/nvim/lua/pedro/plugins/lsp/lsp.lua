@@ -13,6 +13,7 @@
 -- @keybind neovim|LSP|Space T H|Toggle inlay hints
 return {
 	"neovim/nvim-lspconfig",
+	lazy = false,
 	dependencies = {
 		"mason-org/mason.nvim",
 		"mason-org/mason-lspconfig.nvim",
@@ -128,10 +129,11 @@ return {
 		for server_name, server_opts in pairs(servers) do
 			vim.lsp.config(server_name, server_opts)
 		end
+		vim.lsp.enable(vim.tbl_keys(servers))
 
 		require("mason-lspconfig").setup({
 			ensure_installed = vim.tbl_keys(servers),
-			automatic_enable = true,
+			automatic_enable = false,
 		})
 	end,
 }

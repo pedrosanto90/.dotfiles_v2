@@ -10,6 +10,7 @@ readonly DEBIAN_PACKAGES=(
   wl-clipboard cliphist grim slurp swappy
   pipewire pipewire-pulse wireplumber libspa-0.2-bluetooth pavucontrol playerctl
   network-manager network-manager-gnome nm-connection-editor
+  wpasupplicant iw iproute2 iputils-ping
   network-manager-openvpn-gnome openvpn
   network-manager-openconnect-gnome openconnect
   network-manager-l2tp-gnome network-manager-strongswan

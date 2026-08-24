@@ -1,0 +1,123 @@
+{
+  "editor.suggest.insertMode": "replace",
+  "terminal.integrated.fontFamily": "'JetBrainsMono Nerd Font Mono', monospace",
+  "editor.fontSize": 17,
+  "editor.linkedEditing": true,
+  "js/ts.updateImportsOnFileMove.enabled": "always",
+  "js/ts.tsserver.experimental.enableProjectDiagnostics": false,
+  "launch": {},
+  "[json]": {},
+  "breadcrumbs.enabled": false,
+  "update.showReleaseNotes": false,
+  "zenMode.hideLineNumbers": false,
+  "zenMode.hideStatusBar": false,
+  "editor.lineNumbers": "relative",
+  // "editor.cursorStyle":"block",
+  "vim.useSystemClipboard": true,
+  "editor.renderLineHighlight": "none",
+  "vim.leader": "<Space>",
+  "vim.hlsearch": false,
+  "vim.visualModeKeyBindings": [
+    // Stay in visual mode while indenting
+    {
+      "before": ["<"],
+      "commands": ["editor.action.outdentLines"],
+    },
+    {
+      "before": [">"],
+      "commands": ["editor.action.indentLines"],
+    },
+  ],
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "go.toolsManagement.autoUpdate": true,
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "editor.fontFamily": "JetBrainsMono Nerd Font Mono",
+  "editor.fontVariations": false,
+  "workbench.settings.applyToAllProfiles": [],
+  "explorer.fileNesting.patterns": {
+    "*.ts": "${capture}.js",
+    "*.js": "${capture}.js.map, ${capture}.min.js, ${capture}.d.ts",
+    "*.jsx": "${capture}.js",
+    "*.tsx": "${capture}.ts",
+    "tsconfig.json": "tsconfig.*.json",
+    "package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml, bun.lockb, bun.lock",
+    "*.sqlite": "${capture}.${extname}-*",
+    "*.db": "${capture}.${extname}-*",
+    "*.sqlite3": "${capture}.${extname}-*",
+    "*.db3": "${capture}.${extname}-*",
+    "*.sdb": "${capture}.${extname}-*",
+    "*.s3db": "${capture}.${extname}-*",
+  },
+  "editor.minimap.enabled": false,
+  "zenMode.centerLayout": false,
+  "database-client.autoSync": true,
+  "git.confirmSync": false,
+  "editor.cursorSurroundingLines": 20,
+  "github.copilot.nextEditSuggestions.enabled": true,
+  "diffEditor.ignoreTrimWhitespace": false,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "workbench.editor.empty.hint": "hidden",
+  "editor.formatOnSave": false,
+  "remote.SSH.path": "/usr/bin/ssh",
+  "remote.SSH.configFile": "~/.ssh/config",
+  "remote.SSH.useExecServer": false,
+  "chat.viewSessions.orientation": "stacked",
+  "workbench.iconTheme": "material-icon-theme",
+  "workbench.colorTheme": "Tokyo Night",
+  "redhat.telemetry.enabled": false,
+  "workbench.activityBar.location": "top",
+  "explorer.confirmDelete": false,
+  "workbench.activityBar.compact": true,
+  "vim.commandLineModeKeyBindings": [],
+  "git.suggestSmartCommit": false,
+  "editor.tokenColorCustomizations": {
+      "[Tokyo Night]": { // or "[Tokyo Night Storm]"
+          "textMateRules": [
+          {
+              "scope": [
+                  "comment keyword.codetag.notation",
+                  "comment.block.documentation keyword",
+                  "comment.block.documentation storage.type.class"
+              ],
+              "settings": {
+                  "foreground": "#bb9af7"
+              }
+          },
+          {
+              "scope": ["comment.block.documentation entity.name.type.instance"],
+              "settings": {
+                  "foreground": "#73daca",
+                  "fontStyle": "italic"
+              }
+          },
+          {
+              "scope": [
+              "comment.block.documentation entity.name.type punctuation.definition.bracket"
+              ],
+              "settings": {
+                  "foreground": "#bb9af7"
+              }
+          },
+          {
+              "scope": ["comment.block.documentation variable"],
+              "settings": {
+                  "foreground": "#e0af68",
+                  "fontStyle": "italic"
+              }
+          }
+          ]
+      }
+    },
+  "window.autoDetectColorScheme": true,
+  "workbench.preferredLightColorTheme": "Tokyo Night Light",
+  "workbench.preferredDarkColorTheme": "Tokyo Night Storm",
+  // "workbench.editor.showTabs": "none",
+  "workbench.editor.showTabs": "single",
+}

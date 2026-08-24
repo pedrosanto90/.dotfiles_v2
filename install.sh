@@ -47,7 +47,7 @@ main() {
   configure_browser
   configure_shell
   configure_gtk_theme
-  configure_vscode_theme
+  install_vscode_extensions
   configure_docker_access
 
   log_step "Enable services"

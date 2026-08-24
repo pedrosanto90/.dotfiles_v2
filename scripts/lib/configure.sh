@@ -18,6 +18,8 @@ deploy_configs() {
   deploy_file "${PROJECT_ROOT}/configs/tmux/tmux.conf" "${HOME}/.tmux.conf"
   deploy_file "${PROJECT_ROOT}/configs/starship/starship.toml" "${HOME}/.config/starship.toml"
   deploy_file "${PROJECT_ROOT}/configs/code-flags.conf" "${HOME}/.config/code-flags.conf"
+  deploy_file "${PROJECT_ROOT}/configs/vscode/settings.json" "${HOME}/.config/Code/User/settings.json"
+  deploy_file "${PROJECT_ROOT}/configs/vscode/keybindings.json" "${HOME}/.config/Code/User/keybindings.json"
   deploy_file "${PROJECT_ROOT}/configs/zsh/zshrc" "${HOME}/.zshrc"
   deploy_file "${PROJECT_ROOT}/configs/zsh/zprofile" "${HOME}/.zprofile"
   deploy_tree "${PROJECT_ROOT}/scripts/bin" "${HOME}/.local/bin"
@@ -81,21 +83,26 @@ configure_gtk_theme() {
   fi
 }
 
-configure_vscode_theme() {
-  local settings="${HOME}/.config/Code/User/settings.json" temporary mode=0644
-  temporary=$(mktemp "${CACHE_HOME}/vscode-settings.XXXXXX")
-  node "${PROJECT_ROOT}/scripts/lib/vscode-theme-settings.mjs" "${settings}" "${temporary}"
-  if [[ -f ${settings} ]] && cmp -s "${temporary}" "${settings}"; then
-    log_info "VS Code already follows the system light/dark theme."
-    return
-  fi
+install_vscode_extensions() {
+  local extension normalized
+  local -A installed=()
 
-  [[ ! -e ${settings} ]] || mode=$(stat -c '%a' "${settings}")
-  backup_file "${settings}"
-  mkdir -p "$(dirname -- "${settings}")"
-  chmod "${mode}" "${temporary}"
-  mv -f -- "${temporary}" "${settings}"
-  log_info "Configured only VS Code's system theme preferences; Settings Sync owns all other settings."
+  require_command code
+  while IFS= read -r extension; do
+    [[ -n ${extension} ]] || continue
+    normalized=${extension,,}
+    installed["${normalized}"]=1
+  done < <(code --list-extensions)
+
+  while IFS= read -r extension || [[ -n ${extension} ]]; do
+    [[ -n ${extension} && ${extension} != \#* ]] || continue
+    normalized=${extension,,}
+    if [[ -n ${installed["${normalized}"]:-} ]]; then
+      continue
+    fi
+    log_info "Installing VS Code extension: ${extension}"
+    code --install-extension "${extension}" || die "Could not install VS Code extension: ${extension}"
+  done <"${PROJECT_ROOT}/configs/vscode/extensions.txt"
 }
 
 configure_docker_access() {

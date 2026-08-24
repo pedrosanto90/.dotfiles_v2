@@ -18,6 +18,7 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 - Wayland portals for screen sharing, Flatpak, and Electron applications
 - Brave exclusively from its official repository, launched through Ozone/Wayland
 - Bruno REST client, Visual Studio Code, and DBeaver Community from official distribution channels
+- Repository-managed VS Code settings, keybindings, and extension inventory
 - Thunar, Yazi, persistent clipboard history, screenshots, and USB automounting
 - Searchable Sway, tmux, and Neovim keybinding reference
 - Tokyo Night palette, Papirus icons, and JetBrainsMono Nerd Font
@@ -83,6 +84,7 @@ An existing Go tree is never deleted. During an upgrade, `/usr/local/go` moves t
 │   ├── nvim/                   # editor and plugin configuration
 │   ├── starship/               # Tokyo Night shell prompt
 │   ├── tmux/                   # multiplexer
+│   ├── vscode/                 # settings, keybindings, and extensions
 │   ├── wofi/                   # launcher
 │   └── zsh/                    # zshrc and zprofile
 ├── scripts/
@@ -127,7 +129,7 @@ Software outside Debian and its source:
 
 The installer applies `Tokyonight-Dark` to GTK 3 and GTK 4 applications by default and provides a Waybar button that switches GTK, icons, Waybar, Ghostty, and Neovim between the Tokyo Night light and dark variants. `nwg-look` remains available for later visual adjustments. The login screen, Sway, Wofi, Mako, Starship, and tmux also use the Tokyo Night palette.
 
-VS Code follows the same system preference with `Tokyo Night Light` and `Tokyo Night`. The installer changes only the three VS Code settings that select and automatically switch the color theme; every other VS Code setting, keybinding, extension, and profile remains owned by Settings Sync after sign-in.
+VS Code follows the system preference with `Tokyo Night Light` and `Tokyo Night Storm`. Its complete user settings and keybindings are deployed from `configs/vscode`, with the same backup and idempotency guarantees as the other managed files. The installer also reads `configs/vscode/extensions.txt` and installs every missing extension from the Visual Studio Marketplace. Existing extensions remain under VS Code's own update policy, and no Settings Sync sign-in is required.
 
 Docker Engine starts automatically at boot. The installer adds the current user to the `docker` group and verifies Engine, Buildx, and Compose through that group. The membership is visible to normal applications after the reboot requested at the end of installation. Membership of the `docker` group grants root-level control over the machine; only trusted users should be added to it.
 
@@ -214,6 +216,28 @@ swaymsg -t get_inputs | jq '.[] | select(.type == "keyboard") | {identifier, nam
 
 If the reported Elora name differs, update `ELORA_KEYBOARD_NAME` in `~/.local/bin/sway-keyboard-layout` and its source file under `scripts/bin/`.
 
+## Wi-Fi ownership
+
+The installer explicitly installs the NetworkManager Wi-Fi backend and its diagnostic tools, then starts the global `wpa_supplicant.service` before NetworkManager. If `wlp1s0` is already managed by NetworkManager, no network configuration is changed.
+
+If Debian's existing `ifupdown` configuration leaves `wlp1s0` as `unmanaged`, the installer runs the guarded migration script at the end of installation, after all downloads have completed. The migration:
+
+- inspects the effective configuration without displaying passwords or PSKs;
+- creates metadata-preserving backups under `/var/backups`;
+- stops before any network interruption and requires the explicit confirmation `MIGRAR`;
+- removes only `wlp1s0` from `ifupdown`, preserving loopback and unrelated interfaces;
+- keeps the global `wpa_supplicant.service` and lets NetworkManager provide Wi-Fi, DHCP, routes, and DNS;
+- uses `nmcli --ask` if a Wi-Fi password must be entered again;
+- automatically rolls back if NetworkManager cannot take ownership of the interface.
+
+The migration refuses to run while the `Domatica` VPN is active. It never modifies that VPN profile and verifies its file checksum and metadata before and after the operation.
+
+To inspect the migration independently without changing the system:
+
+```bash
+sudo ./scripts/system/migrate-wlp1s0-to-networkmanager.sh --inspect
+```
+
 ## VPN support
 
 VPN connections are managed by NetworkManager and appear in `nm-applet` in the Waybar tray. Press `Super + Shift + N` to create, import, or edit a connection graphically. The installer adds official Debian plugins and clients for:
@@ -270,7 +294,7 @@ Remove only managed files that still match the project copies:
 ./scripts/uninstall.sh
 ```
 
-User-modified files remain in place. Backups, packages, and external tools are also preserved deliberately so they can be reviewed before manual removal.
+User-modified files remain in place. Backups, packages, external tools, and VS Code extensions are also preserved deliberately so they can be reviewed before manual removal.
 
 To remove the main Debian packages, inspect the simulation first and tailor the list to your system:
 
@@ -287,7 +311,7 @@ The locally built Ghostty is not an APT package; its files are under `~/.local`.
 ## Diagnostics
 
 ```bash
-bash -n install.sh scripts/lib/*.sh scripts/bin/* scripts/uninstall.sh
+bash -n install.sh scripts/lib/*.sh scripts/bin/* scripts/system/migrate-wlp1s0-to-networkmanager.sh scripts/uninstall.sh
 sh -n scripts/system/debian-sway-session
 scripts/bin/keybindings --root . --list
 sway --validate --config ~/.config/sway/config
