@@ -13,21 +13,7 @@
   "zenMode.hideStatusBar": false,
   "editor.lineNumbers": "relative",
   // "editor.cursorStyle":"block",
-  "vim.useSystemClipboard": true,
   "editor.renderLineHighlight": "none",
-  "vim.leader": "<Space>",
-  "vim.hlsearch": false,
-  "vim.visualModeKeyBindings": [
-    // Stay in visual mode while indenting
-    {
-      "before": ["<"],
-      "commands": ["editor.action.outdentLines"],
-    },
-    {
-      "before": [">"],
-      "commands": ["editor.action.indentLines"],
-    },
-  ],
   "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
@@ -126,7 +112,6 @@
   "workbench.activityBar.location": "top",
   "explorer.confirmDelete": false,
   "workbench.activityBar.compact": true,
-  "vim.commandLineModeKeyBindings": [],
   "git.suggestSmartCommit": false,
   "editor.tokenColorCustomizations": {
       "[Tokyo Night]": { // or "[Tokyo Night Storm]"
@@ -168,7 +153,8 @@
     },
   "window.autoDetectColorScheme": true,
   "workbench.preferredLightColorTheme": "Tokyo Night Light",
-  "workbench.preferredDarkColorTheme": "Tokyo Night Storm",
   // "workbench.editor.showTabs": "none",
   "workbench.editor.showTabs": "single",
+  "workbench.preferredDarkColorTheme": "Kanagawa",
+  "terminal.integrated.enableMultiLinePasteWarning": "never",
 }
