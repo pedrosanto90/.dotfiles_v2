@@ -17,7 +17,9 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 - PipeWire/WirePlumber, NetworkManager, multi-protocol VPN support, Bluetooth, and PolicyKit
 - Wayland portals for screen sharing, Flatpak, and Electron applications
 - Brave exclusively from its official repository, launched through Ozone/Wayland
+- Brave PWAs for Webex, Excalidraw, WhatsApp, Amália, Notion, Telegram, Spotify, and ChatGPT
 - Bruno REST client, Visual Studio Code, and DBeaver Community from official distribution channels
+- Evolution mail, calendar, contacts, and groupware
 - Repository-managed VS Code settings, keybindings, and extension inventory
 - Thunar, Yazi, persistent clipboard history, screenshots, and USB automounting
 - Searchable Sway, tmux, and Neovim keybinding reference
@@ -99,7 +101,7 @@ An existing Go tree is never deleted. During an upgrade, `/usr/local/go` moves t
 
 ## Installed software
 
-Debian packages cover Sway, greetd/wlgreet, Waybar, Wofi, Mako, Zsh, fzf, zoxide, tmux, Git, lazygit, ripgrep, fd (`fdfind`), bat (`batcat`), eza, jq, btop, fastfetch, the C/C++ toolchain, Python, Thunar/GVFS, wl-clipboard, cliphist, grim/slurp/swappy, PipeWire, WirePlumber, pavucontrol, playerctl, NetworkManager with VPN plugins, Blueman, BlueZ, lxpolkit, XDG portals, UPower, power-profiles-daemon, udisks2, udiskie, brightnessctl, Papirus, and nwg-look.
+Debian packages cover Sway, greetd/wlgreet, Waybar, Wofi, Mako, Zsh, fzf, zoxide, tmux, Git, lazygit, ripgrep, fd (`fdfind`), bat (`batcat`), eza, jq, btop, fastfetch, the C/C++ toolchain, Python, Thunar/GVFS, Evolution, wl-clipboard, cliphist, grim/slurp/swappy, PipeWire, WirePlumber, pavucontrol, playerctl, NetworkManager with VPN plugins, Blueman, BlueZ, lxpolkit, XDG portals, UPower, power-profiles-daemon, udisks2, udiskie, brightnessctl, Papirus, and nwg-look.
 
 The installer defines `fd` and `bat` aliases because Debian names those binaries `fdfind` and `batcat`.
 
@@ -128,6 +130,10 @@ Software outside Debian and its source:
 | Yazi | Official `sxyazi/yazi` release binary |
 | Starship | Official installer targeting `~/.local/bin` |
 | JetBrainsMono Nerd Font | Official `ryanoasis/nerd-fonts` release |
+
+The installer deploys `/etc/brave/policies/managed/debian-sway-dev-pwas.json` through `scripts/system/install-brave-pwas.sh`. Brave then installs Webex, Excalidraw, WhatsApp Web, Amália, Notion, Telegram Web, Spotify, and ChatGPT as windowed PWAs for each Brave profile. ChatGPT is not installed as a native Debian package. Restart Brave after the first installation so it can process the policy and create the application launchers.
+
+Because these are force-installed browser applications, Brave keeps them synchronized with the policy and does not offer an uninstall button for them. Remove the policy file first if the PWAs should later be removed through Brave.
 
 The installer applies `Tokyonight-Dark` to GTK 3 and GTK 4 applications by default. The theme button in Waybar opens a Wofi selector with Tokyo Night Dark/Light and Kanagawa Wave/Lotus. A selection updates GTK, Papirus icons, Waybar, Ghostty, and every running Neovim instance; right-clicking the button quickly toggles light/dark inside the active family. Existing `light` or `dark` state files are migrated transparently to Tokyo Night. `nwg-look` remains available for later visual adjustments. The login screen, Sway, Wofi, Mako, Starship, and tmux keep their static Tokyo Night palette.
 
@@ -302,18 +308,18 @@ To remove the main Debian packages, inspect the simulation first and tailor the 
 
 ```bash
 sudo apt-get --simulate remove \
-  greetd wlgreet sway waybar wofi mako-notifier brave-browser bruno code dbeaver-ce \
+  greetd wlgreet sway waybar wofi mako-notifier brave-browser bruno code dbeaver-ce evolution \
   network-manager-openvpn-gnome network-manager-openconnect-gnome \
   network-manager-l2tp-gnome network-manager-strongswan \
   network-manager-vpnc-gnome network-manager-sstp-gnome wireguard-tools
 ```
 
-The locally built Ghostty is not an APT package; its files are under `~/.local`. Source-built Neovim is installed under `/usr/local/bin/nvim` and `/usr/local/share/nvim`. NVM/Node live under `~/.nvm`, Yazi/Starship under `~/.local/bin`, the Nerd Font under `~/.local/share/fonts/JetBrainsMonoNerd`, and backups under `~/.local/state/debian-sway-dev`.
+The locally built Ghostty is not an APT package; its files are under `~/.local`. Source-built Neovim is installed under `/usr/local/bin/nvim` and `/usr/local/share/nvim`. NVM/Node live under `~/.nvm`, Yazi/Starship under `~/.local/bin`, the Nerd Font under `~/.local/share/fonts/JetBrainsMonoNerd`, and backups under `~/.local/state/debian-sway-dev`. The Brave PWA policy remains under `/etc/brave/policies/managed/debian-sway-dev-pwas.json` for separate review and removal.
 
 ## Diagnostics
 
 ```bash
-bash -n install.sh scripts/lib/*.sh scripts/bin/* scripts/system/migrate-wlp1s0-to-networkmanager.sh scripts/uninstall.sh
+bash -n install.sh scripts/lib/*.sh scripts/bin/* scripts/system/install-brave-pwas.sh scripts/system/migrate-wlp1s0-to-networkmanager.sh scripts/uninstall.sh
 sh -n scripts/system/debian-sway-session
 scripts/bin/keybindings --root . --list
 sway --validate --config ~/.config/sway/config

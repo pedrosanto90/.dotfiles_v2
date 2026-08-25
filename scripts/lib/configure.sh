@@ -42,6 +42,7 @@ configure_login_manager() {
 }
 
 configure_browser() {
+  require_command brave-browser
   if command -v xdg-settings >/dev/null 2>&1; then
     xdg-settings set default-web-browser brave-browser.desktop ||
       log_warn "Could not set the browser outside a graphical session; run: xdg-settings set default-web-browser brave-browser.desktop"
@@ -49,6 +50,7 @@ configure_browser() {
   xdg-mime default brave-browser.desktop x-scheme-handler/http
   xdg-mime default brave-browser.desktop x-scheme-handler/https
   xdg-mime default brave-browser.desktop text/html
+  "${PROJECT_ROOT}/scripts/system/install-brave-pwas.sh"
 }
 
 configure_shell() {

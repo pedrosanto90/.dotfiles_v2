@@ -6,7 +6,7 @@ readonly DEBIAN_PACKAGES=(
   git lazygit curl wget unzip zip jq ripgrep fd-find bat eza tree htop btop file fastfetch
   openssh-client build-essential pkg-config cmake make ninja-build gettext xz-utils
   python3 python3-pip python3-venv python3-dev pipx
-  thunar thunar-archive-plugin gvfs gvfs-backends
+  thunar thunar-archive-plugin gvfs gvfs-backends evolution
   wl-clipboard cliphist grim slurp swappy
   pipewire pipewire-pulse wireplumber libspa-0.2-bluetooth pavucontrol playerctl
   network-manager network-manager-gnome nm-connection-editor

@@ -1,0 +1,52 @@
+{
+  "WebAppInstallForceList": [
+    {
+      "url": "https://web.webex.com/",
+      "default_launch_container": "window",
+      "create_desktop_shortcut": true,
+      "custom_name": "Webex"
+    },
+    {
+      "url": "https://excalidraw.com/",
+      "default_launch_container": "window",
+      "create_desktop_shortcut": true,
+      "custom_name": "Excalidraw"
+    },
+    {
+      "url": "https://web.whatsapp.com/",
+      "default_launch_container": "window",
+      "create_desktop_shortcut": true,
+      "custom_name": "WhatsApp Web"
+    },
+    {
+      "url": "https://iaamalia.com/",
+      "default_launch_container": "window",
+      "create_desktop_shortcut": true,
+      "custom_name": "Amália"
+    },
+    {
+      "url": "https://www.notion.so/",
+      "default_launch_container": "window",
+      "create_desktop_shortcut": true,
+      "custom_name": "Notion"
+    },
+    {
+      "url": "https://web.telegram.org/",
+      "default_launch_container": "window",
+      "create_desktop_shortcut": true,
+      "custom_name": "Telegram Web"
+    },
+    {
+      "url": "https://open.spotify.com/",
+      "default_launch_container": "window",
+      "create_desktop_shortcut": true,
+      "custom_name": "Spotify"
+    },
+    {
+      "url": "https://chatgpt.com/",
+      "default_launch_container": "window",
+      "create_desktop_shortcut": true,
+      "custom_name": "ChatGPT"
+    }
+  ]
+}
