@@ -72,6 +72,7 @@
   "workbench.iconTheme": "material-icon-theme",
   "workbench.colorTheme": "Tokyo Night",
   "workbench.colorCustomizations": {
+    "[Tokyo Night][Tokyo Night Storm]": {
     "activityBar.background": "#000000",
     "activityBar.activeBackground": "#000000",
     "activityBarTop.background": "#000000",
@@ -119,6 +120,7 @@
     "titleBar.inactiveBackground": "#000000",
     "walkThrough.embeddedEditorBackground": "#000000",
     "welcomePage.background": "#000000"
+    }
   },
   "redhat.telemetry.enabled": false,
   "workbench.activityBar.location": "top",

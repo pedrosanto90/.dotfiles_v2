@@ -48,14 +48,14 @@ disable_caffeine() {
 
 print_status() {
   if is_active; then
-    printf '{"text":"%s","class":"active","tooltip":"Cafeína ativa — bloqueio automático e suspensão desativados"}\n' "${icon_on}"
+    printf '{"text":"%s","class":"active","tooltip":"Caffeine enabled — automatic locking and suspend disabled"}\n' "${icon_on}"
   else
     # A stale pid file must not leave swayidle paused after an inhibitor crash.
     if [[ -e ${pid_file} ]]; then
       rm -f -- "${pid_file}"
       pkill -CONT -x swayidle 2>/dev/null || true
     fi
-    printf '{"text":"%s","class":"inactive","tooltip":"Cafeína desativada — clique para manter o computador acordado"}\n' "${icon_off}"
+    printf '{"text":"%s","class":"inactive","tooltip":"Caffeine disabled — click to keep the computer awake"}\n' "${icon_off}"
   fi
 }
 

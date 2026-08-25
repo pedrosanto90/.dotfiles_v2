@@ -13,11 +13,13 @@ return {
 				floats = "transparent",
 			},
 			on_colors = function(colors)
-				colors.bg = "#000000"
-				colors.bg_dark = "#000000"
-				colors.bg_float = "#000000"
-				colors.bg_sidebar = "#000000"
-				colors.bg_statusline = "#000000"
+				if vim.o.background == "dark" then
+					colors.bg = "#000000"
+					colors.bg_dark = "#000000"
+					colors.bg_float = "#000000"
+					colors.bg_sidebar = "#000000"
+					colors.bg_statusline = "#000000"
+				end
 			end,
 			on_highlights = function(highlights, colors)
 				highlights.NormalFloat = { bg = colors.bg }
@@ -40,7 +42,7 @@ return {
 			},
 			colors = {
 				theme = {
-					all = {
+					wave = {
 						ui = {
 							bg = "#000000",
 							bg_dim = "#000000",

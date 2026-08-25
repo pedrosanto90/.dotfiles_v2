@@ -4,7 +4,6 @@ font-size = 14
 font-feature = -calt, -liga, -dlig
 theme = light:TokyoNight Day,dark:TokyoNight Night
 config-file = ?current-theme.conf
-background = #000000
 background-opacity = 0.80
 cursor-style = block
 cursor-style-blink = false

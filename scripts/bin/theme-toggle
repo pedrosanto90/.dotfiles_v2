@@ -76,7 +76,7 @@ print_status() {
   mode=$(theme_mode "${selected}")
   label=$(theme_label "${selected}")
   [[ ${mode} == light ]] && icon='󰖨' || icon='󰖔'
-  printf '{"text":"%s","class":"%s","tooltip":"%s\\nClique: escolher tema · Clique direito: alternar claro/escuro"}\n' \
+  printf '{"text":"%s","class":"%s","tooltip":"%s\\nClick: choose theme · Right-click: toggle light/dark"}\n' \
     "${icon}" "${family}-${mode}" "${label}"
 }
 
@@ -106,10 +106,13 @@ replace_symlink() {
 }
 
 write_ghostty_theme() {
-  local theme_pair=$1 temporary
+  local theme=$1 background=${2:-} temporary
   mkdir -p "${ghostty_dir}"
   temporary=$(mktemp "${ghostty_dir}/.current-theme.XXXXXX")
-  printf 'theme = %s\n' "${theme_pair}" >"${temporary}"
+  printf 'theme = %s\n' "${theme}" >"${temporary}"
+  if [[ -n ${background} ]]; then
+    printf 'background = %s\n' "${background}" >>"${temporary}"
+  fi
   if command -v ghostty >/dev/null 2>&1; then
     ghostty +validate-config --config-file="${temporary}" >/dev/null
   fi
@@ -124,7 +127,7 @@ write_waybar_palette() {
 }
 
 apply_theme() {
-  local selected=$1 gtk_theme icon_theme prefer_dark color_scheme palette theme_dir theme_pair temporary
+  local selected=$1 gtk_theme icon_theme prefer_dark color_scheme palette theme_dir ghostty_theme ghostty_background temporary
   case ${selected} in
     tokyonight-dark)
       gtk_theme='Tokyonight-Dark'
@@ -132,7 +135,8 @@ apply_theme() {
       prefer_dark=1
       color_scheme='prefer-dark'
       palette='colors-dark.css'
-      theme_pair='light:TokyoNight Day,dark:TokyoNight Night'
+      ghostty_theme='TokyoNight Night'
+      ghostty_background='#000000'
       ;;
     tokyonight-light)
       gtk_theme='Tokyonight-Light'
@@ -140,7 +144,8 @@ apply_theme() {
       prefer_dark=0
       color_scheme='prefer-light'
       palette='colors-light.css'
-      theme_pair='light:TokyoNight Day,dark:TokyoNight Night'
+      ghostty_theme='TokyoNight Day'
+      ghostty_background=''
       ;;
     kanagawa-dark)
       gtk_theme='Kanagawa-Dark'
@@ -148,7 +153,8 @@ apply_theme() {
       prefer_dark=1
       color_scheme='prefer-dark'
       palette='colors-kanagawa-dark.css'
-      theme_pair='light:Kanagawa Lotus,dark:Kanagawa Wave'
+      ghostty_theme='Kanagawa Wave'
+      ghostty_background='#000000'
       ;;
     kanagawa-light)
       gtk_theme='Kanagawa-Light'
@@ -156,7 +162,8 @@ apply_theme() {
       prefer_dark=0
       color_scheme='prefer-light'
       palette='colors-kanagawa-light.css'
-      theme_pair='light:Kanagawa Lotus,dark:Kanagawa Wave'
+      ghostty_theme='Kanagawa Lotus'
+      ghostty_background=''
       ;;
     *)
       printf 'Unknown theme: %s\n' "${selected}" >&2
@@ -188,7 +195,7 @@ apply_theme() {
   replace_symlink "${theme_dir}/gtk-4.0/assets" "${HOME}/.config/gtk-4.0/assets"
   replace_symlink "${theme_dir}/gtk-4.0/gtk.css" "${HOME}/.config/gtk-4.0/gtk.css"
   replace_symlink "${theme_dir}/gtk-4.0/gtk-dark.css" "${HOME}/.config/gtk-4.0/gtk-dark.css"
-  write_ghostty_theme "${theme_pair}"
+  write_ghostty_theme "${ghostty_theme}" "${ghostty_background}"
 
   if command -v gsettings >/dev/null 2>&1; then
     gsettings set org.gnome.desktop.interface color-scheme "${color_scheme}" || true
