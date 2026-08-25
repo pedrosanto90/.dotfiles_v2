@@ -18,8 +18,11 @@ deploy_configs() {
   deploy_file "${PROJECT_ROOT}/configs/tmux/tmux.conf" "${HOME}/.tmux.conf"
   deploy_file "${PROJECT_ROOT}/configs/starship/starship.toml" "${HOME}/.config/starship.toml"
   deploy_file "${PROJECT_ROOT}/configs/code-flags.conf" "${HOME}/.config/code-flags.conf"
+  deploy_file "${PROJECT_ROOT}/configs/code-flags.conf" "${HOME}/.config/codium-flags.conf"
   deploy_file "${PROJECT_ROOT}/configs/vscode/settings.json" "${HOME}/.config/Code/User/settings.json"
   deploy_file "${PROJECT_ROOT}/configs/vscode/keybindings.json" "${HOME}/.config/Code/User/keybindings.json"
+  deploy_file "${PROJECT_ROOT}/configs/vscode/settings.json" "${HOME}/.config/VSCodium/User/settings.json"
+  deploy_file "${PROJECT_ROOT}/configs/vscode/keybindings.json" "${HOME}/.config/VSCodium/User/keybindings.json"
   deploy_file "${PROJECT_ROOT}/configs/zsh/zshrc" "${HOME}/.zshrc"
   deploy_file "${PROJECT_ROOT}/configs/zsh/zprofile" "${HOME}/.zprofile"
   deploy_tree "${PROJECT_ROOT}/scripts/bin" "${HOME}/.local/bin"
@@ -98,6 +101,57 @@ install_vscode_extensions() {
     log_info "Installing VS Code extension: ${extension}"
     code --install-extension "${extension}" || die "Could not install VS Code extension: ${extension}"
   done <"${PROJECT_ROOT}/configs/vscode/extensions.txt"
+}
+
+migrate_vscode_extensions_to_vscodium() {
+  local extension normalized source target temporary
+  local vscode_extensions="${HOME}/.vscode/extensions"
+  local vscodium_extensions="${HOME}/.vscode-oss/extensions"
+  local metadata="${vscode_extensions}/extensions.json"
+
+  require_command codium
+  require_command jq
+  [[ -f ${metadata} ]] || die "VS Code extension metadata not found: ${metadata}"
+  mkdir -p "${vscodium_extensions}"
+
+  while IFS= read -r extension || [[ -n ${extension} ]]; do
+    [[ -n ${extension} && ${extension} != \#* ]] || continue
+    normalized=${extension,,}
+    source=$(jq -er --arg extension "${normalized}" \
+      'first(.[] | select((.identifier.id | ascii_downcase) == $extension)) | .location.path' \
+      "${metadata}") ||
+      die "VS Code extension from the inventory is not installed: ${extension}"
+    [[ -d ${source} ]] || die "VS Code extension directory not found: ${source}"
+    target="${vscodium_extensions}/$(basename -- "${source}")"
+    if [[ -d ${target} ]]; then
+      continue
+    fi
+    cp -a -- "${source}" "${target}"
+    log_info "Migrated VS Code extension to VSCodium: ${extension}"
+  done <"${PROJECT_ROOT}/configs/vscode/extensions.txt"
+
+  temporary=$(mktemp "${vscodium_extensions}/.extensions.XXXXXX.json")
+  jq --rawfile inventory "${PROJECT_ROOT}/configs/vscode/extensions.txt" \
+    --arg source "${vscode_extensions}" --arg destination "${vscodium_extensions}" '
+    ($inventory | split("\n") |
+      map(select(length > 0 and (startswith("#") | not)) | ascii_downcase)) as $wanted |
+    map(select((.identifier.id | ascii_downcase) as $id | $wanted | index($id))) |
+    map(
+      if (.location.path | startswith($source)) then
+        .location.path = ($destination + (.location.path | ltrimstr($source)))
+      else
+        .
+      end
+    )
+  ' "${metadata}" >"${temporary}"
+  if [[ -f ${vscodium_extensions}/extensions.json ]] &&
+    cmp -s "${temporary}" "${vscodium_extensions}/extensions.json"; then
+    rm -- "${temporary}"
+  else
+    backup_file "${vscodium_extensions}/extensions.json"
+    mv -f -- "${temporary}" "${vscodium_extensions}/extensions.json"
+    log_info "Synchronized the VSCodium extension index from VS Code."
+  fi
 }
 
 configure_docker_access() {

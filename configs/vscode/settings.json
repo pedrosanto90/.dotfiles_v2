@@ -157,4 +157,7 @@
   "workbench.editor.showTabs": "single",
   "workbench.preferredDarkColorTheme": "Kanagawa",
   "terminal.integrated.enableMultiLinePasteWarning": "never",
+  "extensions.experimental.affinity": {
+    "asvetliakov.vscode-neovim": 1
+  },
 }

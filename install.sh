@@ -49,6 +49,7 @@ main() {
   configure_shell
   configure_gtk_theme
   install_vscode_extensions
+  migrate_vscode_extensions_to_vscodium
   configure_docker_access
 
   log_step "Enable services"
