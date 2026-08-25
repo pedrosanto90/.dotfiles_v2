@@ -2,6 +2,7 @@
 
 readonly GHOSTTY_VERSION="1.3.1"
 readonly TOKYONIGHT_GTK_COMMIT="6c340e058e84c1975a038a8e5d1e384477225dc0"
+readonly KANAGAWA_GTK_COMMIT="55ca4ba249eba21f861b9866b71ab41bb8930318"
 
 install_docker_engine() {
   local architecture key_tmp sources_tmp repository_changed=0 package packages_missing=0
@@ -306,6 +307,29 @@ install_tokyonight_gtk_theme() {
     --dest "${HOME}/.local/share/themes" --name Tokyonight --color light dark --libadwaita
   [[ -f ${dark_theme_dir}/gtk-3.0/gtk.css ]] || die "Tokyonight-Dark GTK theme installation failed."
   [[ -f ${light_theme_dir}/gtk-3.0/gtk.css ]] || die "Tokyonight-Light GTK theme installation failed."
+}
+
+install_kanagawa_gtk_theme() {
+  local dark_theme_dir="${HOME}/.local/share/themes/Kanagawa-Dark"
+  local light_theme_dir="${HOME}/.local/share/themes/Kanagawa-Light" source_dir
+  if [[ -f ${dark_theme_dir}/gtk-3.0/gtk.css && -f ${dark_theme_dir}/gtk-4.0/gtk.css &&
+        -f ${light_theme_dir}/gtk-3.0/gtk.css && -f ${light_theme_dir}/gtk-4.0/gtk.css ]]; then
+    log_info "Kanagawa light and dark GTK themes are already installed."
+    return
+  fi
+
+  source_dir=$(mktemp -d "${CACHE_HOME}/kanagawa-gtk.XXXXXX")
+  git -C "${source_dir}" init --quiet
+  git -C "${source_dir}" remote add origin \
+    https://github.com/Fausto-Korpsvart/Kanagawa-GKT-Theme.git
+  git -C "${source_dir}" fetch --depth 1 origin "${KANAGAWA_GTK_COMMIT}"
+  git -C "${source_dir}" checkout --quiet --detach FETCH_HEAD
+  bash "${source_dir}/themes/install.sh" \
+    --dest "${HOME}/.local/share/themes" --name Kanagawa --color light dark
+  [[ -f ${dark_theme_dir}/gtk-3.0/gtk.css && -f ${dark_theme_dir}/gtk-4.0/gtk.css ]] ||
+    die "Kanagawa-Dark GTK theme installation failed."
+  [[ -f ${light_theme_dir}/gtk-3.0/gtk.css && -f ${light_theme_dir}/gtk-4.0/gtk.css ]] ||
+    die "Kanagawa-Light GTK theme installation failed."
 }
 
 install_nerd_font() {

@@ -39,6 +39,7 @@ main() {
   install_neovim_from_source
   install_ghostty
   install_tokyonight_gtk_theme
+  install_kanagawa_gtk_theme
   install_nerd_font
 
   log_step "Deploy configurations with backups"

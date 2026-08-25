@@ -5,24 +5,34 @@ local runtime_dir = vim.env.XDG_RUNTIME_DIR or ("/run/user/" .. vim.fn.getuid())
 local state_file = state_home .. "/debian-sway-dev/theme"
 local socket_dir = runtime_dir .. "/debian-sway-dev-nvim"
 
-local function read_mode()
+local themes = {
+	["tokyonight-dark"] = { background = "dark", colorscheme = "tokyonight-night" },
+	["tokyonight-light"] = { background = "light", colorscheme = "tokyonight-day" },
+	["kanagawa-dark"] = { background = "dark", colorscheme = "kanagawa-wave" },
+	["kanagawa-light"] = { background = "light", colorscheme = "kanagawa-lotus" },
+}
+
+local function read_theme()
 	local file = io.open(state_file, "r")
 	if not file then
-		return "dark"
+		return "tokyonight-dark"
 	end
-	local mode = vim.trim(file:read("*l") or "")
+	local selected = vim.trim(file:read("*l") or "")
 	file:close()
-	return mode == "light" and "light" or "dark"
+	if selected == "light" or selected == "dark" then
+		return "tokyonight-" .. selected
+	end
+	return themes[selected] and selected or "tokyonight-dark"
 end
 
 function M.apply()
-	local mode = read_mode()
-	local colorscheme = mode == "light" and "tokyonight-day" or "tokyonight-night"
-	vim.o.background = mode
-	if vim.g.colors_name ~= colorscheme then
-		vim.cmd.colorscheme(colorscheme)
+	local selected = read_theme()
+	local theme = themes[selected]
+	vim.o.background = theme.background
+	if vim.g.colors_name ~= theme.colorscheme then
+		vim.cmd.colorscheme(theme.colorscheme)
 	end
-	return mode
+	return selected
 end
 
 local function start_theme_server()

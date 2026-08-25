@@ -10,7 +10,7 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 - Native Wayland graphical login through greetd and wlgreet
 - Ghostty built from the official release tarball when unavailable in Debian
 - Framework-free Zsh with Starship, fzf, zoxide, and a small alias set
-- Latest stable Neovim built from official source, with a modular Tokyo Night configuration
+- Latest stable Neovim built from official source, with modular Tokyo Night and Kanagawa themes
 - Docker Engine with CLI, Buildx, and Compose; no Docker Desktop and no `sudo` for daily use
 - Node.js LTS through NVM, npm, Corepack, pnpm, and Yarn
 - Official stable Go toolchain and Python with venv, pip, and pipx
@@ -21,8 +21,8 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 - Repository-managed VS Code settings, keybindings, and extension inventory
 - Thunar, Yazi, persistent clipboard history, screenshots, and USB automounting
 - Searchable Sway, tmux, and Neovim keybinding reference
-- Tokyo Night palette, Papirus icons, and JetBrainsMono Nerd Font
-- Synchronized Tokyo Night light/dark themes for GTK, Waybar, Ghostty, and Neovim
+- Tokyo Night and Kanagawa palettes, Papirus icons, and JetBrainsMono Nerd Font
+- Synchronized light/dark theme families for GTK, Waybar, Ghostty, and Neovim
 
 ## Requirements
 
@@ -122,12 +122,13 @@ Software outside Debian and its source:
 | Neovim | Latest stable Git tag built locally with the official CMake/Make procedure and installed in `/usr/local` |
 | Ghostty | Pinned official `release.files.ghostty.org` tarball, built locally |
 | Tokyonight GTK | Pinned commit from `Fausto-Korpsvart/Tokyonight-GTK-Theme`, installed for the current user |
+| Kanagawa GTK | Pinned commit from `Fausto-Korpsvart/Kanagawa-GKT-Theme`, installed for the current user |
 | Docker | Official Docker APT repository; Engine, CLI, containerd, Buildx, and Compose plugin |
 | Yazi | Official `sxyazi/yazi` release binary |
 | Starship | Official installer targeting `~/.local/bin` |
 | JetBrainsMono Nerd Font | Official `ryanoasis/nerd-fonts` release |
 
-The installer applies `Tokyonight-Dark` to GTK 3 and GTK 4 applications by default and provides a Waybar button that switches GTK, icons, Waybar, Ghostty, and Neovim between the Tokyo Night light and dark variants. `nwg-look` remains available for later visual adjustments. The login screen, Sway, Wofi, Mako, Starship, and tmux also use the Tokyo Night palette.
+The installer applies `Tokyonight-Dark` to GTK 3 and GTK 4 applications by default. The theme button in Waybar opens a Wofi selector with Tokyo Night Dark/Light and Kanagawa Wave/Lotus. A selection updates GTK, Papirus icons, Waybar, Ghostty, and every running Neovim instance; right-clicking the button quickly toggles light/dark inside the active family. Existing `light` or `dark` state files are migrated transparently to Tokyo Night. `nwg-look` remains available for later visual adjustments. The login screen, Sway, Wofi, Mako, Starship, and tmux keep their static Tokyo Night palette.
 
 VS Code follows the system preference with `Tokyo Night Light` and `Tokyo Night Storm`. Its complete user settings and keybindings are deployed from `configs/vscode`, with the same backup and idempotency guarantees as the other managed files. The installer also reads `configs/vscode/extensions.txt` and installs every missing extension from the Visual Studio Marketplace. Existing extensions remain under VS Code's own update policy, and no Settings Sync sign-in is required.
 

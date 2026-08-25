@@ -7,32 +7,77 @@ readonly state_file="${state_home}/theme"
 readonly lock_file="${runtime_dir}/debian-sway-dev-theme.lock"
 readonly themes_dir="${HOME}/.local/share/themes"
 readonly waybar_dir="${HOME}/.config/waybar"
+readonly ghostty_dir="${HOME}/.config/ghostty"
+readonly ghostty_theme_file="${ghostty_dir}/current-theme.conf"
 
-current_mode() {
-  local mode=''
+is_theme() {
+  case ${1:-} in
+    tokyonight-dark | tokyonight-light | kanagawa-dark | kanagawa-light) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+current_theme() {
+  local selected=''
   if [[ -r ${state_file} ]]; then
-    read -r mode <"${state_file}"
+    read -r selected <"${state_file}"
   fi
-  if [[ ${mode} == light || ${mode} == dark ]]; then
-    printf '%s\n' "${mode}"
+  if is_theme "${selected}"; then
+    printf '%s\n' "${selected}"
+    return
+  fi
+
+  if [[ ${selected} == light || ${selected} == dark ]]; then
+    printf 'tokyonight-%s\n' "${selected}"
     return
   fi
 
   if command -v gsettings >/dev/null 2>&1; then
-    mode=$(gsettings get org.gnome.desktop.interface color-scheme 2>/dev/null || true)
-    [[ ${mode} == *prefer-light* ]] && mode=light || mode=dark
+    selected=$(gsettings get org.gnome.desktop.interface color-scheme 2>/dev/null || true)
+    [[ ${selected} == *prefer-light* ]] && selected=light || selected=dark
   else
-    mode=dark
+    selected=dark
   fi
-  printf '%s\n' "${mode}"
+  printf 'tokyonight-%s\n' "${selected}"
+}
+
+theme_family() {
+  printf '%s\n' "${1%-*}"
+}
+
+theme_mode() {
+  printf '%s\n' "${1##*-}"
+}
+
+theme_label() {
+  case $1 in
+    tokyonight-dark) printf 'Tokyo Night — Dark' ;;
+    tokyonight-light) printf 'Tokyo Night — Light' ;;
+    kanagawa-dark) printf 'Kanagawa — Wave (Dark)' ;;
+    kanagawa-light) printf 'Kanagawa — Lotus (Light)' ;;
+  esac
+}
+
+print_themes() {
+  theme_label tokyonight-dark
+  printf '\n'
+  theme_label tokyonight-light
+  printf '\n'
+  theme_label kanagawa-dark
+  printf '\n'
+  theme_label kanagawa-light
+  printf '\n'
 }
 
 print_status() {
-  if [[ $(current_mode) == light ]]; then
-    printf '{"text":"%s","class":"light","tooltip":"Tema claro — clique para ativar o tema escuro"}\n' '󰖨'
-  else
-    printf '{"text":"%s","class":"dark","tooltip":"Tema escuro — clique para ativar o tema claro"}\n' '󰖔'
-  fi
+  local selected family mode label icon
+  selected=$(current_theme)
+  family=$(theme_family "${selected}")
+  mode=$(theme_mode "${selected}")
+  label=$(theme_label "${selected}")
+  [[ ${mode} == light ]] && icon='󰖨' || icon='󰖔'
+  printf '{"text":"%s","class":"%s","tooltip":"%s\\nClique: escolher tema · Clique direito: alternar claro/escuro"}\n' \
+    "${icon}" "${family}-${mode}" "${label}"
 }
 
 notify_error() {
@@ -60,32 +105,68 @@ replace_symlink() {
   mv -Tf -- "${temporary}" "${link}"
 }
 
-apply_mode() {
-  local mode=$1 gtk_theme icon_theme prefer_dark color_scheme palette theme_dir temporary link
-  case ${mode} in
-    dark)
+write_ghostty_theme() {
+  local theme_pair=$1 temporary
+  mkdir -p "${ghostty_dir}"
+  temporary=$(mktemp "${ghostty_dir}/.current-theme.XXXXXX")
+  printf 'theme = %s\n' "${theme_pair}" >"${temporary}"
+  if command -v ghostty >/dev/null 2>&1; then
+    ghostty +validate-config --config-file="${temporary}" >/dev/null
+  fi
+  mv -f -- "${temporary}" "${ghostty_theme_file}"
+}
+
+write_waybar_palette() {
+  local palette=$1 temporary
+  temporary=$(mktemp "${waybar_dir}/.colors.css.XXXXXX")
+  printf '@import "%s";\n' "${palette}" >"${temporary}"
+  mv -f -- "${temporary}" "${waybar_dir}/colors.css"
+}
+
+apply_theme() {
+  local selected=$1 gtk_theme icon_theme prefer_dark color_scheme palette theme_dir theme_pair temporary
+  case ${selected} in
+    tokyonight-dark)
       gtk_theme='Tokyonight-Dark'
       icon_theme='Papirus-Dark'
       prefer_dark=1
       color_scheme='prefer-dark'
       palette='colors-dark.css'
+      theme_pair='light:TokyoNight Day,dark:TokyoNight Night'
       ;;
-    light)
+    tokyonight-light)
       gtk_theme='Tokyonight-Light'
       icon_theme='Papirus-Light'
       prefer_dark=0
       color_scheme='prefer-light'
       palette='colors-light.css'
+      theme_pair='light:TokyoNight Day,dark:TokyoNight Night'
+      ;;
+    kanagawa-dark)
+      gtk_theme='Kanagawa-Dark'
+      icon_theme='Papirus-Dark'
+      prefer_dark=1
+      color_scheme='prefer-dark'
+      palette='colors-kanagawa-dark.css'
+      theme_pair='light:Kanagawa Lotus,dark:Kanagawa Wave'
+      ;;
+    kanagawa-light)
+      gtk_theme='Kanagawa-Light'
+      icon_theme='Papirus-Light'
+      prefer_dark=0
+      color_scheme='prefer-light'
+      palette='colors-kanagawa-light.css'
+      theme_pair='light:Kanagawa Lotus,dark:Kanagawa Wave'
       ;;
     *)
-      printf 'Unknown theme mode: %s\n' "${mode}" >&2
+      printf 'Unknown theme: %s\n' "${selected}" >&2
       return 2
       ;;
   esac
 
   theme_dir="${themes_dir}/${gtk_theme}"
   [[ -f ${theme_dir}/gtk-3.0/gtk.css && -f ${theme_dir}/gtk-4.0/gtk.css ]] || {
-    notify_error "O tema ${gtk_theme} não está instalado."
+    notify_error "O tema ${gtk_theme} não está instalado. Executa novamente ./install.sh."
     return 1
   }
   [[ -f ${waybar_dir}/${palette} ]] || {
@@ -107,6 +188,7 @@ apply_mode() {
   replace_symlink "${theme_dir}/gtk-4.0/assets" "${HOME}/.config/gtk-4.0/assets"
   replace_symlink "${theme_dir}/gtk-4.0/gtk.css" "${HOME}/.config/gtk-4.0/gtk.css"
   replace_symlink "${theme_dir}/gtk-4.0/gtk-dark.css" "${HOME}/.config/gtk-4.0/gtk-dark.css"
+  write_ghostty_theme "${theme_pair}"
 
   if command -v gsettings >/dev/null 2>&1; then
     gsettings set org.gnome.desktop.interface color-scheme "${color_scheme}" || true
@@ -114,12 +196,10 @@ apply_mode() {
     gsettings set org.gnome.desktop.interface icon-theme "${icon_theme}" || true
   fi
 
-  temporary=$(mktemp "${waybar_dir}/.colors.css.XXXXXX")
-  printf '@import "%s";\n' "${palette}" >"${temporary}"
-  mv -f -- "${temporary}" "${waybar_dir}/colors.css"
+  write_waybar_palette "${palette}"
   mkdir -p "${state_home}"
   temporary=$(mktemp "${state_home}/.theme.XXXXXX")
-  printf '%s\n' "${mode}" >"${temporary}"
+  printf '%s\n' "${selected}" >"${temporary}"
   mv -f -- "${temporary}" "${state_file}"
 }
 
@@ -136,6 +216,15 @@ refresh_neovim() {
     fi
   done
   shopt -u nullglob
+}
+
+refresh_ghostty() {
+  command -v ghostty >/dev/null 2>&1 || return 0
+  if systemctl --user is-active --quiet app-com.mitchellh.ghostty.service 2>/dev/null; then
+    systemctl --user reload app-com.mitchellh.ghostty.service || true
+  else
+    pkill -USR2 -x ghostty 2>/dev/null || true
+  fi
 }
 
 stop_waybar() {
@@ -171,37 +260,92 @@ restart_waybar() {
     done
   done
 
-  # Never leave duplicate bars behind when startup behaves unexpectedly.
   stop_waybar || true
   notify_error 'A Waybar não reiniciou com uma única instância.'
   return 1
 }
 
 select_mode() {
-  local requested=$1 mode
-  if [[ ${requested} == toggle ]]; then
-    mode=$(current_mode)
-    [[ ${mode} == dark ]] && printf 'light\n' || printf 'dark\n'
-  else
-    printf '%s\n' "${requested}"
-  fi
+  local requested=$1 selected family mode
+  selected=$(current_theme)
+  family=$(theme_family "${selected}")
+  mode=$(theme_mode "${selected}")
+  case ${requested} in
+    toggle)
+      [[ ${mode} == dark ]] && mode=light || mode=dark
+      printf '%s-%s\n' "${family}" "${mode}"
+      ;;
+    dark | light)
+      printf '%s-%s\n' "${family}" "${requested}"
+      ;;
+  esac
+}
+
+choose_theme() {
+  local selection
+  command -v wofi >/dev/null 2>&1 || {
+    notify_error 'O Wofi não está instalado.'
+    return 1
+  }
+  selection=$(print_themes | wofi --dmenu --prompt 'Tema' --width 440 --height 260 || true)
+  case ${selection} in
+    'Tokyo Night — Dark') printf 'tokyonight-dark\n' ;;
+    'Tokyo Night — Light') printf 'tokyonight-light\n' ;;
+    'Kanagawa — Wave (Dark)') printf 'kanagawa-dark\n' ;;
+    'Kanagawa — Lotus (Light)') printf 'kanagawa-light\n' ;;
+    '') return 1 ;;
+    *) notify_error "Tema desconhecido: ${selection}"; return 1 ;;
+  esac
+}
+
+run_selection() {
+  local selected=$1
+  apply_theme "${selected}"
+  refresh_neovim
+  refresh_ghostty
+  restart_waybar
 }
 
 case ${1:-status} in
   status)
     print_status
     ;;
+  list)
+    print_themes
+    ;;
+  initialize)
+    mkdir -p "${runtime_dir}"
+    exec 9>"${lock_file}"
+    flock -n 9 || exit 0
+    if [[ -r ${state_file} ]]; then
+      selected=$(current_theme)
+    else
+      selected=tokyonight-dark
+    fi
+    apply_theme "${selected}"
+    ;;
+  menu)
+    selected=$(choose_theme) || exit 0
+    mkdir -p "${runtime_dir}"
+    exec 9>"${lock_file}"
+    flock -n 9 || exit 0
+    run_selection "${selected}"
+    ;;
   toggle | dark | light)
     mkdir -p "${runtime_dir}"
     exec 9>"${lock_file}"
     flock -n 9 || exit 0
-    mode=$(select_mode "$1")
-    apply_mode "${mode}"
-    refresh_neovim
-    restart_waybar
+    selected=$(select_mode "$1")
+    run_selection "${selected}"
+    ;;
+  tokyonight-dark | tokyonight-light | kanagawa-dark | kanagawa-light)
+    mkdir -p "${runtime_dir}"
+    exec 9>"${lock_file}"
+    flock -n 9 || exit 0
+    run_selection "$1"
     ;;
   *)
-    printf 'Usage: %s [status|toggle|dark|light]\n' "${0##*/}" >&2
+    printf 'Usage: %s [status|list|menu|toggle|dark|light|tokyonight-dark|tokyonight-light|kanagawa-dark|kanagawa-light]\n' "${0##*/}" >&2
     exit 2
     ;;
 esac

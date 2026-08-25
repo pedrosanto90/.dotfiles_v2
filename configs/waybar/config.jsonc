@@ -65,7 +65,8 @@
     "return-type": "json",
     "interval": 5,
     "signal": 9,
-    "on-click": "~/.local/bin/theme-toggle toggle"
+    "on-click": "~/.local/bin/theme-toggle menu",
+    "on-click-right": "~/.local/bin/theme-toggle toggle"
   },
   "custom/caffeine": {
     "exec": "~/.local/bin/caffeine-toggle status",

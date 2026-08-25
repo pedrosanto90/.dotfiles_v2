@@ -71,16 +71,9 @@ configure_shell() {
 }
 
 configure_gtk_theme() {
-  if command -v gsettings >/dev/null 2>&1; then
-    gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' ||
-      log_warn "Could not set the desktop dark color preference through GSettings."
-    gsettings set org.gnome.desktop.interface gtk-theme 'Tokyonight-Dark' ||
-      log_warn "Could not set the GTK theme through GSettings."
-    gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark' ||
-      log_warn "Could not set the icon theme through GSettings."
-  else
-    log_warn "gsettings is unavailable; GTK settings.ini files will still request the dark theme."
-  fi
+  local theme_command="${HOME}/.local/bin/theme-toggle"
+  [[ -x ${theme_command} ]] || die "Theme selector was not deployed: ${theme_command}"
+  "${theme_command}" initialize
 }
 
 install_vscode_extensions() {
