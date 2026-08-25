@@ -8,4 +8,5 @@ background-opacity = 0.80
 cursor-style = block
 cursor-style-blink = false
 shell-integration = zsh
+shell-integration-features = ssh-env,ssh-terminfo
 copy-on-select = clipboard
