@@ -18,9 +18,9 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 - Wayland portals for screen sharing, Flatpak, and Electron applications
 - Brave exclusively from its official repository, launched through Ozone/Wayland
 - Brave PWAs for Webex, Excalidraw, WhatsApp, Amália, Notion, Telegram, Spotify, and ChatGPT
-- Bruno REST client, Visual Studio Code, VSCodium, and DBeaver Community from official distribution channels
+- Bruno REST client, VSCodium, and DBeaver Community from official distribution channels
 - Evolution mail, calendar, contacts, and groupware
-- Shared repository-managed VS Code/VSCodium settings, keybindings, and extension inventory
+- Repository-managed VSCodium settings, keybindings, and extension inventory
 - Thunar, Yazi, persistent clipboard history, screenshots, and USB automounting
 - Searchable Sway, tmux, and Neovim keybinding reference
 - Tokyo Night and Kanagawa palettes, Papirus icons, and JetBrainsMono Nerd Font
@@ -87,7 +87,7 @@ An existing Go tree is never deleted. During an upgrade, `/usr/local/go` moves t
 │   ├── nvim/                   # editor and plugin configuration
 │   ├── starship/               # Tokyo Night shell prompt
 │   ├── tmux/                   # multiplexer
-│   ├── vscode/                 # settings, keybindings, and extensions
+│   ├── vscodium/               # settings, keybindings, and extensions
 │   ├── wofi/                   # launcher
 │   └── zsh/                    # zshrc and zprofile
 ├── scripts/
@@ -117,7 +117,6 @@ Software outside Debian and its source:
 |---|---|
 | Brave | Official Brave APT repository |
 | Bruno | Official Bruno APT repository on `amd64`; checksummed official release package on `arm64` |
-| Visual Studio Code | Official Microsoft APT repository |
 | VSCodium | Officially documented VSCodium APT repository |
 | DBeaver Community | Official DBeaver APT repository |
 | NVM | Latest tag from the official `nvm-sh/nvm` repository |
@@ -138,7 +137,7 @@ Because these are force-installed browser applications, Brave keeps them synchro
 
 The installer applies `Tokyonight-Dark` to GTK 3 and GTK 4 applications by default. The theme button in Waybar opens a Wofi selector with Tokyo Night Dark/Light and Kanagawa Wave/Lotus. A selection updates GTK, Papirus icons, Waybar, Ghostty, and every running Neovim instance; right-clicking the button quickly toggles light/dark inside the active family. Existing `light` or `dark` state files are migrated transparently to Tokyo Night. `nwg-look` remains available for later visual adjustments. The login screen, Sway, Wofi, Mako, Starship, and tmux keep their static Tokyo Night palette.
 
-VS Code and VSCodium follow the system preference with `Tokyo Night Light` and `Tokyo Night Storm`. Their user settings and keybindings are deployed from the same files under `configs/vscode`, with the same backup and idempotency guarantees as the other managed files. The installer reads `configs/vscode/extensions.txt` and installs every missing extension in VS Code from the Visual Studio Marketplace. It then copies each installed version that is missing from VSCodium into VSCodium's separate extension directory. This also preserves extensions absent from Open VSX without redirecting VSCodium to Microsoft's marketplace. Some proprietary Microsoft extensions can still reject non-Microsoft builds at runtime; VS Code remains installed as a fallback and no Settings Sync sign-in is required.
+VSCodium follows the system preference with `Tokyo Night Light` and `Tokyo Night Storm`. Its user settings and keybindings are deployed from `configs/vscodium`, with the same backup and idempotency guarantees as the other managed files. The installer reads `configs/vscodium/extensions.txt` and installs every missing extension from Open VSX. Extensions unavailable from Open VSX are reported without aborting the rest of the installation. Some proprietary Microsoft extensions can reject non-Microsoft builds at runtime, even when already present locally. The shell aliases `code` to `codium`, so existing terminal habits continue to work without installing Visual Studio Code. No Settings Sync sign-in is required.
 
 Docker Engine starts automatically at boot. The installer adds the current user to the `docker` group and verifies Engine, Buildx, and Compose through that group. The membership is visible to normal applications after the reboot requested at the end of installation. Membership of the `docker` group grants root-level control over the machine; only trusted users should be added to it.
 
@@ -303,13 +302,13 @@ Remove only managed files that still match the project copies:
 ./scripts/uninstall.sh
 ```
 
-User-modified files remain in place. Backups, packages, external tools, and VS Code/VSCodium extensions are also preserved deliberately so they can be reviewed before manual removal.
+User-modified files remain in place. Backups, packages, external tools, and VSCodium extensions are also preserved deliberately so they can be reviewed before manual removal.
 
 To remove the main Debian packages, inspect the simulation first and tailor the list to your system:
 
 ```bash
 sudo apt-get --simulate remove \
-  greetd wlgreet sway waybar wofi mako-notifier brave-browser bruno code codium dbeaver-ce evolution \
+  greetd wlgreet sway waybar wofi mako-notifier brave-browser bruno codium dbeaver-ce evolution \
   network-manager-openvpn-gnome network-manager-openconnect-gnome \
   network-manager-l2tp-gnome network-manager-strongswan \
   network-manager-vpnc-gnome network-manager-sstp-gnome wireguard-tools
@@ -346,9 +345,7 @@ If screen sharing does not appear in an application, fully close that applicatio
 - [Cisco Meraki Client VPN overview](https://documentation.meraki.com/SASE_and_SD-WAN/MX/Design_and_Configure/Configuration_Guides/Client_VPN/Client_VPN_Overview)
 - [Installing Brave on Linux](https://brave.com/linux/)
 - [Installing Bruno](https://docs.usebruno.com/v2/get-started/bruno-basics/download)
-- [Installing Visual Studio Code on Linux](https://code.visualstudio.com/docs/setup/linux)
 - [Installing VSCodium](https://vscodium.com/install)
-- [Migrating from Visual Studio Code to VSCodium](https://github.com/VSCodium/vscodium/blob/master/docs/migration.md)
 - [Downloading DBeaver Community](https://dbeaver.io/download/)
 - [NVM](https://github.com/nvm-sh/nvm)
 - [Official Go installation](https://go.dev/doc/install)

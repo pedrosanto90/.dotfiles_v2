@@ -104,29 +104,23 @@ install_bruno_arm64() {
 }
 
 install_developer_gui_apps() {
-  local microsoft_key vscodium_key dbeaver_key bruno_key repository_changed=0 package
-  local -a packages=(code codium dbeaver-ce)
+  local vscodium_key dbeaver_key bruno_key repository_changed=0 package
+  local -a packages=(codium dbeaver-ce)
 
-  log_info "Installing Bruno, Visual Studio Code, VSCodium, and DBeaver from official sources."
+  log_info "Installing Bruno, VSCodium, and DBeaver from official sources."
 
-  microsoft_key=$(mktemp "${CACHE_HOME}/microsoft-key.XXXXXX.gpg")
   vscodium_key=$(mktemp "${CACHE_HOME}/vscodium-key.XXXXXX.gpg")
   dbeaver_key=$(mktemp "${CACHE_HOME}/dbeaver-key.XXXXXX.gpg")
-  dearmor_key 'https://packages.microsoft.com/keys/microsoft.asc' "${microsoft_key}"
   dearmor_key 'https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/raw/master/pub.gpg' "${vscodium_key}"
   dearmor_key 'https://dbeaver.io/debs/dbeaver.gpg.key' "${dbeaver_key}"
 
-  cmp -s "${microsoft_key}" /usr/share/keyrings/microsoft.gpg || repository_changed=1
   cmp -s "${vscodium_key}" /usr/share/keyrings/vscodium-archive-keyring.gpg || repository_changed=1
   cmp -s "${dbeaver_key}" /usr/share/keyrings/dbeaver.gpg || repository_changed=1
-  cmp -s "${PROJECT_ROOT}/assets/apt/vscode.sources" /etc/apt/sources.list.d/vscode.sources || repository_changed=1
   cmp -s "${PROJECT_ROOT}/assets/apt/vscodium.list" /etc/apt/sources.list.d/vscodium.list || repository_changed=1
   cmp -s "${PROJECT_ROOT}/assets/apt/dbeaver.list" /etc/apt/sources.list.d/dbeaver.list || repository_changed=1
 
-  sudo_deploy_config "${microsoft_key}" /usr/share/keyrings/microsoft.gpg
   sudo_deploy_config "${vscodium_key}" /usr/share/keyrings/vscodium-archive-keyring.gpg
   sudo_deploy_config "${dbeaver_key}" /usr/share/keyrings/dbeaver.gpg
-  sudo_deploy_config "${PROJECT_ROOT}/assets/apt/vscode.sources" /etc/apt/sources.list.d/vscode.sources
   sudo_deploy_config "${PROJECT_ROOT}/assets/apt/vscodium.list" /etc/apt/sources.list.d/vscodium.list
   sudo_deploy_config "${PROJECT_ROOT}/assets/apt/dbeaver.list" /etc/apt/sources.list.d/dbeaver.list
 

@@ -11,13 +11,10 @@ while IFS=$'\t' read -r destination project_root; do
   [[ -n ${destination} ]] || continue
   relative=''
   case ${destination} in
-    "${HOME}/.config/Code/User/settings.json") relative='configs/vscode/settings.json' ;;
-    "${HOME}/.config/Code/User/keybindings.json") relative='configs/vscode/keybindings.json' ;;
-    "${HOME}/.config/VSCodium/User/settings.json") relative='configs/vscode/settings.json' ;;
-    "${HOME}/.config/VSCodium/User/keybindings.json") relative='configs/vscode/keybindings.json' ;;
+    "${HOME}/.config/VSCodium/User/settings.json") relative='configs/vscodium/settings.json' ;;
+    "${HOME}/.config/VSCodium/User/keybindings.json") relative='configs/vscodium/keybindings.json' ;;
     "${HOME}/.config/starship.toml") relative='configs/starship/starship.toml' ;;
-    "${HOME}/.config/code-flags.conf") relative='configs/code-flags.conf' ;;
-    "${HOME}/.config/codium-flags.conf") relative='configs/code-flags.conf' ;;
+    "${HOME}/.config/codium-flags.conf") relative='configs/codium-flags.conf' ;;
     "${HOME}/.config/"*) relative="configs/${destination#"${HOME}/.config/"}" ;;
     "${HOME}/.local/bin/"*) relative="scripts/bin/${destination#"${HOME}/.local/bin/"}" ;;
     "${HOME}/.local/share/wallpapers/debian-sway-dev/"*) relative="wallpapers/${destination#"${HOME}/.local/share/wallpapers/debian-sway-dev/"}" ;;
