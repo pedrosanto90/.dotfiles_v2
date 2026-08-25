@@ -13,7 +13,7 @@ window#waybar { background: @bar_background; color: @foreground; }
 #workspaces button.focused { color: @selected_foreground; background: @blue; }
 #workspaces button.urgent { color: @selected_foreground; background: @red; }
 #window { padding-left: 10px; color: @secondary_foreground; }
-#clock, #cpu, #memory, #disk, #network, #bluetooth, #pulseaudio, #battery, #tray, #custom-theme, #custom-caffeine, #custom-power {
+#clock, #cpu, #memory, #disk, #network, #bluetooth, #pulseaudio, #battery, #tray, #custom-clipboard, #custom-theme, #custom-caffeine, #custom-power {
   padding: 0 9px;
   margin: 4px 0;
   color: @foreground;
@@ -23,6 +23,7 @@ window#waybar { background: @bar_background; color: @foreground; }
 #pulseaudio { color: @yellow; }
 #battery.warning { color: @orange; }
 #battery.critical { color: @red; }
+#custom-clipboard { color: @blue; font-size: 15px; }
 #custom-theme { color: @purple; font-size: 15px; }
 #custom-caffeine { color: @muted; font-size: 15px; }
 #custom-caffeine.active { color: @yellow; }

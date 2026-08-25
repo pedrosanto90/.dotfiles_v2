@@ -287,7 +287,7 @@ choose_theme() {
     notify_error 'O Wofi não está instalado.'
     return 1
   }
-  selection=$(print_themes | wofi --dmenu --prompt 'Tema' --width 440 --height 260 || true)
+  selection=$(print_themes | wofi --dmenu --prompt 'Theme' --width 440 --height 260 || true)
   case ${selection} in
     'Tokyo Night — Dark') printf 'tokyonight-dark\n' ;;
     'Tokyo Night — Light') printf 'tokyonight-light\n' ;;

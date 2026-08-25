@@ -5,7 +5,7 @@
   "spacing": 4,
   "modules-left": ["sway/workspaces", "sway/window"],
   "modules-center": ["clock"],
-  "modules-right": ["cpu", "memory", "disk", "network", "bluetooth", "pulseaudio", "battery", "tray", "custom/theme", "custom/caffeine", "custom/power"],
+  "modules-right": ["cpu", "memory", "disk", "network", "bluetooth", "pulseaudio", "battery", "tray", "custom/clipboard", "custom/theme", "custom/caffeine", "custom/power"],
   "sway/workspaces": {
     "disable-scroll": true,
     "all-outputs": true,
@@ -60,6 +60,11 @@
     "format-icons": ["󰁺", "󰁻", "󰁽", "󰁿", "󰂁", "󰁹"]
   },
   "tray": { "spacing": 8 },
+  "custom/clipboard": {
+    "format": "",
+    "tooltip-format": "Clipboard history",
+    "on-click": "~/.local/bin/clipboard-history"
+  },
   "custom/theme": {
     "exec": "~/.local/bin/theme-toggle status",
     "return-type": "json",

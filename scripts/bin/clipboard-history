@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+readonly lock_file="${runtime_dir}/debian-sway-dev-clipboard.lock"
+
+notify_error() {
+  command -v notify-send >/dev/null 2>&1 &&
+    notify-send --urgency=critical 'Clipboard history' "$1" || true
+}
+
+for command in cliphist wl-copy wofi; do
+  command -v "${command}" >/dev/null 2>&1 || {
+    notify_error "Required command not found: ${command}"
+    exit 1
+  }
+done
+
+[[ -n ${WAYLAND_DISPLAY:-} ]] || {
+  notify_error 'A Wayland session is required.'
+  exit 1
+}
+
+mkdir -p "${runtime_dir}"
+exec 9>"${lock_file}"
+flock -n 9 || exit 0
+
+selection=$(cliphist list | wofi --dmenu --insensitive --prompt 'Clipboard' \
+  --width 760 --height 520 || true)
+[[ -n ${selection} ]] || exit 0
+
+# wl-copy forks to keep serving the selected data. Release and close the menu
+# lock first so its background process cannot inherit it indefinitely.
+flock -u 9
+exec 9>&-
+
+if ! printf '%s\n' "${selection}" | cliphist decode | wl-copy; then
+  notify_error 'Could not restore the selected clipboard entry.'
+  exit 1
+fi
