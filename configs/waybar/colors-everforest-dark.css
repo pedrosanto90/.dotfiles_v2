@@ -1,0 +1,13 @@
+@define-color bar_background rgba(45, 53, 59, 0.96);
+@define-color tooltip_background #343f44;
+@define-color foreground #d3c6aa;
+@define-color secondary_foreground #9da9a0;
+@define-color selected_foreground #2d353b;
+@define-color muted #859289;
+@define-color border #475258;
+@define-color blue #7fbbb3;
+@define-color green #a7c080;
+@define-color yellow #dbbc7f;
+@define-color orange #e69875;
+@define-color red #e67e80;
+@define-color purple #d699b6;

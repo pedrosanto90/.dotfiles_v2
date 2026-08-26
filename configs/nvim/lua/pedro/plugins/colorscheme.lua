@@ -68,4 +68,38 @@ return {
 			require("kanagawa").setup(opts)
 		end,
 	},
+	{
+		"rose-pine/neovim",
+		name = "rose-pine",
+		lazy = false,
+		priority = 1000,
+		opts = { variant = "main", dark_variant = "main" },
+		config = function(_, opts)
+			require("rose-pine").setup(opts)
+		end,
+	},
+	{
+		"sainnhe/everforest",
+		lazy = false,
+		priority = 1000,
+	},
+	{
+		"catppuccin/nvim",
+		name = "catppuccin",
+		lazy = false,
+		priority = 1000,
+		opts = { flavour = "mocha" },
+		config = function(_, opts)
+			require("catppuccin").setup(opts)
+		end,
+	},
+	{
+		"EdenEast/nightfox.nvim",
+		lazy = false,
+		priority = 1000,
+		opts = {},
+		config = function(_, opts)
+			require("nightfox").setup(opts)
+		end,
+	},
 }

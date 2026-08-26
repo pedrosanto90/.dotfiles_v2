@@ -40,6 +40,7 @@ main() {
   install_ghostty
   install_tokyonight_gtk_theme
   install_kanagawa_gtk_theme
+  install_additional_gtk_themes
   install_nerd_font
 
   log_step "Deploy configurations with backups"

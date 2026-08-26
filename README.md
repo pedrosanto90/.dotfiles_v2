@@ -9,7 +9,7 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 - Modular Sway configuration with Waybar, Wofi, Mako, locking, and idle handling
 - Native Wayland graphical login through greetd and wlgreet
 - Ghostty built from the official release tarball when unavailable in Debian
-- Framework-free Zsh with Starship, fzf, zoxide, and a small alias set
+- Framework-free Zsh with Starship, fzf, zoxide, GitHub CLI, and a small alias set
 - Latest stable Neovim built from official source, with modular Tokyo Night and Kanagawa themes
 - Docker Engine with CLI, Buildx, and Compose; no Docker Desktop and no `sudo` for daily use
 - Node.js LTS through NVM, npm, Corepack, pnpm, and Yarn
@@ -135,9 +135,9 @@ The installer deploys `/etc/brave/policies/managed/debian-sway-dev-pwas.json` th
 
 Because these are force-installed browser applications, Brave keeps them synchronized with the policy and does not offer an uninstall button for them. Remove the policy file first if the PWAs should later be removed through Brave.
 
-The installer applies `Tokyonight-Dark` to GTK 3 and GTK 4 applications by default. The theme button in Waybar opens a Wofi selector with Tokyo Night Dark/Light and Kanagawa Wave/Lotus. A selection updates GTK, Papirus icons, Waybar, Ghostty, and every running Neovim instance; right-clicking the button quickly toggles light/dark inside the active family. Existing `light` or `dark` state files are migrated transparently to Tokyo Night. `nwg-look` remains available for later visual adjustments. The login screen, Sway, Wofi, Mako, Starship, and tmux keep their static Tokyo Night palette.
+The installer applies `Tokyonight-Dark` to GTK 3 and GTK 4 applications by default. The theme button in Waybar opens a Wofi selector with Tokyo Night Dark/Light, Kanagawa Wave/Lotus, Rosé Pine, Everforest Dark, Catppuccin Mocha, and Nightfox. A selection updates GTK, Papirus icons, Waybar, Ghostty, tmux, VSCodium, and every running Neovim instance. Right-clicking the button quickly toggles light/dark inside families that provide both modes; dark-only families remain dark. Existing `light` or `dark` state files are migrated transparently to Tokyo Night. `nwg-look` remains available for later visual adjustments. The login screen, Sway, Wofi, Mako, and Starship keep their static Tokyo Night palette.
 
-VSCodium follows the system preference with `Tokyo Night Light` and `Tokyo Night Storm`. Its user settings and keybindings are deployed from `configs/vscodium`, with the same backup and idempotency guarantees as the other managed files. The installer reads `configs/vscodium/extensions.txt` and installs every missing extension from Open VSX. Extensions unavailable from Open VSX are reported without aborting the rest of the installation. Some proprietary Microsoft extensions can reject non-Microsoft builds at runtime, even when already present locally. The shell aliases `code` to `codium`, so existing terminal habits continue to work without installing Visual Studio Code. No Settings Sync sign-in is required.
+The theme selector writes the matching theme directly to VSCodium, so family and mode changes remain reliable under Sway even when automatic desktop-theme detection is unavailable. Only Tokyo Night's dark variants enforce a black application background; every other family keeps its original palette. Its user settings and keybindings are deployed from `configs/vscodium`, with the same backup and idempotency guarantees as the other managed files. The installer reads `configs/vscodium/extensions.txt` and installs every missing extension from Open VSX. Extensions unavailable from Open VSX are reported without aborting the rest of the installation. Some proprietary Microsoft extensions can reject non-Microsoft builds at runtime, even when already present locally. The shell aliases `code` to `codium`, so existing terminal habits continue to work without installing Visual Studio Code. No Settings Sync sign-in is required.
 
 Docker Engine starts automatically at boot. The installer adds the current user to the `docker` group and verifies Engine, Buildx, and Compose through that group. The membership is visible to normal applications after the reboot requested at the end of installation. Membership of the `docker` group grants root-level control over the machine; only trusted users should be added to it.
 
@@ -185,7 +185,7 @@ Global TypeScript packages are intentionally omitted. Prefer `corepack pnpm add 
 | Media keys | Volume, mute, microphone, and playback controls |
 | Brightness keys | Increase or decrease brightness by 5% |
 
-The tmux prefix is `Ctrl+J`. Follow it with `h/j/k/l` to navigate panes, `r` to reload the configuration, or `f` to open the session selector. From the Zsh prompt, `Ctrl+F` opens the same selector directly.
+The tmux prefix is `Ctrl+J`. Follow it with `h/j/k/l` to navigate panes, `r` to reload the configuration, or `f` to open the session selector. Its status bar, messages, selection mode, window states, and pane borders follow the active system palette automatically. From the Zsh prompt, `Ctrl+F` opens the same selector directly.
 
 ### Searchable keybinding reference
 

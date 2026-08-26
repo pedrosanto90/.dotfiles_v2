@@ -56,7 +56,7 @@
   "remote.SSH.useExecServer": false,
   "chat.viewSessions.orientation": "stacked",
   "workbench.iconTheme": "material-icon-theme",
-  "workbench.colorTheme": "Tokyo Night",
+  "workbench.colorTheme": "Kanagawa Wave",
   "workbench.colorCustomizations": {
     "[Tokyo Night][Tokyo Night Storm]": {
     "activityBar.background": "#000000",
@@ -151,11 +151,11 @@
           ]
       }
     },
-  "window.autoDetectColorScheme": true,
+  "window.autoDetectColorScheme": false,
   "workbench.preferredLightColorTheme": "Tokyo Night Light",
   // "workbench.editor.showTabs": "none",
   "workbench.editor.showTabs": "single",
-  "workbench.preferredDarkColorTheme": "Kanagawa",
+  "workbench.preferredDarkColorTheme": "Tokyo Night Storm",
   "terminal.integrated.enableMultiLinePasteWarning": "never",
   "extensions.experimental.affinity": {
     "asvetliakov.vscode-neovim": 1

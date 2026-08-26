@@ -9,10 +9,14 @@ readonly themes_dir="${HOME}/.local/share/themes"
 readonly waybar_dir="${HOME}/.config/waybar"
 readonly ghostty_dir="${HOME}/.config/ghostty"
 readonly ghostty_theme_file="${ghostty_dir}/current-theme.conf"
+readonly tmux_dir="${HOME}/.config/tmux"
+readonly tmux_theme_file="${tmux_dir}/current-theme.conf"
+readonly vscodium_settings="${HOME}/.config/VSCodium/User/settings.json"
 
 is_theme() {
   case ${1:-} in
-    tokyonight-dark | tokyonight-light | kanagawa-dark | kanagawa-light) return 0 ;;
+    tokyonight-dark | tokyonight-light | kanagawa-dark | kanagawa-light | \
+      rose-pine-dark | everforest-dark | catppuccin-dark | nightfox-dark) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -55,6 +59,10 @@ theme_label() {
     tokyonight-light) printf 'Tokyo Night — Light' ;;
     kanagawa-dark) printf 'Kanagawa — Wave (Dark)' ;;
     kanagawa-light) printf 'Kanagawa — Lotus (Light)' ;;
+    rose-pine-dark) printf 'Rosé Pine — Dark' ;;
+    everforest-dark) printf 'Everforest — Dark' ;;
+    catppuccin-dark) printf 'Catppuccin — Mocha' ;;
+    nightfox-dark) printf 'Nightfox — Dark' ;;
   esac
 }
 
@@ -67,17 +75,29 @@ print_themes() {
   printf '\n'
   theme_label kanagawa-light
   printf '\n'
+  theme_label rose-pine-dark
+  printf '\n'
+  theme_label everforest-dark
+  printf '\n'
+  theme_label catppuccin-dark
+  printf '\n'
+  theme_label nightfox-dark
+  printf '\n'
 }
 
 print_status() {
-  local selected family mode label icon
+  local selected family mode label icon hint
   selected=$(current_theme)
   family=$(theme_family "${selected}")
   mode=$(theme_mode "${selected}")
   label=$(theme_label "${selected}")
   [[ ${mode} == light ]] && icon='󰖨' || icon='󰖔'
-  printf '{"text":"%s","class":"%s","tooltip":"%s\\nClick: choose theme · Right-click: toggle light/dark"}\n' \
-    "${icon}" "${family}-${mode}" "${label}"
+  case ${family} in
+    rose-pine | everforest | catppuccin | nightfox) hint='Click: choose theme · Dark-only family' ;;
+    *) hint='Click: choose theme · Right-click: toggle light/dark' ;;
+  esac
+  printf '{"text":"%s","class":"%s","tooltip":"%s\\n%s"}\n' \
+    "${icon}" "${family}-${mode}" "${label}" "${hint}"
 }
 
 notify_error() {
@@ -126,8 +146,80 @@ write_waybar_palette() {
   mv -f -- "${temporary}" "${waybar_dir}/colors.css"
 }
 
+palette_color() {
+  local palette_file=$1 color=$2
+  awk -v color="${color}" '
+    $1 == "@define-color" && $2 == color {
+      value = $3
+      sub(/;$/, "", value)
+      print value
+      found = 1
+      exit
+    }
+    END { if (!found) exit 1 }
+  ' "${palette_file}"
+}
+
+write_tmux_theme() {
+  local palette_file=$1 background foreground selected muted border accent alert purple temporary
+  background=$(palette_color "${palette_file}" tooltip_background)
+  foreground=$(palette_color "${palette_file}" foreground)
+  selected=$(palette_color "${palette_file}" selected_foreground)
+  muted=$(palette_color "${palette_file}" muted)
+  border=$(palette_color "${palette_file}" border)
+  accent=$(palette_color "${palette_file}" blue)
+  alert=$(palette_color "${palette_file}" red)
+  purple=$(palette_color "${palette_file}" purple)
+
+  mkdir -p "${tmux_dir}"
+  temporary=$(mktemp "${tmux_dir}/.current-theme.XXXXXX")
+  printf '%s\n' \
+    "set -g status-style 'bg=${background},fg=${foreground}'" \
+    "set -g message-style 'bg=${accent},fg=${selected}'" \
+    "set -g message-command-style 'bg=${purple},fg=${selected}'" \
+    "set -g mode-style 'bg=${accent},fg=${selected}'" \
+    "set -g pane-border-style 'fg=${border}'" \
+    "set -g pane-active-border-style 'fg=${accent}'" \
+    "set -g window-status-style 'fg=${muted}'" \
+    "set -g window-status-current-style 'bg=${accent},fg=${selected},bold'" \
+    "set -g window-status-bell-style 'bg=${alert},fg=${selected},bold'" \
+    "set -g status-left-style 'fg=${purple}'" \
+    "set -g status-right-style 'fg=${foreground}'" >"${temporary}"
+  mv -f -- "${temporary}" "${tmux_theme_file}"
+}
+
+write_vscodium_theme() {
+  local theme=$1 temporary
+  [[ -f ${vscodium_settings} ]] || return 0
+
+  temporary=$(mktemp "$(dirname -- "${vscodium_settings}")/.settings.XXXXXX.json")
+  if ! awk -v theme="${theme}" '
+    BEGIN { found = 0 }
+    /^[[:space:]]*"workbench\.colorTheme"[[:space:]]*:/ {
+      indent = $0
+      sub(/[^[:space:]].*$/, "", indent)
+      printf "%s\"workbench.colorTheme\": \"%s\",\n", indent, theme
+      found = 1
+      next
+    }
+    { print }
+    END { if (!found) exit 42 }
+  ' "${vscodium_settings}" >"${temporary}"; then
+    rm -f -- "${temporary}"
+    notify_error 'A opção workbench.colorTheme não existe nas settings do VSCodium.'
+    return 1
+  fi
+  chmod --reference="${vscodium_settings}" "${temporary}"
+
+  if cmp -s "${temporary}" "${vscodium_settings}"; then
+    rm -f -- "${temporary}"
+  else
+    mv -f -- "${temporary}" "${vscodium_settings}"
+  fi
+}
+
 apply_theme() {
-  local selected=$1 gtk_theme icon_theme prefer_dark color_scheme palette theme_dir ghostty_theme ghostty_background temporary
+  local selected=$1 gtk_theme icon_theme prefer_dark color_scheme palette theme_dir ghostty_theme ghostty_background vscodium_theme temporary
   case ${selected} in
     tokyonight-dark)
       gtk_theme='Tokyonight-Dark'
@@ -137,6 +229,7 @@ apply_theme() {
       palette='colors-dark.css'
       ghostty_theme='TokyoNight Night'
       ghostty_background='#000000'
+      vscodium_theme='Tokyo Night Storm'
       ;;
     tokyonight-light)
       gtk_theme='Tokyonight-Light'
@@ -146,6 +239,7 @@ apply_theme() {
       palette='colors-light.css'
       ghostty_theme='TokyoNight Day'
       ghostty_background=''
+      vscodium_theme='Tokyo Night Light'
       ;;
     kanagawa-dark)
       gtk_theme='Kanagawa-Dark'
@@ -155,6 +249,7 @@ apply_theme() {
       palette='colors-kanagawa-dark.css'
       ghostty_theme='Kanagawa Wave'
       ghostty_background='#000000'
+      vscodium_theme='Kanagawa Wave'
       ;;
     kanagawa-light)
       gtk_theme='Kanagawa-Light'
@@ -164,6 +259,47 @@ apply_theme() {
       palette='colors-kanagawa-light.css'
       ghostty_theme='Kanagawa Lotus'
       ghostty_background=''
+      vscodium_theme='Kanagawa Lotus'
+      ;;
+    rose-pine-dark)
+      gtk_theme='Rose-Pine-Dark'
+      icon_theme='Papirus-Dark'
+      prefer_dark=1
+      color_scheme='prefer-dark'
+      palette='colors-rose-pine-dark.css'
+      ghostty_theme='Rose Pine'
+      ghostty_background=''
+      vscodium_theme='Rosé Pine'
+      ;;
+    everforest-dark)
+      gtk_theme='Everforest-Dark'
+      icon_theme='Papirus-Dark'
+      prefer_dark=1
+      color_scheme='prefer-dark'
+      palette='colors-everforest-dark.css'
+      ghostty_theme='Everforest Dark Hard'
+      ghostty_background=''
+      vscodium_theme='Everforest Dark'
+      ;;
+    catppuccin-dark)
+      gtk_theme='Catppuccin-Dark'
+      icon_theme='Papirus-Dark'
+      prefer_dark=1
+      color_scheme='prefer-dark'
+      palette='colors-catppuccin-mocha.css'
+      ghostty_theme='Catppuccin Mocha'
+      ghostty_background=''
+      vscodium_theme='Catppuccin Mocha'
+      ;;
+    nightfox-dark)
+      gtk_theme='Nightfox-Dark'
+      icon_theme='Papirus-Dark'
+      prefer_dark=1
+      color_scheme='prefer-dark'
+      palette='colors-nightfox-dark.css'
+      ghostty_theme='Nightfox'
+      ghostty_background=''
+      vscodium_theme='Nightfox'
       ;;
     *)
       printf 'Unknown theme: %s\n' "${selected}" >&2
@@ -196,6 +332,8 @@ apply_theme() {
   replace_symlink "${theme_dir}/gtk-4.0/gtk.css" "${HOME}/.config/gtk-4.0/gtk.css"
   replace_symlink "${theme_dir}/gtk-4.0/gtk-dark.css" "${HOME}/.config/gtk-4.0/gtk-dark.css"
   write_ghostty_theme "${ghostty_theme}" "${ghostty_background}"
+  write_tmux_theme "${waybar_dir}/${palette}"
+  write_vscodium_theme "${vscodium_theme}"
 
   if command -v gsettings >/dev/null 2>&1; then
     gsettings set org.gnome.desktop.interface color-scheme "${color_scheme}" || true
@@ -232,6 +370,12 @@ refresh_ghostty() {
   else
     pkill -USR2 -x ghostty 2>/dev/null || true
   fi
+}
+
+refresh_tmux() {
+  command -v tmux >/dev/null 2>&1 || return 0
+  tmux list-sessions >/dev/null 2>&1 || return 0
+  tmux source-file "${tmux_theme_file}"
 }
 
 stop_waybar() {
@@ -277,6 +421,12 @@ select_mode() {
   selected=$(current_theme)
   family=$(theme_family "${selected}")
   mode=$(theme_mode "${selected}")
+  case ${family} in
+    rose-pine | everforest | catppuccin | nightfox)
+      printf '%s-dark\n' "${family}"
+      return
+      ;;
+  esac
   case ${requested} in
     toggle)
       [[ ${mode} == dark ]] && mode=light || mode=dark
@@ -294,12 +444,16 @@ choose_theme() {
     notify_error 'O Wofi não está instalado.'
     return 1
   }
-  selection=$(print_themes | wofi --dmenu --prompt 'Theme' --width 440 --height 260 || true)
+  selection=$(print_themes | wofi --dmenu --prompt 'Theme' --width 440 --height 420 || true)
   case ${selection} in
     'Tokyo Night — Dark') printf 'tokyonight-dark\n' ;;
     'Tokyo Night — Light') printf 'tokyonight-light\n' ;;
     'Kanagawa — Wave (Dark)') printf 'kanagawa-dark\n' ;;
     'Kanagawa — Lotus (Light)') printf 'kanagawa-light\n' ;;
+    'Rosé Pine — Dark') printf 'rose-pine-dark\n' ;;
+    'Everforest — Dark') printf 'everforest-dark\n' ;;
+    'Catppuccin — Mocha') printf 'catppuccin-dark\n' ;;
+    'Nightfox — Dark') printf 'nightfox-dark\n' ;;
     '') return 1 ;;
     *) notify_error "Tema desconhecido: ${selection}"; return 1 ;;
   esac
@@ -310,6 +464,7 @@ run_selection() {
   apply_theme "${selected}"
   refresh_neovim
   refresh_ghostty
+  refresh_tmux
   restart_waybar
 }
 
@@ -345,14 +500,15 @@ case ${1:-status} in
     selected=$(select_mode "$1")
     run_selection "${selected}"
     ;;
-  tokyonight-dark | tokyonight-light | kanagawa-dark | kanagawa-light)
+  tokyonight-dark | tokyonight-light | kanagawa-dark | kanagawa-light | \
+    rose-pine-dark | everforest-dark | catppuccin-dark | nightfox-dark)
     mkdir -p "${runtime_dir}"
     exec 9>"${lock_file}"
     flock -n 9 || exit 0
     run_selection "$1"
     ;;
   *)
-    printf 'Usage: %s [status|list|menu|toggle|dark|light|tokyonight-dark|tokyonight-light|kanagawa-dark|kanagawa-light]\n' "${0##*/}" >&2
+    printf 'Usage: %s [status|list|menu|toggle|dark|light|tokyonight-dark|tokyonight-light|kanagawa-dark|kanagawa-light|rose-pine-dark|everforest-dark|catppuccin-dark|nightfox-dark]\n' "${0##*/}" >&2
     exit 2
     ;;
 esac

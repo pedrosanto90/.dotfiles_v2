@@ -3,6 +3,10 @@
 readonly GHOSTTY_VERSION="1.3.1"
 readonly TOKYONIGHT_GTK_COMMIT="6c340e058e84c1975a038a8e5d1e384477225dc0"
 readonly KANAGAWA_GTK_COMMIT="55ca4ba249eba21f861b9866b71ab41bb8930318"
+readonly ROSE_PINE_GTK_COMMIT="c4fdfa62a9eb6941a36b2cd5026fc64123aaa0dd"
+readonly EVERFOREST_GTK_COMMIT="9b8be4d6648ae9eaae3dd550105081f8c9054825"
+readonly CATPPUCCIN_GTK_COMMIT="a0f69cc33299dc97267c3507fe8a001aecc46b0f"
+readonly NIGHTFOX_GTK_COMMIT="f0212f2aa0d3d6cc0b313020d2d0122f313eafc9"
 
 install_docker_engine() {
   local architecture key_tmp sources_tmp repository_changed=0 package packages_missing=0
@@ -330,6 +334,33 @@ install_kanagawa_gtk_theme() {
     die "Kanagawa-Dark GTK theme installation failed."
   [[ -f ${light_theme_dir}/gtk-3.0/gtk.css && -f ${light_theme_dir}/gtk-4.0/gtk.css ]] ||
     die "Kanagawa-Light GTK theme installation failed."
+}
+
+install_dark_gtk_theme() {
+  local repository=$1 commit=$2 name=$3
+  local theme_dir="${HOME}/.local/share/themes/${name}-Dark" source_dir
+  if [[ -f ${theme_dir}/gtk-3.0/gtk.css && -f ${theme_dir}/gtk-4.0/gtk.css ]]; then
+    log_info "${name} dark GTK theme is already installed."
+    return
+  fi
+
+  source_dir=$(mktemp -d "${CACHE_HOME}/${name,,}-gtk.XXXXXX")
+  git -C "${source_dir}" init --quiet
+  git -C "${source_dir}" remote add origin \
+    "https://github.com/Fausto-Korpsvart/${repository}.git"
+  git -C "${source_dir}" fetch --depth 1 origin "${commit}"
+  git -C "${source_dir}" checkout --quiet --detach FETCH_HEAD
+  BATCH_MODE=true bash "${source_dir}/themes/install.sh" \
+    --dest "${HOME}/.local/share/themes" --name "${name}" --color dark
+  [[ -f ${theme_dir}/gtk-3.0/gtk.css && -f ${theme_dir}/gtk-4.0/gtk.css ]] ||
+    die "${name}-Dark GTK theme installation failed."
+}
+
+install_additional_gtk_themes() {
+  install_dark_gtk_theme Rose-Pine-GTK-Theme "${ROSE_PINE_GTK_COMMIT}" Rose-Pine
+  install_dark_gtk_theme Everforest-GTK-Theme "${EVERFOREST_GTK_COMMIT}" Everforest
+  install_dark_gtk_theme Catppuccin-GTK-Theme "${CATPPUCCIN_GTK_COMMIT}" Catppuccin
+  install_dark_gtk_theme Nightfox-GTK-Theme "${NIGHTFOX_GTK_COMMIT}" Nightfox
 }
 
 install_nerd_font() {

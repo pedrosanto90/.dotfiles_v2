@@ -10,6 +10,10 @@ local themes = {
 	["tokyonight-light"] = { background = "light", colorscheme = "tokyonight-day" },
 	["kanagawa-dark"] = { background = "dark", colorscheme = "kanagawa-wave" },
 	["kanagawa-light"] = { background = "light", colorscheme = "kanagawa-lotus" },
+	["rose-pine-dark"] = { background = "dark", colorscheme = "rose-pine" },
+	["everforest-dark"] = { background = "dark", colorscheme = "everforest" },
+	["catppuccin-dark"] = { background = "dark", colorscheme = "catppuccin-mocha" },
+	["nightfox-dark"] = { background = "dark", colorscheme = "nightfox" },
 }
 
 local function read_theme()
