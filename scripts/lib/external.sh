@@ -356,9 +356,31 @@ install_dark_gtk_theme() {
     die "${name}-Dark GTK theme installation failed."
 }
 
+install_everforest_gtk_theme() {
+  local dark_theme_dir="${HOME}/.local/share/themes/Everforest-Dark"
+  local light_theme_dir="${HOME}/.local/share/themes/Everforest-Light" source_dir
+  if [[ -f ${dark_theme_dir}/gtk-3.0/gtk.css && -f ${dark_theme_dir}/gtk-4.0/gtk.css &&
+        -f ${light_theme_dir}/gtk-3.0/gtk.css && -f ${light_theme_dir}/gtk-4.0/gtk.css ]]; then
+    log_info "Everforest light and dark GTK themes are already installed."
+    return
+  fi
+
+  source_dir=$(mktemp -d "${CACHE_HOME}/everforest-gtk.XXXXXX")
+  git -C "${source_dir}" init --quiet
+  git -C "${source_dir}" remote add origin \
+    "https://github.com/Fausto-Korpsvart/Everforest-GTK-Theme.git"
+  git -C "${source_dir}" fetch --depth 1 origin "${EVERFOREST_GTK_COMMIT}"
+  git -C "${source_dir}" checkout --quiet --detach FETCH_HEAD
+  bash "${source_dir}/themes/install.sh" \
+    --dest "${HOME}/.local/share/themes" --name Everforest --color light dark
+  [[ -f ${dark_theme_dir}/gtk-3.0/gtk.css && -f ${dark_theme_dir}/gtk-4.0/gtk.css &&
+      -f ${light_theme_dir}/gtk-3.0/gtk.css && -f ${light_theme_dir}/gtk-4.0/gtk.css ]] ||
+    die "Everforest light/dark GTK theme installation failed."
+}
+
 install_additional_gtk_themes() {
   install_dark_gtk_theme Rose-Pine-GTK-Theme "${ROSE_PINE_GTK_COMMIT}" Rose-Pine
-  install_dark_gtk_theme Everforest-GTK-Theme "${EVERFOREST_GTK_COMMIT}" Everforest
+  install_everforest_gtk_theme
   install_dark_gtk_theme Catppuccin-GTK-Theme "${CATPPUCCIN_GTK_COMMIT}" Catppuccin
   install_dark_gtk_theme Nightfox-GTK-Theme "${NIGHTFOX_GTK_COMMIT}" Nightfox
 }

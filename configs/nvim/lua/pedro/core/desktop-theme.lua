@@ -12,6 +12,7 @@ local themes = {
 	["kanagawa-light"] = { background = "light", colorscheme = "kanagawa-lotus" },
 	["rose-pine-dark"] = { background = "dark", colorscheme = "rose-pine" },
 	["everforest-dark"] = { background = "dark", colorscheme = "everforest" },
+	["everforest-light"] = { background = "light", colorscheme = "everforest" },
 	["catppuccin-dark"] = { background = "dark", colorscheme = "catppuccin-mocha" },
 	["nightfox-dark"] = { background = "dark", colorscheme = "nightfox" },
 }
@@ -33,8 +34,17 @@ function M.apply()
 	local selected = read_theme()
 	local theme = themes[selected]
 	vim.o.background = theme.background
+	if selected == "everforest-dark" or selected == "everforest-light" then
+		vim.g.everforest_background = "hard"
+	end
 	if vim.g.colors_name ~= theme.colorscheme then
 		vim.cmd.colorscheme(theme.colorscheme)
+	end
+	for _, group in ipairs({ "Normal", "NormalNC", "NormalFloat", "FloatBorder", "SignColumn", "FoldColumn", "EndOfBuffer", "MsgArea" }) do
+		local highlights = vim.api.nvim_get_hl(0, { name = group, link = false })
+		highlights.bg = nil
+		highlights.ctermbg = nil
+		vim.api.nvim_set_hl(0, group, highlights)
 	end
 	return selected
 end

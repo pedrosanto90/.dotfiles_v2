@@ -16,7 +16,7 @@ readonly vscodium_settings="${HOME}/.config/VSCodium/User/settings.json"
 is_theme() {
   case ${1:-} in
     tokyonight-dark | tokyonight-light | kanagawa-dark | kanagawa-light | \
-      rose-pine-dark | everforest-dark | catppuccin-dark | nightfox-dark) return 0 ;;
+      rose-pine-dark | everforest-dark | everforest-light | catppuccin-dark | nightfox-dark) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -61,6 +61,7 @@ theme_label() {
     kanagawa-light) printf 'Kanagawa — Lotus (Light)' ;;
     rose-pine-dark) printf 'Rosé Pine — Dark' ;;
     everforest-dark) printf 'Everforest — Dark' ;;
+    everforest-light) printf 'Everforest — Light' ;;
     catppuccin-dark) printf 'Catppuccin — Mocha' ;;
     nightfox-dark) printf 'Nightfox — Dark' ;;
   esac
@@ -79,6 +80,8 @@ print_themes() {
   printf '\n'
   theme_label everforest-dark
   printf '\n'
+  theme_label everforest-light
+  printf '\n'
   theme_label catppuccin-dark
   printf '\n'
   theme_label nightfox-dark
@@ -93,7 +96,7 @@ print_status() {
   label=$(theme_label "${selected}")
   [[ ${mode} == light ]] && icon='󰖨' || icon='󰖔'
   case ${family} in
-    rose-pine | everforest | catppuccin | nightfox) hint='Click: choose theme · Dark-only family' ;;
+    rose-pine | catppuccin | nightfox) hint='Click: choose theme · Dark-only family' ;;
     *) hint='Click: choose theme · Right-click: toggle light/dark' ;;
   esac
   printf '{"text":"%s","class":"%s","tooltip":"%s\\n%s"}\n' \
@@ -279,7 +282,17 @@ apply_theme() {
       palette='colors-everforest-dark.css'
       ghostty_theme='Everforest Dark Hard'
       ghostty_background=''
-      vscodium_theme='Everforest Dark'
+      vscodium_theme='Everforest Night Hard'
+      ;;
+    everforest-light)
+      gtk_theme='Everforest-Light'
+      icon_theme='Papirus-Light'
+      prefer_dark=0
+      color_scheme='prefer-light'
+      palette='colors-everforest-light.css'
+      ghostty_theme='Everforest Light Med'
+      ghostty_background=''
+      vscodium_theme='Everforest Night Light Hard'
       ;;
     catppuccin-dark)
       gtk_theme='Catppuccin-Dark'
@@ -422,7 +435,7 @@ select_mode() {
   family=$(theme_family "${selected}")
   mode=$(theme_mode "${selected}")
   case ${family} in
-    rose-pine | everforest | catppuccin | nightfox)
+    rose-pine | catppuccin | nightfox)
       printf '%s-dark\n' "${family}"
       return
       ;;
@@ -452,6 +465,7 @@ choose_theme() {
     'Kanagawa — Lotus (Light)') printf 'kanagawa-light\n' ;;
     'Rosé Pine — Dark') printf 'rose-pine-dark\n' ;;
     'Everforest — Dark') printf 'everforest-dark\n' ;;
+    'Everforest — Light') printf 'everforest-light\n' ;;
     'Catppuccin — Mocha') printf 'catppuccin-dark\n' ;;
     'Nightfox — Dark') printf 'nightfox-dark\n' ;;
     '') return 1 ;;
@@ -501,14 +515,14 @@ case ${1:-status} in
     run_selection "${selected}"
     ;;
   tokyonight-dark | tokyonight-light | kanagawa-dark | kanagawa-light | \
-    rose-pine-dark | everforest-dark | catppuccin-dark | nightfox-dark)
+    rose-pine-dark | everforest-dark | everforest-light | catppuccin-dark | nightfox-dark)
     mkdir -p "${runtime_dir}"
     exec 9>"${lock_file}"
     flock -n 9 || exit 0
     run_selection "$1"
     ;;
   *)
-    printf 'Usage: %s [status|list|menu|toggle|dark|light|tokyonight-dark|tokyonight-light|kanagawa-dark|kanagawa-light|rose-pine-dark|everforest-dark|catppuccin-dark|nightfox-dark]\n' "${0##*/}" >&2
+    printf 'Usage: %s [status|list|menu|toggle|dark|light|tokyonight-dark|tokyonight-light|kanagawa-dark|kanagawa-light|rose-pine-dark|everforest-dark|everforest-light|catppuccin-dark|nightfox-dark]\n' "${0##*/}" >&2
     exit 2
     ;;
 esac

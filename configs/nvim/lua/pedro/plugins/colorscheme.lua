@@ -14,16 +14,12 @@ return {
 			},
 			on_colors = function(colors)
 				if vim.o.background == "dark" then
-					colors.bg = "#000000"
-					colors.bg_dark = "#000000"
-					colors.bg_float = "#000000"
-					colors.bg_sidebar = "#000000"
-					colors.bg_statusline = "#000000"
+					colors.bg = "NONE"
+					colors.bg_dark = "NONE"
+					colors.bg_float = "NONE"
+					colors.bg_sidebar = "NONE"
+					colors.bg_statusline = "NONE"
 				end
-			end,
-			on_highlights = function(highlights, colors)
-				highlights.NormalFloat = { bg = colors.bg }
-				highlights.FloatBorder = { bg = colors.bg, fg = colors.blue }
 			end,
 		},
 		config = function(_, opts)
@@ -40,29 +36,6 @@ return {
 				dark = "wave",
 				light = "lotus",
 			},
-			colors = {
-				theme = {
-					wave = {
-						ui = {
-							bg = "#000000",
-							bg_dim = "#000000",
-							bg_gutter = "#000000",
-							bg_m3 = "#000000",
-							bg_m2 = "#000000",
-							bg_m1 = "#000000",
-							bg_p1 = "#000000",
-							bg_p2 = "#000000",
-						},
-					},
-				},
-			},
-			overrides = function(colors)
-				local theme = colors.theme
-				return {
-					NormalFloat = { bg = theme.ui.bg },
-					FloatBorder = { bg = theme.ui.bg, fg = theme.ui.special },
-				}
-			end,
 		},
 		config = function(_, opts)
 			require("kanagawa").setup(opts)
@@ -73,7 +46,7 @@ return {
 		name = "rose-pine",
 		lazy = false,
 		priority = 1000,
-		opts = { variant = "main", dark_variant = "main" },
+		opts = { variant = "main", dark_variant = "main", disable_background = true },
 		config = function(_, opts)
 			require("rose-pine").setup(opts)
 		end,
@@ -82,13 +55,17 @@ return {
 		"sainnhe/everforest",
 		lazy = false,
 		priority = 1000,
+		init = function()
+			vim.g.everforest_background = "hard"
+			vim.g.everforest_transparent_background = 2
+		end,
 	},
 	{
 		"catppuccin/nvim",
 		name = "catppuccin",
 		lazy = false,
 		priority = 1000,
-		opts = { flavour = "mocha" },
+		opts = { flavour = "mocha", transparent_background = true },
 		config = function(_, opts)
 			require("catppuccin").setup(opts)
 		end,
@@ -97,7 +74,7 @@ return {
 		"EdenEast/nightfox.nvim",
 		lazy = false,
 		priority = 1000,
-		opts = {},
+		opts = { options = { transparent = true } },
 		config = function(_, opts)
 			require("nightfox").setup(opts)
 		end,
