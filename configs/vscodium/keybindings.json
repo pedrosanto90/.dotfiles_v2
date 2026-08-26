@@ -58,17 +58,17 @@
     "when": "neovim.mode == normal && editorTextFocus"
   },
   {
-    "key": "space c o",
+    "key": "ctrl-o",
     "command": "chatgpt.openSidebar",
     "when": "((neovim.mode == normal && editorTextFocus) || (!editorTextFocus && !inputFocus)) && (!auxiliaryBarVisible || activeAuxiliary != workbench.view.extension.codexSecondaryViewContainer) && (!sideBarVisible || activeViewlet != workbench.view.extension.codexViewContainer)"
   },
   {
-    "key": "space c o",
+    "key": "ctrl-o",
     "command": "workbench.action.closeAuxiliaryBar",
     "when": "((neovim.mode == normal && editorTextFocus) || (!editorTextFocus && !inputFocus)) && auxiliaryBarVisible && activeAuxiliary == workbench.view.extension.codexSecondaryViewContainer"
   },
   {
-    "key": "space c o",
+    "key": "ctrl-o",
     "command": "workbench.action.closeSidebar",
     "when": "((neovim.mode == normal && editorTextFocus) || (!editorTextFocus && !inputFocus)) && sideBarVisible && activeViewlet == workbench.view.extension.codexViewContainer"
   },
