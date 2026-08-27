@@ -107,11 +107,33 @@ install_bruno_arm64() {
   "${SUDO[@]}" apt-get install --yes "${archive}"
 }
 
+install_slack() {
+  local architecture version installed='' archive url
+  architecture=$(dpkg --print-architecture)
+  [[ ${architecture} == amd64 ]] || {
+    log_warn "Slack's official Linux package is only available for amd64; skipping Slack on ${architecture}."
+    return
+  }
+
+  version=$(curl --fail --silent --show-error --location 'https://slack.com/downloads/linux' |
+    sed -nE 's/.*Version[[:space:]]+([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | head -n1)
+  [[ ${version} =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ||
+    die "Could not determine the current Slack release version."
+  installed=$(dpkg-query -W -f='${Version}' slack-desktop 2>/dev/null || true)
+  installed=${installed%%-*}
+  [[ ${installed} == "${version}" ]] && { log_info "Slack ${version} is already installed."; return; }
+
+  archive="${CACHE_HOME}/slack-desktop-${version}-amd64.deb"
+  url="https://downloads.slack-edge.com/desktop-releases/linux/x64/${version}/slack-desktop-${version}-amd64.deb"
+  download "${url}" "${archive}"
+  "${SUDO[@]}" apt-get install --yes "${archive}"
+}
+
 install_developer_gui_apps() {
   local vscodium_key dbeaver_key bruno_key repository_changed=0 package
   local -a packages=(codium dbeaver-ce)
 
-  log_info "Installing Bruno, VSCodium, and DBeaver from official sources."
+  log_info "Installing Bruno, Slack, VSCodium, and DBeaver from official sources."
 
   vscodium_key=$(mktemp "${CACHE_HOME}/vscodium-key.XXXXXX.gpg")
   dbeaver_key=$(mktemp "${CACHE_HOME}/dbeaver-key.XXXXXX.gpg")
@@ -157,6 +179,8 @@ install_developer_gui_apps() {
   case $(uname -m) in
     aarch64|arm64) install_bruno_arm64 ;;
   esac
+
+  install_slack
 
 }
 
