@@ -1,9 +1,9 @@
 -- Hightlight yanking
 vim.api.nvim_create_autocmd("TextYankPost", {
-    desc = "Highlight when yanking (copying) text",
-    callback = function()
-        vim.hl.on_yank()
-    end,
+	desc = "Highlight when yanking (copying) text",
+	callback = function()
+		vim.hl.on_yank()
+	end,
 })
 
 -- when nvim is opened with a directory arg (e.g. `nvim .`), open Telescope find_files
@@ -41,15 +41,15 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 
 -- compile java projects when saving
 vim.api.nvim_create_autocmd("BufWritePost", {
-    pattern = "*.java",
-    callback = function()
-      vim.fn.jobstart({"./mvnw", "compile", "-o", "-q"}, { detach = true })
-    end,
-  })
+	pattern = "*.java",
+	callback = function()
+		vim.fn.jobstart({ "./mvnw", "compile", "-o", "-q" }, { detach = true })
+	end,
+})
 
 -- format onsave
-vim.api.nvim_create_autocmd('BufWritePre', {
-  callback = function()
-    vim.lsp.buf.format({ async = false })
-  end,
+vim.api.nvim_create_autocmd("BufWritePre", {
+	callback = function()
+		vim.lsp.buf.format({ async = false })
+	end,
 })

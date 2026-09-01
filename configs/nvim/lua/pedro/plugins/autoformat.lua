@@ -17,7 +17,7 @@ return {
 			css = { "prettier" },
 			htmldjango = { "djlint" },
 			go = { "gofmt" },
-			-- php = { "duster" },
+			php = { "duster" },
 			json = { "prettier" },
 		},
 		format_on_save = {
