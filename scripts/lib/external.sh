@@ -6,6 +6,7 @@ readonly KANAGAWA_GTK_COMMIT="55ca4ba249eba21f861b9866b71ab41bb8930318"
 readonly ROSE_PINE_GTK_COMMIT="c4fdfa62a9eb6941a36b2cd5026fc64123aaa0dd"
 readonly EVERFOREST_GTK_COMMIT="9b8be4d6648ae9eaae3dd550105081f8c9054825"
 readonly CATPPUCCIN_GTK_COMMIT="a0f69cc33299dc97267c3507fe8a001aecc46b0f"
+readonly GRUVBOX_GTK_COMMIT="578cd220b5ff6e86b078a6111d26bb20ec8c733f"
 readonly NIGHTFOX_GTK_COMMIT="f0212f2aa0d3d6cc0b313020d2d0122f313eafc9"
 
 install_docker_engine() {
@@ -360,11 +361,18 @@ install_kanagawa_gtk_theme() {
     die "Kanagawa-Light GTK theme installation failed."
 }
 
-install_dark_gtk_theme() {
+install_gtk_theme_variants() {
   local repository=$1 commit=$2 name=$3
-  local theme_dir="${HOME}/.local/share/themes/${name}-Dark" source_dir
-  if [[ -f ${theme_dir}/gtk-3.0/gtk.css && -f ${theme_dir}/gtk-4.0/gtk.css ]]; then
-    log_info "${name} dark GTK theme is already installed."
+  shift 3
+  local mode theme_dir source_dir complete=1
+  for mode in "$@"; do
+    theme_dir="${HOME}/.local/share/themes/${name}-${mode^}"
+    if [[ ! -f ${theme_dir}/gtk-3.0/gtk.css || ! -f ${theme_dir}/gtk-4.0/gtk.css ]]; then
+      complete=0
+    fi
+  done
+  if (( complete )); then
+    log_info "${name} GTK themes ($*) are already installed."
     return
   fi
 
@@ -375,9 +383,12 @@ install_dark_gtk_theme() {
   git -C "${source_dir}" fetch --depth 1 origin "${commit}"
   git -C "${source_dir}" checkout --quiet --detach FETCH_HEAD
   BATCH_MODE=true bash "${source_dir}/themes/install.sh" \
-    --dest "${HOME}/.local/share/themes" --name "${name}" --color dark
-  [[ -f ${theme_dir}/gtk-3.0/gtk.css && -f ${theme_dir}/gtk-4.0/gtk.css ]] ||
-    die "${name}-Dark GTK theme installation failed."
+    --dest "${HOME}/.local/share/themes" --name "${name}" --color "$@"
+  for mode in "$@"; do
+    theme_dir="${HOME}/.local/share/themes/${name}-${mode^}"
+    [[ -f ${theme_dir}/gtk-3.0/gtk.css && -f ${theme_dir}/gtk-4.0/gtk.css ]] || \
+      die "${name}-${mode^} GTK theme installation failed."
+  done
 }
 
 install_everforest_gtk_theme() {
@@ -403,10 +414,11 @@ install_everforest_gtk_theme() {
 }
 
 install_additional_gtk_themes() {
-  install_dark_gtk_theme Rose-Pine-GTK-Theme "${ROSE_PINE_GTK_COMMIT}" Rose-Pine
+  install_gtk_theme_variants Rose-Pine-GTK-Theme "${ROSE_PINE_GTK_COMMIT}" Rose-Pine dark
   install_everforest_gtk_theme
-  install_dark_gtk_theme Catppuccin-GTK-Theme "${CATPPUCCIN_GTK_COMMIT}" Catppuccin
-  install_dark_gtk_theme Nightfox-GTK-Theme "${NIGHTFOX_GTK_COMMIT}" Nightfox
+  install_gtk_theme_variants Catppuccin-GTK-Theme "${CATPPUCCIN_GTK_COMMIT}" Catppuccin light dark
+  install_gtk_theme_variants Gruvbox-GTK-Theme "${GRUVBOX_GTK_COMMIT}" Gruvbox light dark
+  install_gtk_theme_variants Nightfox-GTK-Theme "${NIGHTFOX_GTK_COMMIT}" Nightfox dark
 }
 
 install_nerd_font() {

@@ -71,6 +71,12 @@ return {
 		end,
 	},
 	{
+		"ellisonleao/gruvbox.nvim",
+		lazy = false,
+		priority = 1000,
+		opts = { transparent_mode = true },
+	},
+	{
 		"EdenEast/nightfox.nvim",
 		lazy = false,
 		priority = 1000,

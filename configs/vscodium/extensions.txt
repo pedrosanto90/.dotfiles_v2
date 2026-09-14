@@ -15,6 +15,7 @@ fuzionix.devtool-plus
 github.codespaces
 golang.go
 jarith.everforest-night-vscode
+jdinhlife.gruvbox
 jeanp413.open-remote-ssh
 metaphore.kanagawa-vscode-color-theme
 mikael.angular-beastcode

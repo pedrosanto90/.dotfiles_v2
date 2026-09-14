@@ -14,6 +14,9 @@ local themes = {
 	["everforest-dark"] = { background = "dark", colorscheme = "everforest" },
 	["everforest-light"] = { background = "light", colorscheme = "everforest" },
 	["catppuccin-dark"] = { background = "dark", colorscheme = "catppuccin-mocha" },
+	["catppuccin-light"] = { background = "light", colorscheme = "catppuccin-latte" },
+	["gruvbox-dark"] = { background = "dark", colorscheme = "gruvbox" },
+	["gruvbox-light"] = { background = "light", colorscheme = "gruvbox" },
 	["nightfox-dark"] = { background = "dark", colorscheme = "nightfox" },
 }
 
