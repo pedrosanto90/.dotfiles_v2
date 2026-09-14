@@ -193,6 +193,18 @@ install_starship() {
   sh "${installer}" --yes --bin-dir "${HOME}/.local/bin"
 }
 
+install_uv() {
+  local installer
+  if command -v uv >/dev/null 2>&1 || [[ -x ${HOME}/.local/bin/uv ]]; then
+    log_info "uv is already installed."
+    return
+  fi
+  installer=$(mktemp "${CACHE_HOME}/uv-install.XXXXXX")
+  download 'https://astral.sh/uv/install.sh' "${installer}"
+  UV_INSTALL_DIR="${HOME}/.local/bin" UV_NO_MODIFY_PATH=1 sh "${installer}"
+  "${HOME}/.local/bin/uv" --version
+}
+
 install_nvm_and_node() {
   local nvm_dir="${NVM_DIR:-${HOME}/.nvm}" tag
   if [[ ! -s ${nvm_dir}/nvm.sh ]]; then

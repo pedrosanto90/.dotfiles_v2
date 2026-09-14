@@ -13,7 +13,7 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 - Latest stable Neovim built from official source, with modular Tokyo Night and Kanagawa themes
 - Docker Engine with CLI, Buildx, and Compose; no Docker Desktop and no `sudo` for daily use
 - Node.js LTS through NVM, npm, Corepack, pnpm, and Yarn
-- Official stable Go toolchain and Python with venv, pip, and pipx
+- Official stable Go toolchain and Python with venv, pip, pipx, and uv
 - PipeWire/WirePlumber, NetworkManager, multi-protocol VPN support, Bluetooth, and PolicyKit
 - Wayland portals for screen sharing, Flatpak, and Electron applications
 - Brave exclusively from its official repository, launched through Ozone/Wayland
@@ -130,6 +130,7 @@ Software outside Debian and its source:
 | Docker | Official Docker APT repository; Engine, CLI, containerd, Buildx, and Compose plugin |
 | Yazi | Official `sxyazi/yazi` release binary |
 | Starship | Official installer targeting `~/.local/bin` |
+| uv | Official Astral installer targeting `~/.local/bin` |
 | JetBrainsMono Nerd Font | Official `ryanoasis/nerd-fonts` release |
 
 The installer deploys `/etc/brave/policies/managed/debian-sway-dev-pwas.json` through `scripts/system/install-brave-pwas.sh`. Brave then installs Webex, Excalidraw, WhatsApp Web, Amália, Notion, Telegram Web, Spotify, and ChatGPT as windowed PWAs for each Brave profile. ChatGPT is not installed as a native Debian package. Restart Brave after the first installation so it can process the policy and create the application launchers.
@@ -147,7 +148,7 @@ Docker Engine starts automatically at boot. The installer adds the current user 
 ## Languages
 
 - **Node.js/TypeScript:** NVM loads from `.zshrc`; the installer runs `nvm install --lts`, updates npm, enables Corepack, and makes pnpm/Yarn available.
-- **Python:** `python3`, development headers, pip, venv, and pipx. pipx binaries live in `~/.local/bin`.
+- **Python:** `python3`, development headers, pip, venv, pipx, and uv. uv and uvx are installed in `~/.local/bin`, alongside pipx binaries. Existing uv installations are preserved; update standalone installations with `uv self update`.
 - **Go:** `GOROOT=/usr/local/go`, `GOPATH=~/go`, and both binary directories are added to `PATH`.
 
 Global TypeScript packages are intentionally omitted. Prefer `corepack pnpm add -D typescript` inside each project for reproducible builds.
@@ -353,6 +354,7 @@ If screen sharing does not appear in an application, fully close that applicatio
 - [Downloading DBeaver Community](https://dbeaver.io/download/)
 - [NVM](https://github.com/nvm-sh/nvm)
 - [Official Go installation](https://go.dev/doc/install)
+- [Installing uv](https://docs.astral.sh/uv/getting-started/installation/)
 - [Building Neovim](https://neovim.io/doc/build/)
 - [Building and installing Ghostty](https://ghostty.org/docs/install/build)
 - [Installing Yazi](https://yazi-rs.github.io/docs/installation/)

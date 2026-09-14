@@ -31,6 +31,7 @@ main() {
   install_brave
   install_developer_gui_apps
   install_starship
+  install_uv
   install_nvm_and_node
   install_go
   install_yazi
