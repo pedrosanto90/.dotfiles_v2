@@ -7,6 +7,8 @@ readonly MANIFEST="${STATE_HOME}/installed-files.tsv"
 readonly LOCK_FILE="${STATE_HOME}/install.lock"
 SUDO=()
 APT_UPDATED=0
+USE_GREETD=1
+EXISTING_DISPLAY_MANAGER=''
 
 log_info() { printf '\033[1;34m[INFO]\033[0m %s\n' "$*"; }
 log_step() { printf '\n\033[1;36m==> %s\033[0m\n' "$*"; }
@@ -44,6 +46,30 @@ acquire_lock() {
   require_command flock
   exec 9>"${LOCK_FILE}"
   flock -n 9 || die "Another installation is already running."
+}
+
+select_display_manager() {
+  local manager='' manager_name=''
+
+  if [[ -e /etc/systemd/system/display-manager.service || -L /etc/systemd/system/display-manager.service ]]; then
+    manager=$(readlink -f /etc/systemd/system/display-manager.service 2>/dev/null || true)
+  fi
+  if [[ -z ${manager} && -r /etc/X11/default-display-manager ]]; then
+    IFS= read -r manager </etc/X11/default-display-manager || true
+  fi
+
+  manager_name=${manager##*/}
+  case ${manager_name} in
+    '' | greetd | greetd.service)
+      USE_GREETD=1
+      ;;
+    *)
+      USE_GREETD=0
+      EXISTING_DISPLAY_MANAGER=${manager_name%.service}
+      log_info "Preserving existing display manager: ${EXISTING_DISPLAY_MANAGER}."
+      log_info "greetd and wlgreet will not be installed, configured, or enabled."
+      ;;
+  esac
 }
 
 sudo_install_file() {

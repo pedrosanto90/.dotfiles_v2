@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 readonly DEBIAN_PACKAGES=(
-  sway swaybg swayidle swaylock waybar wofi nwg-displays mako-notifier greetd wlgreet
+  sway swaybg swayidle swaylock waybar wofi nwg-displays mako-notifier
   zsh fzf zoxide tmux
   git gh lazygit curl wget unzip zip jq ripgrep fd-find bat eza tree htop btop file fastfetch
   openssh-client build-essential pkg-config cmake make ninja-build gettext xz-utils
@@ -27,6 +27,8 @@ readonly DEBIAN_PACKAGES=(
   tree-sitter-cli
 )
 
+readonly GREETD_PACKAGES=(greetd wlgreet)
+
 apt_update_once() {
   (( APT_UPDATED == 1 )) && return
   "${SUDO[@]}" apt-get update
@@ -35,9 +37,15 @@ apt_update_once() {
 
 install_debian_packages() {
   local package
+  local -a requested=("${DEBIAN_PACKAGES[@]}")
   local -a missing=()
+
+  if (( USE_GREETD == 1 )); then
+    requested+=("${GREETD_PACKAGES[@]}")
+  fi
+
   apt_update_once
-  for package in "${DEBIAN_PACKAGES[@]}"; do
+  for package in "${requested[@]}"; do
     if dpkg-query -W -f='${db:Status-Abbrev}' "${package}" 2>/dev/null | grep -q '^ii '; then
       continue
     fi

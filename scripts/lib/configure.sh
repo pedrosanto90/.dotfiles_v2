@@ -28,6 +28,11 @@ deploy_configs() {
 }
 
 configure_login_manager() {
+  if (( USE_GREETD == 0 )); then
+    log_info "Leaving ${EXISTING_DISPLAY_MANAGER} and display-manager.service unchanged."
+    return
+  fi
+
   log_info "Configuring the native Wayland graphical login manager (greetd + wlgreet)."
   sudo_deploy_config "${PROJECT_ROOT}/configs/greetd/config.toml" /etc/greetd/config.toml
   sudo_deploy_config "${PROJECT_ROOT}/configs/greetd/sway-config" /etc/greetd/sway-config

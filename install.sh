@@ -20,6 +20,7 @@ main() {
   require_regular_user
   init_runtime
   acquire_lock
+  select_display_manager
 
   log_step "Update package indexes and install Debian packages"
   install_debian_packages
@@ -58,7 +59,12 @@ main() {
   verify_docker_installation
 
   log_success "Installation complete"
-  printf '\nReboot, then sign in through the graphical wlgreet screen. Backups: %s\n' "${BACKUP_ROOT}"
+  if (( USE_GREETD == 1 )); then
+    printf '\nReboot, then sign in through the graphical wlgreet screen. Backups: %s\n' "${BACKUP_ROOT}"
+  else
+    printf '\nThe existing %s login screen was preserved. Select Sway there when you want to test it. Backups: %s\n' \
+      "${EXISTING_DISPLAY_MANAGER}" "${BACKUP_ROOT}"
+  fi
   printf 'Before doing so, review ~/.config/sway/config.d/output.conf and input.conf.\n'
 }
 

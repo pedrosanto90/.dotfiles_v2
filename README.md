@@ -37,7 +37,7 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 - Approximately 7 GB of free space while Ghostty and Neovim are built
 - `amd64` or `arm64` hardware for the complete environment. Go supports more official architectures, but the complete Ghostty/Yazi installation is limited to these two.
 
-The project installs and configures `greetd` with the graphical `wlgreet` frontend. After reboot, authentication starts the prepared Sway session directly; no TTY command or desktop environment is required.
+On a machine without a display manager, the project installs and configures `greetd` with the graphical `wlgreet` frontend. After reboot, authentication starts the prepared Sway session directly; no TTY command or desktop environment is required. If a different display manager is already selected, such as GNOME's GDM, the installer preserves it and skips the `greetd` and `wlgreet` packages and configuration. Select Sway from the existing login screen when you want to test it.
 
 ## Installation
 
@@ -57,7 +57,7 @@ After installation:
 2. Press `Super+Shift+M` to arrange monitors graphically with nwg-displays. Saved layouts and workspace assignments are restored automatically on login.
 3. Zsh is set as your login shell automatically; the change takes effect at the next login.
 4. Reboot the machine.
-5. Enter your username and password in the Tokyo Night wlgreet screen. Sway starts automatically after authentication.
+5. Enter your username and password in the Tokyo Night wlgreet screen. If the installer preserved an existing display manager, select Sway from its session menu first.
 
 ### Safety and idempotency
 
@@ -69,7 +69,7 @@ Every destination is compared before deployment. Identical files remain untouche
 
 Only then is it replaced atomically. The managed-file manifest lives at `~/.local/state/debian-sway-dev/installed-files.tsv`. The installer detects installed packages, current tool versions, and enabled services, so it is safe to run repeatedly.
 
-Existing system-level greetd files are backed up under `/var/backups/debian-sway-dev/` before replacement. The installer enables greetd for the next boot instead of starting it immediately, preventing a second display manager from disrupting the current graphical session.
+If no display manager is selected, existing system-level greetd files are backed up under `/var/backups/debian-sway-dev/` before replacement. The installer enables greetd for the next boot instead of starting it immediately. When `display-manager.service` already points to another manager (for example, `gdm3`), that manager is left untouched and greetd/wlgreet are not installed or configured.
 
 An existing Go tree is never deleted. During an upgrade, `/usr/local/go` moves to `/usr/local/go.backup.<timestamp>`.
 
