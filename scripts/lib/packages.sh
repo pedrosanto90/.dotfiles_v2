@@ -5,7 +5,7 @@ readonly DEBIAN_PACKAGES=(
   zsh fzf zoxide tmux
   git gh lazygit curl wget unzip zip jq ripgrep fd-find bat eza tree htop btop file fastfetch
   openssh-client build-essential pkg-config cmake make ninja-build gettext xz-utils
-  python3 python3-pip python3-venv python3-dev pipx
+  python3 python3-pip python3-venv python3-dev python3-i3ipc pipx
   php composer libapache2-mod-php
   thunar thunar-archive-plugin gvfs gvfs-backends evolution
   wl-clipboard cliphist grim slurp swappy
@@ -20,7 +20,7 @@ readonly DEBIAN_PACKAGES=(
   polkitd pkexec lxpolkit
   xdg-desktop-portal xdg-desktop-portal-wlr xdg-desktop-portal-gtk xdg-utils desktop-file-utils
   upower power-profiles-daemon udisks2 udiskie brightnessctl
-  papirus-icon-theme nwg-look fontconfig libnotify-bin
+  papirus-icon-theme nwg-look fontconfig libnotify-bin librsvg2-common
   sassc gtk2-engines-murrine gnome-themes-extra
   libgtk-4-dev libgtk4-layer-shell-dev libadwaita-1-dev libxml2-utils
   ca-certificates gnupg util-linux procps dbus-user-session libpam-systemd

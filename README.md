@@ -7,6 +7,7 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 ## Features
 
 - Modular Sway configuration with Waybar, Wofi, Mako, locking, and idle handling
+- Illustrated Waybar tiling selector with seven workspace presets and automatic alternating splits
 - Native Wayland graphical login through greetd and wlgreet
 - Ghostty built from the official release tarball when unavailable in Debian
 - Framework-free Zsh with Starship, fzf, zoxide, GitHub CLI, and a small alias set
@@ -190,6 +191,33 @@ Global TypeScript packages are intentionally omitted. Prefer `corepack pnpm add 
 | Brightness keys | Increase or decrease brightness by 5% |
 
 The tmux prefix is `Ctrl+J`. Follow it with `h/j/k/l` to navigate panes, `r` to reload the configuration, or `f` to open the session selector. Its status bar, messages, selection mode, window states, and pane borders follow the active system palette automatically. From the Zsh prompt, `Ctrl+F` opens the same selector directly.
+
+### Automatic window tiling
+
+Click the layout icon next to the Waybar tray to open a two-column picker with SVG previews. Select a preset to immediately arrange the current workspace. Each workspace remembers its own choice across sessions; new windows, closed windows, and windows moved between workspaces update the selected grid automatically.
+
+| Preset (columns × rows) | Reference window count |
+| --- | --- |
+| 2 × 1 | 2 |
+| 3 × 1 | 3 |
+| 2 × 2 | 4 |
+| 1 + 4: main window on the left, four on the right | 5 |
+| 3 × 2 | 6 |
+| 2 × 3 | 6 |
+| 4 × 2 | 8 |
+
+Window counts are examples, not limits: fewer windows expand to use the available space; additional windows add rows to the selected columns. The main-window preset keeps the first window on the left and distributes the rest vertically on the right. Previews number windows in opening order and follow the active Waybar palette.
+
+The **Alternado** option preserves the original default: the second window opens to the right of the first, the third below the second, the fourth to the right of the third, and so on. Each new window subdivides the last tile, even when another window is focused.
+
+Floating and scratchpad windows are excluded. Manually selected tabbed/stacking layouts are left alone until a preset is chosen again. `sway-autotiling` starts with Sway and prevents duplicate listeners on reload. The selector uses Wofi, Python's `i3ipc` package, and SVG support from `librsvg2-common`. Choices are stored in `~/.local/state/debian-sway-dev/tiling.json`.
+
+```bash
+sway-layout menu              # illustrated picker
+sway-layout apply 2x2         # select and apply to the current workspace
+sway-layout apply alternate   # restore alternating splits
+sway-layout status            # Waybar JSON status
+```
 
 ### Searchable keybinding reference
 

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+source_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)
+if [[ -f ${source_root}/configs/sway/tiling.py ]]; then
+  backend="${source_root}/configs/sway/tiling.py"
+else
+  backend="${XDG_CONFIG_HOME:-${HOME}/.config}/sway/tiling.py"
+fi
+exec /usr/bin/python3 "${backend}" "${@:-menu}"

@@ -1,0 +1,37 @@
+/* Palette definitions are prepended by sway-layout from Waybar's active theme. */
+
+window {
+  background: transparent;
+  font-family: "JetBrainsMono Nerd Font", sans-serif;
+  font-size: 13px;
+}
+#outer-box {
+  margin: 8px;
+  padding: 8px;
+  background: @tooltip_background;
+  color: @foreground;
+  border: 2px solid @blue;
+  border-radius: 14px;
+}
+#input {
+  margin: 6px 6px 12px;
+  padding: 10px 12px;
+  border: 1px solid @border;
+  border-radius: 8px;
+  background: @tooltip_background;
+  color: @foreground;
+}
+#inner-box { margin: 0 2px 4px; }
+#entry {
+  margin: 4px;
+  padding: 10px;
+  border: 1px solid @border;
+  border-radius: 9px;
+  color: @foreground;
+}
+#entry:selected {
+  border-color: @blue;
+  background: alpha(@blue, 0.18);
+}
+#img { margin-right: 12px; }
+#text { color: @foreground; }
