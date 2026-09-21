@@ -12,6 +12,8 @@ height=120
 default-timeout=5000
 ignore-timeout=1
 anchor=top-right
+on-button-left=dismiss
+on-button-right=invoke-default-action
 
 [urgency=high]
 border-color=#f7768eff
