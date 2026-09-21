@@ -130,11 +130,37 @@ install_slack() {
   "${SUDO[@]}" apt-get install --yes "${archive}"
 }
 
+install_discord() {
+  local architecture version installed='' archive package_name package_version package_architecture
+  architecture=$(dpkg --print-architecture)
+  [[ ${architecture} == amd64 ]] || {
+    log_warn "Discord's official Linux package is only available for amd64; skipping Discord on ${architecture}."
+    return
+  }
+
+  version=$(curl --fail --silent --show-error --location \
+    'https://discord.com/api/updates/stable?platform=linux' | jq -er '.name')
+  [[ ${version} =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ||
+    die "Could not determine the current Discord release version."
+  installed=$(dpkg-query -W -f='${Version}' discord 2>/dev/null || true)
+  installed=${installed%%-*}
+  [[ ${installed} == "${version}" ]] && { log_info "Discord ${version} is already installed."; return; }
+
+  archive="${CACHE_HOME}/discord-${version}-amd64.deb"
+  download 'https://discord.com/api/download?platform=linux&format=deb' "${archive}"
+  package_name=$(dpkg-deb -f "${archive}" Package)
+  package_version=$(dpkg-deb -f "${archive}" Version)
+  package_architecture=$(dpkg-deb -f "${archive}" Architecture)
+  [[ ${package_name} == discord && ${package_version} == "${version}" && ${package_architecture} == amd64 ]] ||
+    die "Unexpected metadata in the official Discord package."
+  "${SUDO[@]}" apt-get install --yes "${archive}"
+}
+
 install_developer_gui_apps() {
   local vscodium_key dbeaver_key bruno_key repository_changed=0 package
   local -a packages=(codium dbeaver-ce)
 
-  log_info "Installing Bruno, Slack, VSCodium, and DBeaver from official sources."
+  log_info "Installing Bruno, Slack, Discord, VSCodium, and DBeaver from official sources."
 
   vscodium_key=$(mktemp "${CACHE_HOME}/vscodium-key.XXXXXX.gpg")
   dbeaver_key=$(mktemp "${CACHE_HOME}/dbeaver-key.XXXXXX.gpg")
@@ -182,6 +208,7 @@ install_developer_gui_apps() {
   esac
 
   install_slack
+  install_discord
 
 }
 

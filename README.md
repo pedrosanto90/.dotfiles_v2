@@ -19,7 +19,7 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 - Wayland portals for screen sharing, Flatpak, and Electron applications
 - Brave exclusively from its official repository, launched through Ozone/Wayland
 - Brave PWAs for Webex, Excalidraw, WhatsApp, Amália, Notion, Telegram, Spotify, and ChatGPT
-- Bruno REST client, Slack, VSCodium, and DBeaver Community from official distribution channels
+- Bruno REST client, Slack, Discord, VSCodium, and DBeaver Community from official distribution channels
 - Evolution mail, calendar, contacts, and groupware
 - Repository-managed VSCodium settings, keybindings, and extension inventory
 - Thunar, Yazi, persistent clipboard history, screenshots, and USB automounting
@@ -119,6 +119,7 @@ Software outside Debian and its source:
 | Brave | Official Brave APT repository |
 | Bruno | Official Bruno APT repository on `amd64`; checksummed official release package on `arm64` |
 | Slack | Official Slack `.deb` release package on `amd64` |
+| Discord | Official stable Discord `.deb` release package on `amd64` |
 | VSCodium | Officially documented VSCodium APT repository |
 | DBeaver Community | Official DBeaver APT repository |
 | NVM | Latest tag from the official `nvm-sh/nvm` repository |
@@ -340,7 +341,7 @@ To remove the main Debian packages, inspect the simulation first and tailor the 
 
 ```bash
 sudo apt-get --simulate remove \
-  greetd wlgreet sway waybar wofi mako-notifier brave-browser bruno codium dbeaver-ce evolution \
+  greetd wlgreet sway waybar wofi mako-notifier brave-browser bruno discord codium dbeaver-ce evolution \
   network-manager-openvpn-gnome network-manager-openconnect-gnome \
   network-manager-l2tp-gnome network-manager-strongswan \
   network-manager-vpnc-gnome network-manager-sstp-gnome wireguard-tools
@@ -378,6 +379,7 @@ If screen sharing does not appear in an application, fully close that applicatio
 - [Installing Brave on Linux](https://brave.com/linux/)
 - [Installing Bruno](https://docs.usebruno.com/v2/get-started/bruno-basics/download)
 - [Downloading Slack for Linux](https://slack.com/downloads/linux)
+- [Downloading Discord for Linux](https://discord.com/download)
 - [Installing VSCodium](https://vscodium.com/install)
 - [Downloading DBeaver Community](https://dbeaver.io/download/)
 - [NVM](https://github.com/nvm-sh/nvm)
