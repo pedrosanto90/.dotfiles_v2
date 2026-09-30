@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=Yazi
+GenericName=File Manager
+Comment=Browse files in the terminal
+Exec=ghostty -e yazi
+Terminal=false
+Type=Application
+Icon=utilities-file-manager
+Categories=Utility;FileManager;
+Keywords=file;manager;browser;terminal;
+StartupNotify=true
+StartupWMClass=com.mitchellh.ghostty

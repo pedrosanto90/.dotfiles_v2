@@ -19,6 +19,7 @@ while IFS=$'\t' read -r destination project_root; do
     "${HOME}/.local/bin/"*) relative="scripts/bin/${destination#"${HOME}/.local/bin/"}" ;;
     "${HOME}/.local/share/wallpapers/debian-sway-dev/"*) relative="wallpapers/${destination#"${HOME}/.local/share/wallpapers/debian-sway-dev/"}" ;;
     "${HOME}/.local/share/applications/brave-browser.desktop") relative='assets/brave-browser.desktop' ;;
+    "${HOME}/.local/share/applications/yazi.desktop") relative='assets/yazi.desktop' ;;
     "${HOME}/.tmux.conf") relative='configs/tmux/tmux.conf' ;;
     "${HOME}/.zshrc") relative='configs/zsh/zshrc' ;;
     "${HOME}/.zprofile") relative='configs/zsh/zprofile' ;;

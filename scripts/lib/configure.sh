@@ -25,6 +25,7 @@ deploy_configs() {
   deploy_tree "${PROJECT_ROOT}/scripts/bin" "${HOME}/.local/bin"
   deploy_tree "${PROJECT_ROOT}/wallpapers" "${HOME}/.local/share/wallpapers/debian-sway-dev"
   deploy_file "${PROJECT_ROOT}/assets/brave-browser.desktop" "${HOME}/.local/share/applications/brave-browser.desktop"
+  deploy_file "${PROJECT_ROOT}/assets/yazi.desktop" "${HOME}/.local/share/applications/yazi.desktop"
 }
 
 configure_login_manager() {

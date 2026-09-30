@@ -357,7 +357,7 @@ sudo apt-get --simulate remove \
   network-manager-vpnc-gnome network-manager-sstp-gnome wireguard-tools
 ```
 
-The locally built Ghostty is not an APT package; its files are under `~/.local`. Source-built Neovim is installed under `/usr/local/bin/nvim` and `/usr/local/share/nvim`. NVM/Node live under `~/.nvm`, Yazi/Starship under `~/.local/bin`, the Nerd Font under `~/.local/share/fonts/JetBrainsMonoNerd`, and backups under `~/.local/state/debian-sway-dev`. The Brave PWA policy remains under `/etc/brave/policies/managed/debian-sway-dev-pwas.json` for separate review and removal.
+The locally built Ghostty is not an APT package; its files are under `~/.local`. Source-built Neovim is installed under `/usr/local/bin/nvim` and `/usr/local/share/nvim`. NVM/Node live under `~/.nvm`, Yazi/Starship under `~/.local/bin`, the Nerd Font under `~/.local/share/fonts/JetBrainsMonoNerd`, and backups under `~/.local/state/debian-sway-dev`. A `Yazi` entry in the applications menu (Wofi) opens a new Ghostty window running Yazi; its desktop file lives at `~/.local/share/applications/yazi.desktop`. The Brave PWA policy remains under `/etc/brave/policies/managed/debian-sway-dev-pwas.json` for separate review and removal.
 
 ## Diagnostics
 
