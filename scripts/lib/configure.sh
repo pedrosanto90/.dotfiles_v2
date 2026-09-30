@@ -12,7 +12,7 @@ deploy_tree() {
 
 deploy_configs() {
   local directory
-  for directory in sway waybar mako ghostty wofi nvim gtk-3.0 gtk-4.0; do
+  for directory in sway waybar mako ghostty wofi nvim gtk-3.0 gtk-4.0 swappy; do
     deploy_tree "${PROJECT_ROOT}/configs/${directory}" "${HOME}/.config/${directory}"
   done
   deploy_file "${PROJECT_ROOT}/configs/tmux/tmux.conf" "${HOME}/.tmux.conf"
@@ -56,6 +56,34 @@ configure_browser() {
   xdg-mime default brave-browser.desktop x-scheme-handler/https
   xdg-mime default brave-browser.desktop text/html
   "${PROJECT_ROOT}/scripts/system/install-brave-pwas.sh"
+}
+
+configure_viewers() {
+  local mime_type
+  local -a image_mime_types=(
+    image/avif
+    image/bmp
+    image/gif
+    image/heif
+    image/jpeg
+    image/jxl
+    image/png
+    image/svg+xml
+    image/tiff
+    image/webp
+    image/x-webp
+  )
+
+  require_command gwenview
+  require_command zathura
+  require_command swappy
+  require_command xdg-mime
+
+  for mime_type in "${image_mime_types[@]}"; do
+    xdg-mime default org.kde.gwenview.desktop "${mime_type}"
+  done
+  xdg-mime default org.pwmt.zathura.desktop application/pdf
+  log_info "Configured Gwenview for images and Zathura for PDF files."
 }
 
 configure_shell() {

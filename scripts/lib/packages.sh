@@ -7,7 +7,7 @@ readonly DEBIAN_PACKAGES=(
   openssh-client build-essential pkg-config cmake make ninja-build gettext xz-utils
   python3 python3-pip python3-venv python3-dev python3-i3ipc pipx
   php composer libapache2-mod-php
-  thunar thunar-archive-plugin gvfs gvfs-backends evolution
+  thunar thunar-archive-plugin gvfs gvfs-backends evolution gwenview qt6-wayland zathura
   wl-clipboard cliphist grim slurp swappy
   pipewire pipewire-pulse wireplumber libspa-0.2-bluetooth pavucontrol playerctl
   network-manager network-manager-gnome nm-connection-editor

@@ -14,6 +14,7 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 - Latest stable Neovim built from official source, with modular Tokyo Night and Kanagawa themes
 - Docker Engine with CLI, Buildx, and Compose; no Docker Desktop and no `sudo` for daily use
 - Node.js LTS through NVM, npm, Corepack, pnpm, and Yarn
+- Codex CLI (OpenAI) through npm and opencode through its official installer
 - Official stable Go toolchain and Python with venv, pip, pipx, and uv
 - PipeWire/WirePlumber, NetworkManager, multi-protocol VPN support, Bluetooth, and PolicyKit
 - Wayland portals for screen sharing, Flatpak, and Electron applications
@@ -22,7 +23,7 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 - Bruno REST client, Slack, Discord, VSCodium, and DBeaver Community from official distribution channels
 - Evolution mail, calendar, contacts, and groupware
 - Repository-managed VSCodium settings, keybindings, and extension inventory
-- Thunar, Yazi, persistent clipboard history, screenshots, and USB automounting
+- Thunar, Yazi, Gwenview/Zathura image and PDF viewing, persistent clipboard history, screenshots, and USB automounting
 - Searchable Sway, tmux, and Neovim keybinding reference
 - Tokyo Night and Kanagawa palettes, Papirus icons, and JetBrainsMono Nerd Font
 - Synchronized light/dark theme families for GTK, Waybar, Ghostty, and Neovim
@@ -102,7 +103,11 @@ An existing Go tree is never deleted. During an upgrade, `/usr/local/go` moves t
 
 ## Installed software
 
-Debian packages cover Sway, greetd/wlgreet, Waybar, Wofi, Mako, Zsh, fzf, zoxide, tmux, Git, lazygit, ripgrep, fd (`fdfind`), bat (`batcat`), eza, jq, btop, fastfetch, the C/C++ toolchain, Python, Thunar/GVFS, Evolution, wl-clipboard, cliphist, grim/slurp/swappy, PipeWire, WirePlumber, pavucontrol, playerctl, NetworkManager with VPN plugins, Blueman, BlueZ, lxpolkit, XDG portals, UPower, power-profiles-daemon, udisks2, udiskie, brightnessctl, Papirus, and nwg-look.
+Debian packages cover Sway, greetd/wlgreet, Waybar, Wofi, Mako, Zsh, fzf, zoxide, tmux, Git, lazygit, ripgrep, fd (`fdfind`), bat (`batcat`), eza, jq, btop, fastfetch, the C/C++ toolchain, Python, Thunar/GVFS, Evolution, Gwenview, Zathura, wl-clipboard, cliphist, grim/slurp/swappy, PipeWire, WirePlumber, pavucontrol, playerctl, NetworkManager with VPN plugins, Blueman, BlueZ, lxpolkit, XDG portals, UPower, power-profiles-daemon, udisks2, udiskie, brightnessctl, Papirus, and nwg-look.
+
+### Image and PDF viewing
+
+Images open in **Gwenview**, a conventional image viewer with broad format support, printing with fit-to-page controls, and direct annotation tools for freehand strokes, lines, arrows, rectangles, ellipses, text, and custom colours. PDF files open in the keyboard-friendly **Zathura** viewer. **Swappy** remains available for annotating screenshots.
 
 The installer defines `fd` and `bat` aliases because Debian names those binaries `fdfind` and `batcat`.
 
@@ -117,13 +122,16 @@ Software outside Debian and its source:
 | Software | Installation method |
 |---|---|
 | Brave | Official Brave APT repository |
+| Google Chrome | Official stable Google `.deb` package on `amd64` and `arm64`, for Flutter web development |
 | Bruno | Official Bruno APT repository on `amd64`; checksummed official release package on `arm64` |
-| Slack | Official Slack `.deb` release package on `amd64` |
+| Slack | Official Slack `.deb` release package on `amd64`; obsolete Jessie PackageCloud source disabled |
 | Discord | Official stable Discord `.deb` release package on `amd64` |
 | VSCodium | Officially documented VSCodium APT repository |
 | DBeaver Community | Official DBeaver APT repository |
 | NVM | Latest tag from the official `nvm-sh/nvm` repository |
 | Node.js | Latest LTS resolved by NVM |
+| Codex CLI | `@openai/codex` globally through npm |
+| opencode | Official installer script, binary in `~/.local/bin` |
 | Go | Official tarball from `go.dev` |
 | Neovim | Latest stable Git tag built locally with the official CMake/Make procedure and installed in `/usr/local` |
 | Ghostty | Pinned official `release.files.ghostty.org` tarball, built locally |
@@ -139,6 +147,8 @@ The installer deploys `/etc/brave/policies/managed/debian-sway-dev-pwas.json` th
 
 Because these are force-installed browser applications, Brave keeps them synchronized with the policy and does not offer an uninstall button for them. Remove the policy file first if the PWAs should later be removed through Brave.
 
+Google Chrome is also installed so Flutter can detect and launch a supported web-development browser. Brave remains the system default for HTTP, HTTPS, and HTML links.
+
 The installer applies `Tokyonight-Dark` to GTK 3 and GTK 4 applications by default. The theme button in Waybar opens a Wofi selector with Tokyo Night Dark/Light, Kanagawa Wave/Lotus, Rosé Pine, Everforest Dark/Light, Catppuccin Mocha/Latte, Gruvbox Dark/Light, and Nightfox. A selection updates GTK, Papirus icons, Waybar, Ghostty, tmux, VSCodium, and every running Neovim instance. Right-clicking the button quickly toggles light/dark inside families that provide both modes; dark-only families remain dark. Existing `light` or `dark` state files are migrated transparently to Tokyo Night. `nwg-look` remains available for later visual adjustments. The login screen, Sway, Wofi, Mako, and Starship keep their static Tokyo Night palette.
 
 After updating the repository, rerun `./install.sh` to install the added GTK themes, deploy the palettes, and install editor extensions. You can also select the new variants with `theme-toggle catppuccin-light`, `theme-toggle gruvbox-dark`, or `theme-toggle gruvbox-light`.
@@ -153,7 +163,7 @@ Docker Engine starts automatically at boot. The installer adds the current user 
 - **Python:** `python3`, development headers, pip, venv, pipx, and uv. uv and uvx are installed in `~/.local/bin`, alongside pipx binaries. Existing uv installations are preserved; update standalone installations with `uv self update`.
 - **Go:** `GOROOT=/usr/local/go`, `GOPATH=~/go`, and both binary directories are added to `PATH`.
 
-Global TypeScript packages are intentionally omitted. Prefer `corepack pnpm add -D typescript` inside each project for reproducible builds.
+Global TypeScript packages are intentionally omitted, with the exception of the Codex CLI installed through npm. Prefer `corepack pnpm add -D typescript` inside each project for reproducible builds.
 
 ## Sway keybindings
 

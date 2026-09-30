@@ -21,6 +21,7 @@ main() {
   init_runtime
   acquire_lock
   select_display_manager
+  disable_slack_packagecloud_repository
 
   log_step "Update package indexes and install Debian packages"
   install_debian_packages
@@ -30,10 +31,13 @@ main() {
   log_step "Install software from official upstream sources"
   install_docker_engine
   install_brave
+  install_google_chrome
   install_developer_gui_apps
   install_starship
   install_uv
   install_nvm_and_node
+  install_codex
+  install_opencode
   install_go
   install_yazi
   # Neovim is intentionally built from the latest stable upstream source.
@@ -49,6 +53,7 @@ main() {
   deploy_configs
   configure_login_manager
   configure_browser
+  configure_viewers
   configure_shell
   configure_gtk_theme
   install_vscodium_extensions

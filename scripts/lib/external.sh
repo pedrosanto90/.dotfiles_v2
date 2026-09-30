@@ -72,6 +72,31 @@ install_brave() {
   fi
 }
 
+install_google_chrome() {
+  local architecture archive package_name package_architecture
+  architecture=$(dpkg --print-architecture)
+  case ${architecture} in
+    amd64 | arm64) ;;
+    *)
+      log_warn "Google Chrome is unsupported on architecture ${architecture}; skipping it."
+      return
+      ;;
+  esac
+
+  if dpkg-query -W -f='${db:Status-Abbrev}' google-chrome-stable 2>/dev/null | grep -q '^ii '; then
+    log_info "Google Chrome is already installed."
+    return
+  fi
+
+  archive="${CACHE_HOME}/google-chrome-stable_current_${architecture}.deb"
+  download "https://dl.google.com/linux/direct/google-chrome-stable_current_${architecture}.deb" "${archive}"
+  package_name=$(dpkg-deb -f "${archive}" Package)
+  package_architecture=$(dpkg-deb -f "${archive}" Architecture)
+  [[ ${package_name} == google-chrome-stable && ${package_architecture} == "${architecture}" ]] ||
+    die "Unexpected metadata in the official Google Chrome package."
+  "${SUDO[@]}" apt-get install --yes "${archive}"
+}
+
 dearmor_key() {
   local url=$1 destination=$2 armored fingerprint_suffix=${3:-} fingerprint
   armored=$(mktemp "${CACHE_HOME}/vendor-key.XXXXXX")
@@ -108,8 +133,25 @@ install_bruno_arm64() {
   "${SUDO[@]}" apt-get install --yes "${archive}"
 }
 
+disable_slack_packagecloud_repository() {
+  local slack_source=/etc/apt/sources.list.d/slack.list
+
+  # Slack's official .deb ships a daily job which can recreate its obsolete
+  # Debian Jessie PackageCloud source. Keep updates on the official release
+  # package used below, without weakening APT signature verification.
+  if [[ ! -e ${slack_source} && ! -e /etc/cron.daily/slack && ! -e /etc/default/slack ]] &&
+    ! dpkg-query -W -f='${db:Status-Abbrev}' slack-desktop 2>/dev/null | grep -q '^ii '; then
+    return
+  fi
+
+  sudo_deploy_config "${PROJECT_ROOT}/assets/apt/slack-defaults" /etc/default/slack
+  sudo_deploy_config "${PROJECT_ROOT}/assets/apt/slack.list" "${slack_source}"
+  log_info "Disabled Slack's obsolete Debian Jessie PackageCloud repository."
+}
+
 install_slack() {
   local architecture version installed='' archive url
+  disable_slack_packagecloud_repository
   architecture=$(dpkg --print-architecture)
   [[ ${architecture} == amd64 ]] || {
     log_warn "Slack's official Linux package is only available for amd64; skipping Slack on ${architecture}."
@@ -128,6 +170,7 @@ install_slack() {
   url="https://downloads.slack-edge.com/desktop-releases/linux/x64/${version}/slack-desktop-${version}-amd64.deb"
   download "${url}" "${archive}"
   "${SUDO[@]}" apt-get install --yes "${archive}"
+  disable_slack_packagecloud_repository
 }
 
 install_discord() {
@@ -230,6 +273,31 @@ install_uv() {
   download 'https://astral.sh/uv/install.sh' "${installer}"
   UV_INSTALL_DIR="${HOME}/.local/bin" UV_NO_MODIFY_PATH=1 sh "${installer}"
   "${HOME}/.local/bin/uv" --version
+}
+
+install_codex() {
+  if command -v codex >/dev/null 2>&1; then
+    log_info "Codex CLI is already installed."
+    return
+  fi
+  require_command npm
+  npm install --global @openai/codex
+  require_command codex
+}
+
+install_opencode() {
+  local installer
+  if command -v opencode >/dev/null 2>&1 || [[ -x ${HOME}/.local/bin/opencode ]] ||
+    [[ -x ${HOME}/.opencode/bin/opencode ]]; then
+    log_info "opencode is already installed."
+    return
+  fi
+  installer=$(mktemp "${CACHE_HOME}/opencode-install.XXXXXX")
+  download 'https://opencode.ai/install' "${installer}"
+  # ~/.local/bin is already on PATH in the managed zshrc; keep the binary there
+  # and prevent the installer from editing shell configuration files.
+  XDG_BIN_DIR="${HOME}/.local/bin" bash "${installer}" --no-modify-path
+  require_command opencode
 }
 
 install_nvm_and_node() {

@@ -1,0 +1,3 @@
+### THIS FILE IS MANAGED BY DEBIAN-SWAY-DEV ###
+# Slack is updated from its official .deb; the obsolete Jessie repository stays disabled.
+#deb https://packagecloud.io/slacktechnologies/slack/debian/ jessie main

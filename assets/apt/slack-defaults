@@ -1,0 +1,4 @@
+# Prevent Slack's bundled daily job from restoring its obsolete Debian Jessie
+# PackageCloud repository. Updates are installed from Slack's official .deb.
+repo_add_once="false"
+repo_reenable_on_distupgrade="false"
