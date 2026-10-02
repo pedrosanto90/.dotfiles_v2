@@ -5,7 +5,7 @@
   "spacing": 4,
   "modules-left": ["sway/workspaces", "sway/window"],
   "modules-center": ["clock"],
-  "modules-right": ["cpu", "memory", "disk", "network", "bluetooth", "pulseaudio", "battery", "tray", "custom/tiling", "custom/clipboard", "custom/theme", "custom/caffeine", "custom/power"],
+  "modules-right": ["cpu", "memory", "disk", "pulseaudio", "battery", "tray", "custom/tiling", "custom/clipboard", "custom/theme", "custom/caffeine", "custom/power"],
   "sway/workspaces": {
     "disable-scroll": true,
     "all-outputs": true,
@@ -32,18 +32,6 @@
     "path": "/",
     "format": "  {percentage_used}%",
     "interval": 30
-  },
-  "network": {
-    "format-wifi": "  {signalStrength}%",
-    "format-ethernet": "󰈀  {ipaddr}",
-    "format-disconnected": "󰖪",
-    "tooltip-format": "{ifname}: {ipaddr}/{cidr}"
-  },
-  "bluetooth": {
-    "format": "",
-    "format-connected": " {num_connections}",
-    "format-disabled": "󰂲",
-    "on-click": "blueman-manager"
   },
   "pulseaudio": {
     "format": "{icon} {volume}%",

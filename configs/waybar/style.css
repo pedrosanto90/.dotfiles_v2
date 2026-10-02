@@ -13,13 +13,12 @@ window#waybar { background: @bar_background; color: @foreground; }
 #workspaces button.focused { color: @selected_foreground; background: @blue; }
 #workspaces button.urgent { color: @selected_foreground; background: @red; }
 #window { padding-left: 10px; color: @secondary_foreground; }
-#clock, #cpu, #memory, #disk, #network, #bluetooth, #pulseaudio, #battery, #tray, #custom-tiling, #custom-clipboard, #custom-theme, #custom-caffeine, #custom-power {
+#clock, #cpu, #memory, #disk, #pulseaudio, #battery, #tray, #custom-tiling, #custom-clipboard, #custom-theme, #custom-caffeine, #custom-power {
   padding: 0 9px;
   margin: 4px 0;
   color: @foreground;
 }
 #clock { color: @blue; }
-#network { color: @green; }
 #pulseaudio { color: @yellow; }
 #battery.warning { color: @orange; }
 #battery.critical { color: @red; }
