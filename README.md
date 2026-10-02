@@ -27,6 +27,7 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 - Searchable Sway, tmux, and Neovim keybinding reference
 - Tokyo Night and Kanagawa palettes, Papirus icons, and JetBrainsMono Nerd Font
 - Synchronized light/dark theme families for GTK, Waybar, Ghostty, and Neovim
+- Pomodoro timer in Waybar with a Wofi menu, configurable durations, and Mako notifications
 - Clipboard history for text and images, available from Waybar through Wofi
 
 ## Requirements
@@ -184,6 +185,7 @@ Global TypeScript packages are intentionally omitted, with the exception of the 
 | `Super + Shift + C` | Reload Sway |
 | `Super + Shift + E` | Confirm and end the session |
 | `Super + Ctrl + L` | Lock the session |
+| `Super + P` | Open the Pomodoro menu |
 | `Super + H/J/K/L` | Move focus |
 | `Super + Shift + H/J/K/L` | Move the focused window |
 | `Super + 1…0` | Switch to workspace 1…10 |

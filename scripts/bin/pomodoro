@@ -1,0 +1,498 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+readonly state_home="${XDG_STATE_HOME:-${HOME}/.local/state}/debian-sway-dev"
+readonly config_file="${state_home}/pomodoro.conf"
+readonly state_file="${runtime_dir}/debian-sway-dev-pomodoro.state"
+readonly pid_file="${runtime_dir}/debian-sway-dev-pomodoro.pid"
+readonly lock_file="${runtime_dir}/debian-sway-dev-pomodoro.lock"
+
+readonly icon_idle='󰔟'
+readonly icon_focus='󰔛'
+readonly icon_break='󰅊'
+readonly icon_paused='󰏤'
+
+readonly default_focus=50
+readonly default_short=10
+readonly default_long=15
+readonly cycle_length=4
+
+notify_error() {
+  command -v notify-send >/dev/null 2>&1 &&
+    notify-send --urgency=critical 'Pomodoro' "$1" || true
+}
+
+send_notification() {
+  command -v notify-send >/dev/null 2>&1 &&
+    notify-send "$1" "$2" || true
+}
+
+refresh_waybar() {
+  pkill -RTMIN+10 -x waybar 2>/dev/null || true
+}
+
+# Mutations run inside a subshell so the flock is always released on return.
+with_lock() {
+  mkdir -p "${runtime_dir}"
+  (
+    flock 9 || exit 1
+    "$@"
+  ) 9>"${lock_file}"
+}
+
+read_durations() {
+  dur_focus=${default_focus}
+  dur_short=${default_short}
+  dur_long=${default_long}
+  [[ -r ${config_file} ]] || return 0
+
+  local key value
+  while IFS='=' read -r key value; do
+    [[ ${value} =~ ^[0-9]+$ ]] || continue
+    (( value > 0 )) || continue
+    case ${key} in
+      focus) dur_focus=${value} ;;
+      short) dur_short=${value} ;;
+      long) dur_long=${value} ;;
+    esac
+  done <"${config_file}"
+}
+
+read_state() {
+  phase=''
+  ends_at=0
+  remaining=0
+  sessions=0
+  [[ -r ${state_file} ]] || return 0
+
+  local key value
+  while IFS='=' read -r key value; do
+    case ${key} in
+      phase)
+        if [[ ${value} =~ ^(focus|short|long)$ ]]; then
+          phase=${value}
+        fi
+        ;;
+      ends_at)
+        if [[ ${value} =~ ^[0-9]+$ ]]; then
+          ends_at=${value}
+        fi
+        ;;
+      remaining)
+        if [[ ${value} =~ ^[0-9]+$ ]]; then
+          remaining=${value}
+        fi
+        ;;
+      sessions)
+        if [[ ${value} =~ ^[0-9]+$ ]]; then
+          sessions=${value}
+        fi
+        ;;
+    esac
+  done <"${state_file}"
+}
+
+write_state() {
+  mkdir -p "${runtime_dir}"
+  local temporary
+  temporary=$(mktemp "${runtime_dir}/.pomodoro.state.XXXXXX")
+  printf 'phase=%s\nends_at=%s\nremaining=%s\nsessions=%s\n' \
+    "${phase}" "${ends_at}" "${remaining}" "${sessions}" >"${temporary}"
+  mv -f -- "${temporary}" "${state_file}"
+}
+
+phase_label() {
+  case $1 in
+    focus) printf 'Foco' ;;
+    short) printf 'Pausa curta' ;;
+    long) printf 'Pausa longa' ;;
+  esac
+}
+
+phase_description() {
+  case $1 in
+    focus) printf 'sessão de foco' ;;
+    short) printf 'pausa curta' ;;
+    long) printf 'pausa longa' ;;
+  esac
+}
+
+phase_minutes() {
+  read_durations
+  case $1 in
+    focus) printf '%s' "${dur_focus}" ;;
+    short) printf '%s' "${dur_short}" ;;
+    long) printf '%s' "${dur_long}" ;;
+  esac
+}
+
+phase_seconds() {
+  local minutes
+  minutes=$(phase_minutes "$1")
+  printf '%s' "$(( minutes * 60 ))"
+}
+
+format_time() {
+  local total=$1 hours minutes seconds
+  hours=$(( total / 3600 ))
+  minutes=$(( (total % 3600) / 60 ))
+  seconds=$(( total % 60 ))
+  if (( hours > 0 )); then
+    printf '%d:%02d:%02d' "${hours}" "${minutes}" "${seconds}"
+  else
+    printf '%02d:%02d' "${minutes}" "${seconds}"
+  fi
+}
+
+start_phase() {
+  local new_phase=$1 new_sessions=${2:-0} override=${3:-}
+  local seconds
+  if [[ ${override} =~ ^[0-9]+$ ]] && (( override > 0 )); then
+    seconds=${override}
+  else
+    seconds=$(phase_seconds "${new_phase}")
+  fi
+  phase=${new_phase}
+  sessions=${new_sessions}
+  ends_at=$(( $(date +%s) + seconds ))
+  remaining=0
+  write_state
+}
+
+watcher_alive() {
+  local pid=''
+  [[ -r ${pid_file} ]] || return 1
+  read -r pid <"${pid_file}"
+  [[ ${pid} =~ ^[0-9]+$ ]] && kill -0 "${pid}" 2>/dev/null
+}
+
+ensure_watcher() {
+  watcher_alive && return 0
+  read_state
+  (( ends_at > 0 )) || return 0
+  # Close the inherited lock descriptor so the watcher never holds it.
+  setsid "${BASH_SOURCE[0]}" watch >/dev/null 2>&1 9>&- &
+}
+
+run_watcher() {
+  printf '%s\n' "$$" >"${pid_file}"
+
+  local now recorded
+  while true; do
+    sleep 1
+    [[ -r ${state_file} ]] || break
+    read_state
+    [[ -n ${phase} ]] || break
+    (( ends_at > 0 )) || continue
+
+    now=$(date +%s)
+    (( now >= ends_at )) || continue
+    with_lock cmd_transition
+  done
+
+  recorded=''
+  [[ -r ${pid_file} ]] && read -r recorded <"${pid_file}"
+  if [[ ${recorded} == "$$" ]]; then
+    rm -f -- "${pid_file}"
+  fi
+  return 0
+}
+
+cmd_transition() {
+  read_state
+  [[ -n ${phase} ]] || return 0
+
+  local finished=${phase} next
+  case ${finished} in
+    focus)
+      sessions=$(( sessions + 1 ))
+      if (( sessions % cycle_length == 0 )); then
+        next=long
+      else
+        next=short
+      fi
+      ;;
+    *) next=focus ;;
+  esac
+
+  start_phase "${next}" "${sessions}"
+  notify_transition "${finished}" "${next}" "${sessions}"
+  refresh_waybar
+}
+
+notify_transition() {
+  local finished=$1 next=$2 count=$3 minutes
+  if [[ ${finished} == focus ]]; then
+    minutes=$(phase_minutes "${next}")
+    send_notification 'Pomodoro — foco concluído' \
+      "$(printf 'Sessão %s concluída. Faz uma %s de %s min.' \
+        "${count}" "$(phase_description "${next}")" "${minutes}")"
+  else
+    minutes=$(phase_minutes focus)
+    send_notification 'Pomodoro — pausa terminada' \
+      "$(printf 'Volta ao foco durante %s min.' "${minutes}")"
+  fi
+}
+
+cmd_start() {
+  local minutes=${1:-}
+  read_durations
+
+  local override='' display_minutes
+  if [[ ${minutes} =~ ^[0-9]+$ ]] && (( minutes > 0 )); then
+    override=$(( minutes * 60 ))
+    display_minutes=${minutes}
+  else
+    display_minutes=${dur_focus}
+  fi
+
+  sessions=0
+  start_phase focus 0 "${override}"
+  ensure_watcher
+  send_notification 'Pomodoro — foco iniciado' \
+    "$(printf 'Sessão de foco de %s min.' "${display_minutes}")"
+  refresh_waybar
+}
+
+cmd_toggle() {
+  read_state
+  if [[ -z ${phase} ]]; then
+    cmd_start
+  elif (( ends_at > 0 )); then
+    cmd_pause
+  else
+    cmd_resume
+  fi
+}
+
+cmd_pause() {
+  read_state
+  [[ -n ${phase} ]] || return 0
+  (( ends_at > 0 )) || return 0
+
+  local now
+  now=$(date +%s)
+  remaining=$(( ends_at - now ))
+  (( remaining > 0 )) || remaining=0
+  ends_at=0
+  write_state
+  refresh_waybar
+}
+
+cmd_resume() {
+  read_state
+  [[ -n ${phase} ]] || return 0
+  (( ends_at == 0 )) || return 0
+
+  if (( remaining <= 0 )); then
+    remaining=$(phase_seconds "${phase}")
+  fi
+  ends_at=$(( $(date +%s) + remaining ))
+  remaining=0
+  write_state
+  ensure_watcher
+  refresh_waybar
+}
+
+cmd_skip() {
+  read_state
+  if [[ -z ${phase} ]]; then
+    cmd_start
+    return
+  fi
+
+  local next
+  case ${phase} in
+    focus) next=short ;;
+    *) next=focus ;;
+  esac
+
+  start_phase "${next}" "${sessions}"
+  ensure_watcher
+  send_notification 'Pomodoro' \
+    "$(printf 'Saltaste para: %s.' "$(phase_label "${next}")")"
+  refresh_waybar
+}
+
+cmd_stop() {
+  local pid=''
+  if [[ -r ${pid_file} ]]; then
+    read -r pid <"${pid_file}"
+  fi
+  if [[ ${pid} =~ ^[0-9]+$ ]]; then
+    kill "${pid}" 2>/dev/null || true
+  fi
+  rm -f -- "${pid_file}" "${state_file}"
+  send_notification 'Pomodoro' 'Temporizador parado.'
+  refresh_waybar
+}
+
+cmd_set_duration() {
+  local key=$1 value=$2
+  [[ ${key} =~ ^(focus|short|long)$ ]] || return 1
+  [[ ${value} =~ ^[0-9]+$ ]] && (( value > 0 )) || return 1
+
+  read_durations
+  case ${key} in
+    focus) dur_focus=${value} ;;
+    short) dur_short=${value} ;;
+    long) dur_long=${value} ;;
+  esac
+
+  mkdir -p "${state_home}"
+  local temporary
+  temporary=$(mktemp "${state_home}/.pomodoro.conf.XXXXXX")
+  printf 'focus=%s\nshort=%s\nlong=%s\n' \
+    "${dur_focus}" "${dur_short}" "${dur_long}" >"${temporary}"
+  mv -f -- "${temporary}" "${config_file}"
+  send_notification 'Pomodoro' \
+    "$(printf 'Durações: foco %s · pausa curta %s · pausa longa %s min (aplica na próxima fase).' \
+      "${dur_focus}" "${dur_short}" "${dur_long}")"
+}
+
+print_status() {
+  read_state
+  read_durations
+
+  local icon class click_hint session_info tooltip
+  if [[ -z ${phase} ]]; then
+    printf '{"text":"%s","class":"idle","tooltip":"Pomodoro parado\\nClick: iniciar foco (%s min) · Direito: menu · Super+P"}\n' \
+      "${icon_idle}" "${dur_focus}"
+    return 0
+  fi
+
+  if (( ends_at > 0 )); then
+    ensure_watcher
+    now=$(date +%s)
+    remaining=$(( ends_at - now ))
+    (( remaining > 0 )) || remaining=0
+    if [[ ${phase} == focus ]]; then
+      icon=${icon_focus}
+      class=running
+    else
+      icon=${icon_break}
+      class=break
+    fi
+    click_hint='pausar'
+  else
+    icon=${icon_paused}
+    class=paused
+    click_hint='retomar'
+  fi
+
+  session_info=$(printf '%s concluídas (pausa longa a cada %s)' \
+    "${sessions}" "${cycle_length}")
+
+  printf '{"text":"%s %s","class":"%s","tooltip":"%s — %s\\nSessões: %s\\nClick: %s · Direito: menu · Super+P"}\n' \
+    "${icon}" "$(format_time "${remaining}")" "${class}" \
+    "$(phase_label "${phase}")" "$(format_time "${remaining}")" \
+    "${session_info}" "${click_hint}"
+}
+
+show_menu() {
+  read_state
+  local -a entries=()
+
+  if [[ -z ${phase} ]]; then
+    entries+=('Iniciar foco')
+  elif (( ends_at > 0 )); then
+    entries+=('Pausar')
+    if [[ ${phase} == focus ]]; then
+      entries+=('Saltar para a pausa')
+    else
+      entries+=('Saltar para o foco')
+    fi
+  else
+    entries+=('Retomar')
+    entries+=('Saltar fase')
+  fi
+
+  [[ -z ${phase} ]] || entries+=('Parar e limpar')
+  entries+=('Alterar durações…')
+
+  printf '%s\n' "${entries[@]}" |
+    wofi --dmenu --prompt 'Pomodoro' --width 380 --height 340
+}
+
+change_durations() {
+  read_durations
+
+  local selection key value
+  selection=$(printf '%s\n' \
+    "$(printf 'Foco (atual: %s min)' "${dur_focus}")" \
+    "$(printf 'Pausa curta (atual: %s min)' "${dur_short}")" \
+    "$(printf 'Pausa longa (atual: %s min)' "${dur_long}")" |
+    wofi --dmenu --prompt 'Durações' --width 380 --height 220 || true)
+
+  case ${selection} in
+    'Foco ('*) key=focus ;;
+    'Pausa curta ('*) key=short ;;
+    'Pausa longa ('*) key=long ;;
+    *) return 0 ;;
+  esac
+
+  value=$(printf '%s\n' 15 20 25 30 45 50 60 90 |
+    wofi --dmenu --prompt 'Minutos' --width 240 --height 320 || true)
+  [[ ${value} =~ ^[0-9]+$ ]] && (( value > 0 )) || return 0
+
+  with_lock cmd_set_duration "${key}" "${value}"
+}
+
+cmd_menu() {
+  command -v wofi >/dev/null 2>&1 || {
+    notify_error 'O Wofi não está instalado.'
+    return 1
+  }
+  [[ -n ${WAYLAND_DISPLAY:-} ]] || {
+    notify_error 'É necessária uma sessão Wayland para abrir o menu.'
+    return 1
+  }
+
+  local selection
+  selection=$(show_menu || true)
+
+  case ${selection} in
+    'Iniciar foco') with_lock cmd_start ;;
+    'Pausar') with_lock cmd_pause ;;
+    'Retomar') with_lock cmd_resume ;;
+    'Saltar para a pausa' | 'Saltar para o foco' | 'Saltar fase') with_lock cmd_skip ;;
+    'Parar e limpar') with_lock cmd_stop ;;
+    'Alterar durações…') change_durations ;;
+    '') return 0 ;;
+  esac
+}
+
+case ${1:-status} in
+  status)
+    print_status
+    ;;
+  toggle)
+    with_lock cmd_toggle
+    ;;
+  start)
+    with_lock cmd_start "${2:-}"
+    ;;
+  pause)
+    with_lock cmd_pause
+    ;;
+  resume)
+    with_lock cmd_resume
+    ;;
+  skip)
+    with_lock cmd_skip
+    ;;
+  stop)
+    with_lock cmd_stop
+    ;;
+  menu)
+    cmd_menu
+    ;;
+  watch)
+    run_watcher
+    ;;
+  *)
+    printf 'Usage: %s [status|toggle|start [minutes]|pause|resume|skip|stop|menu]\n' "${0##*/}" >&2
+    exit 2
+    ;;
+esac

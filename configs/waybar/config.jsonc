@@ -5,7 +5,7 @@
   "spacing": 4,
   "modules-left": ["sway/workspaces", "sway/window"],
   "modules-center": ["clock"],
-  "modules-right": ["cpu", "memory", "disk", "pulseaudio", "battery", "tray", "custom/tiling", "custom/clipboard", "custom/theme", "custom/caffeine", "custom/power"],
+  "modules-right": ["cpu", "memory", "disk", "pulseaudio", "battery", "tray", "custom/pomodoro", "custom/tiling", "custom/clipboard", "custom/theme", "custom/caffeine", "custom/power"],
   "sway/workspaces": {
     "disable-scroll": true,
     "all-outputs": true,
@@ -48,6 +48,14 @@
     "format-icons": ["󰁺", "󰁻", "󰁽", "󰁿", "󰂁", "󰁹"]
   },
   "tray": { "spacing": 8 },
+  "custom/pomodoro": {
+    "exec": "~/.local/bin/pomodoro status",
+    "return-type": "json",
+    "interval": 1,
+    "signal": 10,
+    "on-click": "~/.local/bin/pomodoro toggle",
+    "on-click-right": "~/.local/bin/pomodoro menu"
+  },
   "custom/tiling": {
     "exec": "~/.local/bin/sway-layout status",
     "return-type": "json",
