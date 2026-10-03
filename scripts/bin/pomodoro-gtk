@@ -1,0 +1,184 @@
+#!/usr/bin/python3
+"""GTK4 dialog for the Pomodoro timer.
+
+Provides spin buttons for the focus/short/long durations and contextual
+action buttons (start, pause, resume, skip, stop). Actions are applied by
+shelling out to the sibling `pomodoro` script so all state handling stays
+in one place. Uses the system Python because the PATH python may lack
+PyGObject.
+"""
+
+import json
+import os
+import subprocess
+import sys
+
+try:
+    import gi
+
+    gi.require_version("Gtk", "4.0")
+    gi.require_version("Gdk", "4.0")
+    from gi.repository import Gdk, Gtk
+except (ImportError, ValueError) as error:  # pragma: no cover - environment guard
+    sys.stderr.write(f"pomodoro-gtk: GTK4/PyGObject unavailable: {error}\n")
+    sys.exit(1)
+
+DEFAULT_DURATIONS = {"focus": 50, "short": 10, "long": 15}
+WINDOW_TITLE = "PomodoroMenu"
+APPLICATION_ID = "dev.debianswaydev.pomodoro"
+
+POMODORO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pomodoro")
+if not os.access(POMODORO, os.X_OK):
+    POMODORO = "pomodoro"
+
+
+def config_path():
+    base = os.environ.get("XDG_STATE_HOME", os.path.expanduser("~/.local/state"))
+    return os.path.join(base, "debian-sway-dev", "pomodoro.conf")
+
+
+def read_durations():
+    durations = dict(DEFAULT_DURATIONS)
+    try:
+        with open(config_path(), encoding="utf-8") as handle:
+            for line in handle:
+                key, separator, value = line.strip().partition("=")
+                if separator and key in durations and value.isdigit() and int(value) > 0:
+                    durations[key] = int(value)
+    except FileNotFoundError:
+        pass
+    return durations
+
+
+def run_pomodoro(*args):
+    subprocess.run([POMODORO, *args], check=False)
+
+
+def current_class():
+    try:
+        result = subprocess.run(
+            [POMODORO, "status"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        return json.loads(result.stdout).get("class", "idle")
+    except (ValueError, OSError):
+        return "idle"
+
+
+class PomodoroMenu(Gtk.Application):
+    def __init__(self):
+        super().__init__(application_id=APPLICATION_ID)
+
+    def do_activate(self):
+        durations = read_durations()
+
+        window = Gtk.ApplicationWindow(application=self, title=WINDOW_TITLE)
+        window.set_default_size(440, 360)
+        window.set_resizable(False)
+
+        key_controller = Gtk.EventControllerKey()
+        key_controller.connect("key-pressed", self.on_key_pressed)
+        window.add_controller(key_controller)
+
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        for margin in ("top", "bottom", "start", "end"):
+            getattr(box, f"set_margin_{margin}")(18)
+        window.set_child(box)
+
+        heading = Gtk.Label(label="Pomodoro", xalign=0)
+        heading.add_css_class("title-2")
+        box.append(heading)
+
+        durations_grid = Gtk.Grid(column_spacing=16, row_spacing=10)
+        box.append(durations_grid)
+        self.spins = {}
+        rows = [
+            ("focus", "Foco"),
+            ("short", "Pausa curta"),
+            ("long", "Pausa longa"),
+        ]
+        for index, (key, label) in enumerate(rows):
+            durations_grid.attach(
+                Gtk.Label(label=label, xalign=0, hexpand=True), 0, index, 1, 1
+            )
+            spin = Gtk.SpinButton.new_with_range(1, 180, 1)
+            spin.set_value(durations[key])
+            spin.set_hexpand(False)
+            durations_grid.attach(spin, 1, index, 1, 1)
+            self.spins[key] = spin
+
+        save_button = Gtk.Button(label="Guardar durações", halign=Gtk.Align.START)
+        save_button.connect("clicked", self.on_save)
+        box.append(save_button)
+
+        box.append(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL))
+
+        actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        actions.set_homogeneous(True)
+        box.append(actions)
+        self.build_actions(actions, current_class())
+
+        self.status = Gtk.Label(label="", xalign=0)
+        self.status.add_css_class("dim-label")
+        box.append(self.status)
+
+        close_button = Gtk.Button(label="Fechar", halign=Gtk.Align.END)
+        close_button.connect("clicked", lambda _button: self.quit())
+        box.append(close_button)
+
+        window.present()
+
+    def build_actions(self, container, phase):
+        if phase == "idle":
+            self.add_action_button(container, "Iniciar foco", "start")
+        elif phase == "paused":
+            self.add_action_button(container, "Retomar", "resume")
+            self.add_action_button(container, "Saltar", "skip")
+            self.add_action_button(container, "Parar", "stop")
+        else:
+            self.add_action_button(container, "Pausar", "pause")
+            self.add_action_button(container, "Saltar", "skip")
+            self.add_action_button(container, "Parar", "stop")
+
+    def add_action_button(self, container, label, command):
+        button = Gtk.Button(label=label)
+        if command == "start" or command == "resume":
+            button.add_css_class("suggested-action")
+        button.connect("clicked", self.on_action, command)
+        container.append(button)
+
+    def persist(self):
+        run_pomodoro(
+            "set-durations",
+            str(self.spins["focus"].get_value_as_int()),
+            str(self.spins["short"].get_value_as_int()),
+            str(self.spins["long"].get_value_as_int()),
+        )
+
+    def on_save(self, _button):
+        self.persist()
+        self.status.set_text("Durações guardadas.")
+
+    def on_action(self, _button, command):
+        self.persist()
+        run_pomodoro(command)
+        self.quit()
+
+    def on_key_pressed(self, _controller, keyval, _keycode, _state):
+        if keyval == Gdk.KEY_Escape:
+            self.quit()
+            return True
+        return False
+
+
+def main():
+    if not os.environ.get("WAYLAND_DISPLAY") and not os.environ.get("DISPLAY"):
+        sys.stderr.write("pomodoro-gtk: no graphical session available\n")
+        return 1
+    return PomodoroMenu().run([])
+
+
+if __name__ == "__main__":
+    sys.exit(main())

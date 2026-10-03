@@ -28,6 +28,16 @@ send_notification() {
     notify-send "$1" "$2" || true
 }
 
+# Send a notification whose default action runs a subcommand when invoked
+# (right-click on the Mako notification). Runs detached so the caller is not
+# blocked by --wait; fd 9 is closed so the state flock is never inherited.
+spawn_action_notification() {
+  local label=$1 title=$2 body=$3 action=$4
+  command -v notify-send >/dev/null 2>&1 || return 0
+  setsid "${BASH_SOURCE[0]}" notify-action "${label}" "${title}" "${body}" "${action}" \
+    >/dev/null 2>&1 9>&- &
+}
+
 refresh_waybar() {
   pkill -RTMIN+10 -x waybar 2>/dev/null || true
 }
@@ -222,12 +232,13 @@ cmd_transition() {
 }
 
 notify_transition() {
-  local finished=$1 next=$2 count=$3 minutes
+  local finished=$1 next=$2 count=$3 minutes body
   if [[ ${finished} == focus ]]; then
     minutes=$(phase_minutes "${next}")
-    send_notification 'Pomodoro — foco concluído' \
-      "$(printf 'Sessão %s concluída. Faz uma %s de %s min.' \
-        "${count}" "$(phase_description "${next}")" "${minutes}")"
+    body=$(printf 'Sessão %s concluída. Faz uma %s de %s min.' \
+      "${count}" "$(phase_description "${next}")" "${minutes}")
+    spawn_action_notification 'Saltar a pausa' 'Pomodoro — foco concluído' \
+      "${body}" cmd_skip
   else
     minutes=$(phase_minutes focus)
     send_notification 'Pomodoro — pausa terminada' \
@@ -328,27 +339,28 @@ cmd_stop() {
   refresh_waybar
 }
 
-cmd_set_duration() {
-  local key=$1 value=$2
-  [[ ${key} =~ ^(focus|short|long)$ ]] || return 1
-  [[ ${value} =~ ^[0-9]+$ ]] && (( value > 0 )) || return 1
+cmd_notify_action() {
+  local label=$1 title=$2 body=$3 action=$4 choice=''
+  command -v notify-send >/dev/null 2>&1 || return 0
 
-  read_durations
-  case ${key} in
-    focus) dur_focus=${value} ;;
-    short) dur_short=${value} ;;
-    long) dur_long=${value} ;;
-  esac
+  choice=$(notify-send --wait --action="default=${label}" "${title}" "${body}" 2>/dev/null) || true
+  if [[ ${choice} == default ]]; then
+    with_lock "${action}"
+  fi
+}
+
+cmd_set_durations() {
+  local focus=$1 short=$2 long=$3 value
+  for value in "${focus}" "${short}" "${long}"; do
+    [[ ${value} =~ ^[0-9]+$ ]] && (( value > 0 )) || return 1
+  done
 
   mkdir -p "${state_home}"
   local temporary
   temporary=$(mktemp "${state_home}/.pomodoro.conf.XXXXXX")
   printf 'focus=%s\nshort=%s\nlong=%s\n' \
-    "${dur_focus}" "${dur_short}" "${dur_long}" >"${temporary}"
+    "${focus}" "${short}" "${long}" >"${temporary}"
   mv -f -- "${temporary}" "${config_file}"
-  send_notification 'Pomodoro' \
-    "$(printf 'Durações: foco %s · pausa curta %s · pausa longa %s min (aplica na próxima fase).' \
-      "${dur_focus}" "${dur_short}" "${dur_long}")"
 }
 
 print_status() {
@@ -390,58 +402,15 @@ print_status() {
     "${session_info}" "${click_hint}"
 }
 
-show_menu() {
-  read_state
-  local -a entries=()
-
-  if [[ -z ${phase} ]]; then
-    entries+=('Iniciar foco')
-  elif (( ends_at > 0 )); then
-    entries+=('Pausar')
-    if [[ ${phase} == focus ]]; then
-      entries+=('Saltar para a pausa')
-    else
-      entries+=('Saltar para o foco')
-    fi
-  else
-    entries+=('Retomar')
-    entries+=('Saltar fase')
+menu_gui() {
+  local script_dir
+  script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+  local gui="${script_dir}/pomodoro-gtk"
+  if [[ ! -x ${gui} ]]; then
+    gui=$(command -v pomodoro-gtk 2>/dev/null || true)
   fi
-
-  [[ -z ${phase} ]] || entries+=('Parar e limpar')
-  entries+=('Alterar durações…')
-
-  printf '%s\n' "${entries[@]}" |
-    wofi --dmenu --prompt 'Pomodoro' --width 380 --height 340
-}
-
-change_durations() {
-  read_durations
-
-  local selection key value
-  selection=$(printf '%s\n' \
-    "$(printf 'Foco (atual: %s min)' "${dur_focus}")" \
-    "$(printf 'Pausa curta (atual: %s min)' "${dur_short}")" \
-    "$(printf 'Pausa longa (atual: %s min)' "${dur_long}")" |
-    wofi --dmenu --prompt 'Durações' --width 380 --height 220 || true)
-
-  case ${selection} in
-    'Foco ('*) key=focus ;;
-    'Pausa curta ('*) key=short ;;
-    'Pausa longa ('*) key=long ;;
-    *) return 0 ;;
-  esac
-
-  value=$(printf '%s\n' 15 20 25 30 45 50 60 90 |
-    wofi --dmenu --prompt 'Minutos' --width 240 --height 320 || true)
-  [[ ${value} =~ ^[0-9]+$ ]] && (( value > 0 )) || return 0
-
-  with_lock cmd_set_duration "${key}" "${value}"
-}
-
-cmd_menu() {
-  command -v wofi >/dev/null 2>&1 || {
-    notify_error 'O Wofi não está instalado.'
+  [[ -n ${gui} && -x ${gui} ]] || {
+    notify_error 'O menu gráfico do Pomodoro não está instalado.'
     return 1
   }
   [[ -n ${WAYLAND_DISPLAY:-} ]] || {
@@ -449,18 +418,17 @@ cmd_menu() {
     return 1
   }
 
-  local selection
-  selection=$(show_menu || true)
+  # Skip if a menu window is already open so repeated invocations do not stack.
+  if command -v swaymsg >/dev/null 2>&1 &&
+    swaymsg -t get_tree -r 2>/dev/null |
+    jq -e '.. | objects | select(.app_id? == "dev.debianswaydev.pomodoro")' >/dev/null 2>&1; then
+    return 0
+  fi
+  setsid "${gui}" >/dev/null 2>&1 &
+}
 
-  case ${selection} in
-    'Iniciar foco') with_lock cmd_start ;;
-    'Pausar') with_lock cmd_pause ;;
-    'Retomar') with_lock cmd_resume ;;
-    'Saltar para a pausa' | 'Saltar para o foco' | 'Saltar fase') with_lock cmd_skip ;;
-    'Parar e limpar') with_lock cmd_stop ;;
-    'Alterar durações…') change_durations ;;
-    '') return 0 ;;
-  esac
+cmd_menu() {
+  menu_gui
 }
 
 case ${1:-status} in
@@ -488,11 +456,17 @@ case ${1:-status} in
   menu)
     cmd_menu
     ;;
+  set-durations)
+    with_lock cmd_set_durations "${2:-}" "${3:-}" "${4:-}"
+    ;;
+  notify-action)
+    cmd_notify_action "${2:-}" "${3:-}" "${4:-}" "${5:-}"
+    ;;
   watch)
     run_watcher
     ;;
   *)
-    printf 'Usage: %s [status|toggle|start [minutes]|pause|resume|skip|stop|menu]\n' "${0##*/}" >&2
+    printf 'Usage: %s [status|toggle|start [minutes]|pause|resume|skip|stop|menu|set-durations focus short long]\n' "${0##*/}" >&2
     exit 2
     ;;
 esac

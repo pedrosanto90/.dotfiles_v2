@@ -27,7 +27,7 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 - Searchable Sway, tmux, and Neovim keybinding reference
 - Tokyo Night and Kanagawa palettes, Papirus icons, and JetBrainsMono Nerd Font
 - Synchronized light/dark theme families for GTK, Waybar, Ghostty, and Neovim
-- Pomodoro timer in Waybar with a Wofi menu, configurable durations, and Mako notifications
+- Pomodoro timer in Waybar with a GTK4 menu (spinners for the durations), and actionable Mako notifications
 - Clipboard history for text and images, available from Waybar through Wofi
 
 ## Requirements
