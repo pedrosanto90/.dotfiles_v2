@@ -114,17 +114,17 @@ write_state() {
 
 phase_label() {
   case $1 in
-    focus) printf 'Foco' ;;
-    short) printf 'Pausa curta' ;;
-    long) printf 'Pausa longa' ;;
+    focus) printf 'Focus' ;;
+    short) printf 'Short break' ;;
+    long) printf 'Long break' ;;
   esac
 }
 
 phase_description() {
   case $1 in
-    focus) printf 'sessão de foco' ;;
-    short) printf 'pausa curta' ;;
-    long) printf 'pausa longa' ;;
+    focus) printf 'focus session' ;;
+    short) printf 'short break' ;;
+    long) printf 'long break' ;;
   esac
 }
 
@@ -235,14 +235,14 @@ notify_transition() {
   local finished=$1 next=$2 count=$3 minutes body
   if [[ ${finished} == focus ]]; then
     minutes=$(phase_minutes "${next}")
-    body=$(printf 'Sessão %s concluída. Faz uma %s de %s min.' \
+    body=$(printf 'Session %s complete. Take a %s for %s min.' \
       "${count}" "$(phase_description "${next}")" "${minutes}")
-    spawn_action_notification 'Saltar a pausa' 'Pomodoro — foco concluído' \
+    spawn_action_notification 'Skip break' 'Pomodoro — focus complete' \
       "${body}" cmd_skip
   else
     minutes=$(phase_minutes focus)
-    send_notification 'Pomodoro — pausa terminada' \
-      "$(printf 'Volta ao foco durante %s min.' "${minutes}")"
+    send_notification 'Pomodoro — break complete' \
+      "$(printf 'Focus again for %s min.' "${minutes}")"
   fi
 }
 
@@ -261,8 +261,8 @@ cmd_start() {
   sessions=0
   start_phase focus 0 "${override}"
   ensure_watcher
-  send_notification 'Pomodoro — foco iniciado' \
-    "$(printf 'Sessão de foco de %s min.' "${display_minutes}")"
+  send_notification 'Pomodoro — focus started' \
+    "$(printf '%s min focus session.' "${display_minutes}")"
   refresh_waybar
 }
 
@@ -322,7 +322,7 @@ cmd_skip() {
   start_phase "${next}" "${sessions}"
   ensure_watcher
   send_notification 'Pomodoro' \
-    "$(printf 'Saltaste para: %s.' "$(phase_label "${next}")")"
+    "$(printf 'Skipped to: %s.' "$(phase_label "${next}")")"
   refresh_waybar
 }
 
@@ -335,7 +335,7 @@ cmd_stop() {
     kill "${pid}" 2>/dev/null || true
   fi
   rm -f -- "${pid_file}" "${state_file}"
-  send_notification 'Pomodoro' 'Temporizador parado.'
+  send_notification 'Pomodoro' 'Timer stopped.'
   refresh_waybar
 }
 
@@ -369,7 +369,7 @@ print_status() {
 
   local icon class click_hint session_info tooltip
   if [[ -z ${phase} ]]; then
-    printf '{"text":"%s","class":"idle","tooltip":"Pomodoro parado\\nClick: iniciar foco (%s min) · Direito: menu · Super+P"}\n' \
+    printf '{"text":"%s","class":"idle","tooltip":"Pomodoro stopped\\nClick: start focus (%s min) · Right-click: menu · Super+P"}\n' \
       "${icon_idle}" "${dur_focus}"
     return 0
   fi
@@ -386,17 +386,17 @@ print_status() {
       icon=${icon_break}
       class=break
     fi
-    click_hint='pausar'
+    click_hint='pause'
   else
     icon=${icon_paused}
     class=paused
-    click_hint='retomar'
+    click_hint='resume'
   fi
 
-  session_info=$(printf '%s concluídas (pausa longa a cada %s)' \
+  session_info=$(printf '%s completed (long break every %s)' \
     "${sessions}" "${cycle_length}")
 
-  printf '{"text":"%s %s","class":"%s","tooltip":"%s — %s\\nSessões: %s\\nClick: %s · Direito: menu · Super+P"}\n' \
+  printf '{"text":"%s %s","class":"%s","tooltip":"%s — %s\\nSessions: %s\\nClick: %s · Right-click: menu · Super+P"}\n' \
     "${icon}" "$(format_time "${remaining}")" "${class}" \
     "$(phase_label "${phase}")" "$(format_time "${remaining}")" \
     "${session_info}" "${click_hint}"
@@ -410,11 +410,11 @@ menu_gui() {
     gui=$(command -v pomodoro-gtk 2>/dev/null || true)
   fi
   [[ -n ${gui} && -x ${gui} ]] || {
-    notify_error 'O menu gráfico do Pomodoro não está instalado.'
+    notify_error 'The Pomodoro graphical menu is not installed.'
     return 1
   }
   [[ -n ${WAYLAND_DISPLAY:-} ]] || {
-    notify_error 'É necessária uma sessão Wayland para abrir o menu.'
+    notify_error 'A Wayland session is required to open the menu.'
     return 1
   }
 

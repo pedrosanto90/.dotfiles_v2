@@ -205,6 +205,84 @@ Global TypeScript packages are intentionally omitted, with the exception of the 
 
 The tmux prefix is `Ctrl+J`. Follow it with `h/j/k/l` to navigate panes, `r` to reload the configuration, or `f` to open the session selector. Its status bar, messages, selection mode, window states, and pane borders follow the active system palette automatically. From the Zsh prompt, `Ctrl+F` opens the same selector directly.
 
+### Quickshell Control Center
+
+The optional Quickshell Control Center runs alongside Waybar and Mako. Click its
+dedicated sliders icon near the power button or press `Super+Ctrl+M` to open it;
+close it with the Close button or `Escape` while it has focus. The Waybar volume
+module is a read-only indicator: clicking or scrolling it has no effect.
+
+Sound and media is the first section of the Control Center. It controls the
+default PipeWire output and microphone, the laptop backlight, and MPRIS players
+(including supported browser media sessions). With multiple players, use the
+selector to choose which one the panel and media keys control. Playback and
+seeking controls follow each player's reported capabilities. Device selection
+and advanced mixing remain available through Pavucontrol. The panel is structured
+so more Control Center sections can be added later.
+
+Volume, microphone mute and brightness keys display a short, non-focus-stealing
+OSD on the focused Sway monitor. Volume increases are capped at 100%; brightness
+decreases keep at least one hardware step. Brightness uses the `backlight` class,
+not keyboard LEDs, and does not implement DDC/CI for external displays. Audio and
+media events come from PipeWire/MPRIS; brightness is refreshed only while the
+panel is open or a brightness OSD is requested. Colours follow the active Waybar
+palette, including changes made by `theme-toggle`.
+
+If brightness changes fail with `Permission denied`, check that `brightness-udev`
+is installed and your session belongs to the `video` group (`id -nG`). Debian
+ships the permissions separately from `brightnessctl`; this project explicitly
+installs both because APT recommendations are disabled. To repair an existing
+installation without running the full installer:
+
+```bash
+sudo apt-get install brightness-udev
+sudo udevadm control --reload-rules
+sudo udevadm trigger --subsystem-match=backlight --action=add
+sudo udevadm settle
+brightnessctl --class=backlight set +5%
+```
+
+If the user is not in `video`, an administrator must add them with
+`sudo usermod -aG video "$USER"`, followed by a full logout/login. The udev rule
+allows the group to write the brightness attribute and reapplies on boot; no
+world-writable sysfs permissions or privileged Quickshell process are needed.
+
+Quickshell is not in this project's Debian 13 APT package list. The separate,
+user-local installer below pins Quickshell **0.3.1.db3** and libcpptrace from the
+Debian 13 OBS repository linked by the
+[upstream installation guide](https://quickshell.org/docs/v0.3.0/guide/install-setup/).
+It verifies pinned SHA-256 hashes, extracts packages under
+`~/.local/opt/quickshell-0.3.1.db3`, and downloads libdwarf/libunwind through APT.
+It supports Debian 13 **amd64**, requires the system Qt 6.8.2 runtime, and neither
+uses sudo nor adds an APT repository. Existing machines also need the QtQuick QML
+modules listed in `scripts/lib/packages.sh`; the general installer installs those
+modules but does not run this separate Quickshell installer.
+
+```bash
+python3 scripts/system/install-quickshell-local.py
+# After deploying configs/quickshell to ~/.config/quickshell and control-center
+# to ~/.local/bin (or after the normal dotfiles deployment):
+~/.local/bin/control-center start
+~/.local/bin/control-center panel
+```
+
+`control-center` keeps hardware keys working through `wpctl`, `brightnessctl` and
+`playerctl` when Quickshell is unavailable. Opening the Control Center starts the
+shell if needed and falls back to Pavucontrol if startup fails. Sway reloads use
+`--no-duplicate` so they do not create extra shell instances.
+
+To stop this shell without affecting the other desktop components:
+
+```bash
+quickshell kill -p ~/.config/quickshell/control-center/shell.qml
+```
+
+Remove the `control-center start` line from Sway's autostart configuration to keep
+it stopped across reloads/logins. Opening the panel explicitly starts it again.
+
+Run the hardware-independent routing checks with
+`python3 -B tests/test_control_center.py`.
+
 ### Automatic window tiling
 
 Click the layout icon next to the Waybar tray to open a two-column picker with SVG previews. Select a preset to immediately arrange the current workspace. Each workspace remembers its own choice across sessions; new windows, closed windows, and windows moved between workspaces update the selected grid automatically.

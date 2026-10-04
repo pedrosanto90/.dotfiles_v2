@@ -5,7 +5,7 @@
   "spacing": 4,
   "modules-left": ["sway/workspaces", "sway/window"],
   "modules-center": ["clock"],
-  "modules-right": ["cpu", "memory", "disk", "pulseaudio", "battery", "tray", "custom/pomodoro", "custom/tiling", "custom/clipboard", "custom/theme", "custom/caffeine", "custom/power"],
+  "modules-right": ["cpu", "memory", "disk", "pulseaudio", "battery", "tray", "custom/pomodoro", "custom/tiling", "custom/clipboard", "custom/theme", "custom/caffeine", "custom/control-center", "custom/power"],
   "sway/workspaces": {
     "disable-scroll": true,
     "all-outputs": true,
@@ -37,8 +37,7 @@
     "format": "{icon} {volume}%",
     "format-muted": "󰖁 muted",
     "format-icons": { "default": ["", "", ""] },
-    "on-click": "pavucontrol",
-    "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+    "scroll-step": 0
   },
   "battery": {
     "states": { "warning": 30, "critical": 15 },
@@ -81,6 +80,11 @@
     "interval": 5,
     "signal": 8,
     "on-click": "~/.local/bin/caffeine-toggle toggle"
+  },
+  "custom/control-center": {
+    "format": "󰒓",
+    "tooltip-format": "Control Center",
+    "on-click": "~/.local/bin/control-center panel"
   },
   "custom/power": {
     "format": "",

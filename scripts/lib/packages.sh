@@ -8,6 +8,8 @@ readonly DEBIAN_PACKAGES=(
   python3 python3-pip python3-venv python3-dev python3-i3ipc pipx
   php composer libapache2-mod-php
   thunar thunar-archive-plugin gvfs gvfs-backends evolution gwenview qt6-wayland zathura
+  qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts
+  qml6-module-qtquick-templates qml6-module-qtquick-window qml6-module-qtqml-workerscript
   wl-clipboard cliphist grim slurp swappy
   pipewire pipewire-pulse wireplumber libspa-0.2-bluetooth pavucontrol playerctl
   network-manager network-manager-gnome nm-connection-editor
@@ -19,7 +21,8 @@ readonly DEBIAN_PACKAGES=(
   bluez blueman
   polkitd pkexec lxpolkit
   xdg-desktop-portal xdg-desktop-portal-wlr xdg-desktop-portal-gtk xdg-utils desktop-file-utils
-  upower power-profiles-daemon udisks2 udiskie brightnessctl
+  # Explicit because --no-install-recommends otherwise omits backlight permissions.
+  upower power-profiles-daemon udisks2 udiskie brightnessctl brightness-udev
   papirus-icon-theme nwg-look fontconfig libnotify-bin librsvg2-common
   sassc gtk2-engines-murrine gnome-themes-extra
   libgtk-4-dev libgtk4-layer-shell-dev libadwaita-1-dev libxml2-utils

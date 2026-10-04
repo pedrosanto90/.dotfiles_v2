@@ -95,9 +95,9 @@ class PomodoroMenu(Gtk.Application):
         box.append(durations_grid)
         self.spins = {}
         rows = [
-            ("focus", "Foco"),
-            ("short", "Pausa curta"),
-            ("long", "Pausa longa"),
+            ("focus", "Focus"),
+            ("short", "Short break"),
+            ("long", "Long break"),
         ]
         for index, (key, label) in enumerate(rows):
             durations_grid.attach(
@@ -109,7 +109,7 @@ class PomodoroMenu(Gtk.Application):
             durations_grid.attach(spin, 1, index, 1, 1)
             self.spins[key] = spin
 
-        save_button = Gtk.Button(label="Guardar durações", halign=Gtk.Align.START)
+        save_button = Gtk.Button(label="Save durations", halign=Gtk.Align.START)
         save_button.connect("clicked", self.on_save)
         box.append(save_button)
 
@@ -124,7 +124,7 @@ class PomodoroMenu(Gtk.Application):
         self.status.add_css_class("dim-label")
         box.append(self.status)
 
-        close_button = Gtk.Button(label="Fechar", halign=Gtk.Align.END)
+        close_button = Gtk.Button(label="Close", halign=Gtk.Align.END)
         close_button.connect("clicked", lambda _button: self.quit())
         box.append(close_button)
 
@@ -132,15 +132,15 @@ class PomodoroMenu(Gtk.Application):
 
     def build_actions(self, container, phase):
         if phase == "idle":
-            self.add_action_button(container, "Iniciar foco", "start")
+            self.add_action_button(container, "Start focus", "start")
         elif phase == "paused":
-            self.add_action_button(container, "Retomar", "resume")
-            self.add_action_button(container, "Saltar", "skip")
-            self.add_action_button(container, "Parar", "stop")
+            self.add_action_button(container, "Resume", "resume")
+            self.add_action_button(container, "Skip", "skip")
+            self.add_action_button(container, "Stop", "stop")
         else:
-            self.add_action_button(container, "Pausar", "pause")
-            self.add_action_button(container, "Saltar", "skip")
-            self.add_action_button(container, "Parar", "stop")
+            self.add_action_button(container, "Pause", "pause")
+            self.add_action_button(container, "Skip", "skip")
+            self.add_action_button(container, "Stop", "stop")
 
     def add_action_button(self, container, label, command):
         button = Gtk.Button(label=label)
@@ -159,7 +159,7 @@ class PomodoroMenu(Gtk.Application):
 
     def on_save(self, _button):
         self.persist()
-        self.status.set_text("Durações guardadas.")
+        self.status.set_text("Durations saved.")
 
     def on_action(self, _button, command):
         self.persist()

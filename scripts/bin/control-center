@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Hardware keys work independently of the optional Quickshell interface.
+readonly config="${XDG_CONFIG_HOME:-${HOME}/.config}/quickshell/control-center/shell.qml"
+quickshell_bin=$(command -v quickshell || true)
+[[ -n ${quickshell_bin} ]] || quickshell_bin="${HOME}/.local/bin/quickshell"
+
+ipc() {
+  [[ -x ${quickshell_bin} && -f ${config} ]] || return 1
+  timeout 2 "${quickshell_bin}" ipc -p "${config}" call -- media "$@"
+}
+
+show_osd() { ipc show "$1" >/dev/null 2>&1 || true; }
+
+start_shell() {
+  [[ -x ${quickshell_bin} && -f ${config} ]] || return 1
+  QT_QUICK_CONTROLS_STYLE=Basic "${quickshell_bin}" -p "${config}" --no-duplicate --daemonize
+}
+
+case "${1:-panel}" in
+  start) start_shell ;;
+  panel)
+    if ! ipc toggle >/dev/null 2>&1; then
+      if start_shell; then
+        for _ in {1..20}; do
+          ipc toggle >/dev/null 2>&1 && exit 0
+          sleep 0.1
+        done
+      fi
+      exec pavucontrol
+    fi
+    ;;
+  volume-up) wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+; show_osd volume ;;
+  volume-down) wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-; show_osd volume ;;
+  mute) wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle; show_osd volume ;;
+  mic-mute) wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle; show_osd microphone ;;
+  brightness-up) brightnessctl --class=backlight set +5% >/dev/null; show_osd brightness ;;
+  brightness-down) brightnessctl --class=backlight --min-value=1 set 5%- >/dev/null; show_osd brightness ;;
+  play-pause|next|previous)
+    # Use the player selected in the panel, falling back when Quickshell is absent.
+    if ! result=$(ipc transport "$1" 2>/dev/null); then
+      exec playerctl "$1"
+    fi
+    [[ ${result} == true ]] || exit 0
+    ;;
+  *)
+    printf 'Usage: control-center [start|panel|volume-up|volume-down|mute|mic-mute|brightness-up|brightness-down|play-pause|next|previous]\n' >&2
+    exit 2
+    ;;
+esac

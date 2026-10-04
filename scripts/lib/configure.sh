@@ -12,7 +12,7 @@ deploy_tree() {
 
 deploy_configs() {
   local directory
-  for directory in sway waybar mako ghostty wofi nvim gtk-3.0 gtk-4.0 swappy; do
+  for directory in sway waybar quickshell mako ghostty wofi nvim gtk-3.0 gtk-4.0 swappy; do
     deploy_tree "${PROJECT_ROOT}/configs/${directory}" "${HOME}/.config/${directory}"
   done
   deploy_file "${PROJECT_ROOT}/configs/tmux/tmux.conf" "${HOME}/.tmux.conf"
