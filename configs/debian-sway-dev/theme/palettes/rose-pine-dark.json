@@ -1,0 +1,19 @@
+{
+  "id": "rose-pine-dark",
+  "label": "Rosé Pine — Dark",
+  "mode": "dark",
+  "barBackground": "#f5191724",
+  "background": "#1f1d2e",
+  "surface": "#191724",
+  "foreground": "#e0def4",
+  "secondary": "#908caa",
+  "selected": "#191724",
+  "muted": "#6e6a86",
+  "border": "#403d52",
+  "accent": "#9ccfd8",
+  "success": "#31748f",
+  "warning": "#f6c177",
+  "orange": "#ebbcba",
+  "danger": "#eb6f92",
+  "purple": "#c4a7e7"
+}

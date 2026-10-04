@@ -84,6 +84,8 @@ An existing Go tree is never deleted. During an upgrade, `/usr/local/go` moves t
 ├── configs/
 │   ├── sway/config.d/          # appearance, bindings, input, output, and autostart
 │   ├── waybar/                 # config.jsonc and CSS
+│   ├── quickshell/              # control center, OSD, and desktop shell components
+│   ├── debian-sway-dev/theme/   # desktop-neutral theme palettes
 │   ├── ghostty/                # terminal
 │   ├── greetd/                 # graphical Wayland login
 │   ├── mako/                   # notifications
@@ -280,8 +282,13 @@ quickshell kill -p ~/.config/quickshell/control-center/shell.qml
 Remove the `control-center start` line from Sway's autostart configuration to keep
 it stopped across reloads/logins. Opening the panel explicitly starts it again.
 
-Run the hardware-independent routing checks with
-`python3 -B tests/test_control_center.py`.
+Run the hardware-independent routing and theme-palette checks with
+`python3 -B -m unittest discover -s tests`.
+
+The active desktop palette lives at
+`~/.config/debian-sway-dev/theme/current.json`. Quickshell watches this neutral
+palette directly; while Waybar remains in use, `theme-toggle` also maintains its
+legacy `colors.css` import so both interfaces stay synchronized.
 
 ### Automatic window tiling
 
@@ -447,6 +454,7 @@ sh -n scripts/system/debian-sway-session
 scripts/bin/keybindings --root . --list
 sway --validate --config ~/.config/sway/config
 jq empty ~/.config/waybar/config.jsonc
+python3 -B -m unittest discover -s tests
 command -v nvim                    # expected: /usr/local/bin/nvim
 nvim --version | head -n 1
 journalctl --user -b --unit pipewire --unit wireplumber

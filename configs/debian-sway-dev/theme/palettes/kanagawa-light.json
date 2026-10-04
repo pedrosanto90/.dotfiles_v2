@@ -1,0 +1,19 @@
+{
+  "id": "kanagawa-light",
+  "label": "Kanagawa — Lotus (Light)",
+  "mode": "light",
+  "barBackground": "#f5f2ecbc",
+  "background": "#e7dba0",
+  "surface": "#f2ecbc",
+  "foreground": "#545464",
+  "secondary": "#716e61",
+  "selected": "#f2ecbc",
+  "muted": "#8a8980",
+  "border": "#a09cac",
+  "accent": "#4d699b",
+  "success": "#6f894e",
+  "warning": "#77713f",
+  "orange": "#cc6d00",
+  "danger": "#c84053",
+  "purple": "#624c83"
+}

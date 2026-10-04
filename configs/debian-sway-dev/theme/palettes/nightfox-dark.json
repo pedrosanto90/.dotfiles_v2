@@ -1,0 +1,19 @@
+{
+  "id": "nightfox-dark",
+  "label": "Nightfox — Dark",
+  "mode": "dark",
+  "barBackground": "#f5192330",
+  "background": "#131a24",
+  "surface": "#192330",
+  "foreground": "#cdcecf",
+  "secondary": "#aeafb0",
+  "selected": "#192330",
+  "muted": "#738091",
+  "border": "#29394f",
+  "accent": "#719cd6",
+  "success": "#81b29a",
+  "warning": "#dbc074",
+  "orange": "#f4a261",
+  "danger": "#c94f6d",
+  "purple": "#9d79d6"
+}

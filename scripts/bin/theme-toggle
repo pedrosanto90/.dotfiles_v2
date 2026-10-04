@@ -7,6 +7,7 @@ readonly state_file="${state_home}/theme"
 readonly lock_file="${runtime_dir}/debian-sway-dev-theme.lock"
 readonly themes_dir="${HOME}/.local/share/themes"
 readonly waybar_dir="${HOME}/.config/waybar"
+readonly shell_theme_dir="${XDG_CONFIG_HOME:-${HOME}/.config}/debian-sway-dev/theme"
 readonly ghostty_dir="${HOME}/.config/ghostty"
 readonly ghostty_theme_file="${ghostty_dir}/current-theme.conf"
 readonly tmux_dir="${HOME}/.config/tmux"
@@ -156,6 +157,20 @@ write_waybar_palette() {
   temporary=$(mktemp "${waybar_dir}/.colors.css.XXXXXX")
   printf '@import "%s";\n' "${palette}" >"${temporary}"
   mv -f -- "${temporary}" "${waybar_dir}/colors.css"
+}
+
+write_shell_palette() {
+  local selected=$1 source temporary
+  source="${shell_theme_dir}/palettes/${selected}.json"
+  [[ -r ${source} ]] || {
+    notify_error "A paleta do desktop não existe: ${selected}."
+    return 1
+  }
+
+  mkdir -p "${shell_theme_dir}"
+  temporary=$(mktemp "${shell_theme_dir}/.current.XXXXXX.json")
+  cp -- "${source}" "${temporary}"
+  mv -f -- "${temporary}" "${shell_theme_dir}/current.json"
 }
 
 palette_color() {
@@ -368,6 +383,10 @@ apply_theme() {
     notify_error "A paleta ${palette} da Waybar não está instalada."
     return 1
   }
+  [[ -r ${shell_theme_dir}/palettes/${selected}.json ]] || {
+    notify_error "A paleta do desktop não existe: ${selected}."
+    return 1
+  }
   for link in \
     "${HOME}/.config/gtk-4.0/assets" \
     "${HOME}/.config/gtk-4.0/gtk.css" \
@@ -393,6 +412,7 @@ apply_theme() {
     gsettings set org.gnome.desktop.interface icon-theme "${icon_theme}" || true
   fi
 
+  write_shell_palette "${selected}"
   write_waybar_palette "${palette}"
   mkdir -p "${state_home}"
   temporary=$(mktemp "${state_home}/.theme.XXXXXX")

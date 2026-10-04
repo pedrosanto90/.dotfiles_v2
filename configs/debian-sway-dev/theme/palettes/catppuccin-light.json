@@ -1,0 +1,19 @@
+{
+  "id": "catppuccin-light",
+  "label": "Catppuccin — Latte (Light)",
+  "mode": "light",
+  "barBackground": "#f5eff1f5",
+  "background": "#e6e9ef",
+  "surface": "#eff1f5",
+  "foreground": "#4c4f69",
+  "secondary": "#5c5f77",
+  "selected": "#eff1f5",
+  "muted": "#8c8fa1",
+  "border": "#bcc0cc",
+  "accent": "#1e66f5",
+  "success": "#40a02b",
+  "warning": "#df8e1d",
+  "orange": "#fe640b",
+  "danger": "#d20f39",
+  "purple": "#8839ef"
+}

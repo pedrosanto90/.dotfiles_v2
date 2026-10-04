@@ -1,0 +1,19 @@
+{
+  "id": "tokyonight-dark",
+  "label": "Tokyo Night — Dark",
+  "mode": "dark",
+  "barBackground": "#f51a1b26",
+  "background": "#16161e",
+  "surface": "#1a1b26",
+  "foreground": "#c0caf5",
+  "secondary": "#a9b1d6",
+  "selected": "#1a1b26",
+  "muted": "#565f89",
+  "border": "#3b4261",
+  "accent": "#7aa2f7",
+  "success": "#9ece6a",
+  "warning": "#e0af68",
+  "orange": "#ff9e64",
+  "danger": "#f7768e",
+  "purple": "#bb9af7"
+}

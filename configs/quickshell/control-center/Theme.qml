@@ -5,32 +5,39 @@ import Quickshell.Io
 
 QtObject {
     id: root
-    readonly property string paletteDir: (Quickshell.env("XDG_CONFIG_HOME") || Quickshell.env("HOME") + "/.config") + "/waybar/"
-    readonly property string css: palette.text()
-    readonly property string imported: {
-        const match = css.match(/@import\s+"([a-zA-Z0-9_-]+\.css)"/);
-        return match ? match[1] : "";
+    readonly property string configHome: Quickshell.env("XDG_CONFIG_HOME") || Quickshell.env("HOME") + "/.config"
+    readonly property var values: {
+        const source = palette.text();
+        if (!source) return ({});
+        try {
+            return JSON.parse(source);
+        } catch (error) {
+            console.warn("Could not parse the desktop palette:", error);
+            return ({});
+        }
     }
-    readonly property string source: css + "\n" + fallback.text()
-    function colorFor(name, fallbackColor) {
-        const match = source.match(new RegExp("@define-color\\s+" + name + "\\s+(#[0-9a-fA-F]{6})\\s*;"));
-        return match ? match[1] : fallbackColor;
+    function value(name, fallbackValue) {
+        return typeof values[name] === "string" ? values[name] : fallbackValue;
     }
-    readonly property color background: colorFor("tooltip_background", "#16161e")
-    readonly property color foreground: colorFor("foreground", "#c0caf5")
-    readonly property color secondary: colorFor("secondary_foreground", "#a9b1d6")
-    readonly property color border: colorFor("border", "#3b4261")
-    readonly property color accent: colorFor("blue", "#7aa2f7")
-    readonly property color danger: colorFor("red", "#f7768e")
-    readonly property color selected: colorFor("selected_foreground", "#1a1b26")
+    readonly property string themeId: value("id", "tokyonight-dark")
+    readonly property string label: value("label", "Tokyo Night — Dark")
+    readonly property string mode: value("mode", "dark")
+    readonly property color barBackground: value("barBackground", "#f51a1b26")
+    readonly property color background: value("background", "#16161e")
+    readonly property color surface: value("surface", "#1a1b26")
+    readonly property color foreground: value("foreground", "#c0caf5")
+    readonly property color secondary: value("secondary", "#a9b1d6")
+    readonly property color selected: value("selected", "#1a1b26")
+    readonly property color muted: value("muted", "#565f89")
+    readonly property color border: value("border", "#3b4261")
+    readonly property color accent: value("accent", "#7aa2f7")
+    readonly property color success: value("success", "#9ece6a")
+    readonly property color warning: value("warning", "#e0af68")
+    readonly property color orange: value("orange", "#ff9e64")
+    readonly property color danger: value("danger", "#f7768e")
+    readonly property color purple: value("purple", "#bb9af7")
     property FileView palette: FileView {
-        path: root.paletteDir + "colors.css"
-        printErrors: false
-        watchChanges: true
-        onFileChanged: reload()
-    }
-    property FileView fallback: FileView {
-        path: root.imported ? root.paletteDir + root.imported : ""
+        path: root.configHome + "/debian-sway-dev/theme/current.json"
         printErrors: false
         watchChanges: true
         onFileChanged: reload()

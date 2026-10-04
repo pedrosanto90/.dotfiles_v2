@@ -32,7 +32,7 @@ PanelWindow {
             contentWidth: availableWidth
             clip: true
             focus: true
-            Keys.onEscapePressed: window.controller.panelOpen = false
+            Keys.onEscapePressed: window.controller.closePopups()
             palette.window: Theme.background
             palette.windowText: Theme.foreground
             palette.text: Theme.foreground
@@ -50,7 +50,7 @@ PanelWindow {
                 RowLayout {
                     Layout.fillWidth: true
                     Label { text: "Control Center"; font.pixelSize: 20; font.bold: true; Layout.fillWidth: true }
-                    Button { text: "Close"; onClicked: window.controller.panelOpen = false }
+                    Button { text: "Close"; onClicked: window.controller.closePopups() }
                 }
                 Label {
                     text: "Sound & media"
@@ -167,7 +167,7 @@ PanelWindow {
                     text: "Audio devices & mixer…"
                     onClicked: {
                         Quickshell.execDetached(["pavucontrol"]);
-                        window.controller.panelOpen = false;
+                        window.controller.closePopups();
                     }
                 }
             }

@@ -1,0 +1,19 @@
+{
+  "id": "catppuccin-dark",
+  "label": "Catppuccin — Mocha",
+  "mode": "dark",
+  "barBackground": "#f51e1e2e",
+  "background": "#181825",
+  "surface": "#1e1e2e",
+  "foreground": "#cdd6f4",
+  "secondary": "#bac2de",
+  "selected": "#1e1e2e",
+  "muted": "#6c7086",
+  "border": "#45475a",
+  "accent": "#89b4fa",
+  "success": "#a6e3a1",
+  "warning": "#f9e2af",
+  "orange": "#fab387",
+  "danger": "#f38ba8",
+  "purple": "#cba6f7"
+}

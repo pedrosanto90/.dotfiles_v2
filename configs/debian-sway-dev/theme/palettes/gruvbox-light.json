@@ -1,0 +1,19 @@
+{
+  "id": "gruvbox-light",
+  "label": "Gruvbox — Light",
+  "mode": "light",
+  "barBackground": "#f5fbf1c7",
+  "background": "#fbf1c7",
+  "surface": "#fbf1c7",
+  "foreground": "#3c3836",
+  "secondary": "#504945",
+  "selected": "#fbf1c7",
+  "muted": "#928374",
+  "border": "#d5c4a1",
+  "accent": "#076678",
+  "success": "#79740e",
+  "warning": "#b57614",
+  "orange": "#af3a03",
+  "danger": "#9d0006",
+  "purple": "#8f3f71"
+}

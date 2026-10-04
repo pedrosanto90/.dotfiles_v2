@@ -1,0 +1,19 @@
+{
+  "id": "kanagawa-dark",
+  "label": "Kanagawa — Wave (Dark)",
+  "mode": "dark",
+  "barBackground": "#f51f1f28",
+  "background": "#16161d",
+  "surface": "#1f1f28",
+  "foreground": "#dcd7ba",
+  "secondary": "#c8c093",
+  "selected": "#1f1f28",
+  "muted": "#727169",
+  "border": "#54546d",
+  "accent": "#7e9cd8",
+  "success": "#98bb6c",
+  "warning": "#e6c384",
+  "orange": "#ffa066",
+  "danger": "#e46876",
+  "purple": "#957fb8"
+}

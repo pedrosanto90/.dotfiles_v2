@@ -7,7 +7,9 @@ import Quickshell.Services.Mpris
 
 ShellRoot {
     id: root
-    property bool panelOpen: false
+    readonly property bool panelOpen: popupManager.activePopup === "control-center"
+    readonly property string activePopup: popupManager.activePopup
+    readonly property var availablePopups: ["control-center"]
     property string osdKind: ""
     property var targetScreen: null
     readonly property var sink: Pipewire.defaultAudioSink
@@ -22,6 +24,8 @@ ShellRoot {
     property string brightnessError: ""
     property int pendingBrightness: -1
 
+    PopupManager { id: popupManager }
+
     PwObjectTracker { objects: [root.sink, root.source].filter(n => n !== null) }
 
     function chooseScreen() {
@@ -31,6 +35,26 @@ ShellRoot {
     function refreshBrightness() {
         if (!brightnessRead.running && !brightnessWrite.running)
             brightnessRead.running = true;
+    }
+    function popupAvailable(name) {
+        return availablePopups.indexOf(name) >= 0;
+    }
+    function openPopup(name) {
+        if (!popupAvailable(name)) return false;
+        chooseScreen();
+        popupManager.open(name);
+        if (name === "control-center") refreshBrightness();
+        return true;
+    }
+    function togglePopup(name) {
+        if (!popupAvailable(name)) return false;
+        chooseScreen();
+        popupManager.toggle(name);
+        if (name === "control-center" && panelOpen) refreshBrightness();
+        return true;
+    }
+    function closePopups() {
+        popupManager.closeAll();
     }
     function show(kind) {
         if (["volume", "microphone", "brightness"].indexOf(kind) < 0) return;
@@ -66,12 +90,8 @@ ShellRoot {
 
     IpcHandler {
         target: "media"
-        function toggle(): void {
-            root.chooseScreen();
-            root.panelOpen = !root.panelOpen;
-            if (root.panelOpen) root.refreshBrightness();
-        }
-        function close(): void { root.panelOpen = false; }
+        function toggle(): void { root.togglePopup("control-center"); }
+        function close(): void { root.closePopups(); }
         function show(kind: string): void { root.show(kind); }
         function transport(action: string): bool { return root.transport(action); }
         function status(): string {
@@ -79,6 +99,18 @@ ShellRoot {
                 output: root.sink ? root.sink.description : "", brightness: root.brightness,
                 brightnessAvailable: root.brightnessAvailable,
                 player: root.player ? root.player.identity : ""});
+        }
+    }
+
+    IpcHandler {
+        target: "shell"
+        function open(name: string): bool { return root.openPopup(name); }
+        function toggle(name: string): bool { return root.togglePopup(name); }
+        function close(): void { root.closePopups(); }
+        function status(): string {
+            return JSON.stringify({activePopup: root.activePopup,
+                screen: root.targetScreen ? root.targetScreen.name : "",
+                availablePopups: root.availablePopups});
         }
     }
 
