@@ -316,6 +316,11 @@ Select an entry with the mouse or keyboard to restore it through `wl-copy`.
 Running `clipboard-history` opens the same popup and falls back to Wofi when the
 Quickshell instance is unavailable.
 
+The theme icon opens a native searchable selector and marks the active palette.
+Right-clicking the icon, or using the button in the selector, toggles the current
+theme family between light and dark when both variants exist. `theme-toggle menu`
+opens the same popup and retains Wofi as a fallback.
+
 ### Automatic window tiling
 
 Click the layout icon in the Quickshell bar to open a two-column picker with SVG previews. Select a preset to immediately arrange the current workspace. Each workspace remembers its own choice across sessions; new windows, closed windows, and windows moved between workspaces update the selected grid automatically.

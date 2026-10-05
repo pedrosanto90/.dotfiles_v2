@@ -324,7 +324,7 @@ Scope {
                         text: themeStatus.data.text
                         tooltip: themeStatus.data.tooltip
                         foregroundColor: Theme.purple
-                        onPrimaryClicked: root.run(["theme-toggle", "menu"])
+                        onPrimaryClicked: root.controller.togglePopupOnScreen("theme", window.screen)
                         onSecondaryClicked: root.run(["theme-toggle", "toggle"])
                     }
 
@@ -392,6 +392,14 @@ Scope {
                     active: root.controller.activePopup === "clipboard"
                         && root.controller.targetScreen === window.screen
                     ClipboardPopover {
+                        controller: root.controller
+                        barScreen: window.screen
+                    }
+                }
+                LazyLoader {
+                    active: root.controller.activePopup === "theme"
+                        && root.controller.targetScreen === window.screen
+                    ThemePopover {
                         controller: root.controller
                         barScreen: window.screen
                     }

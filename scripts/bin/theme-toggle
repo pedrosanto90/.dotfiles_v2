@@ -13,6 +13,12 @@ readonly ghostty_theme_file="${ghostty_dir}/current-theme.conf"
 readonly tmux_dir="${HOME}/.config/tmux"
 readonly tmux_theme_file="${tmux_dir}/current-theme.conf"
 readonly vscodium_settings="${HOME}/.config/VSCodium/User/settings.json"
+readonly shell_config="${XDG_CONFIG_HOME:-${HOME}/.config}/quickshell/control-center/shell.qml"
+readonly -a theme_ids=(
+  tokyonight-dark tokyonight-light kanagawa-dark kanagawa-light rose-pine-dark
+  everforest-dark everforest-light catppuccin-dark catppuccin-light
+  gruvbox-dark gruvbox-light nightfox-dark
+)
 
 is_theme() {
   case ${1:-} in
@@ -72,30 +78,18 @@ theme_label() {
 }
 
 print_themes() {
-  theme_label tokyonight-dark
-  printf '\n'
-  theme_label tokyonight-light
-  printf '\n'
-  theme_label kanagawa-dark
-  printf '\n'
-  theme_label kanagawa-light
-  printf '\n'
-  theme_label rose-pine-dark
-  printf '\n'
-  theme_label everforest-dark
-  printf '\n'
-  theme_label everforest-light
-  printf '\n'
-  theme_label catppuccin-dark
-  printf '\n'
-  theme_label catppuccin-light
-  printf '\n'
-  theme_label gruvbox-dark
-  printf '\n'
-  theme_label gruvbox-light
-  printf '\n'
-  theme_label nightfox-dark
-  printf '\n'
+  local theme
+  for theme in "${theme_ids[@]}"; do
+    theme_label "${theme}"
+    printf '\n'
+  done
+}
+
+print_theme_records() {
+  local theme
+  for theme in "${theme_ids[@]}"; do
+    printf '%s\t%s\t%s\n' "${theme}" "$(theme_label "${theme}")" "$(theme_mode "${theme}")"
+  done
 }
 
 print_status() {
@@ -505,12 +499,33 @@ run_selection() {
   refresh_tmux
 }
 
+open_quickshell_menu() {
+  local quickshell_bin
+  quickshell_bin=$(command -v quickshell || true)
+  [[ -n ${quickshell_bin} ]] || quickshell_bin="${HOME}/.local/bin/quickshell"
+  [[ -x ${quickshell_bin} && -f ${shell_config} ]] || return 1
+  timeout 2 "${quickshell_bin}" ipc -p "${shell_config}" call -- shell toggle theme \
+    >/dev/null 2>&1
+}
+
+run_menu_fallback() {
+  local selected
+  selected=$(choose_theme) || return 0
+  mkdir -p "${runtime_dir}"
+  exec 9>"${lock_file}"
+  flock -n 9 || return 0
+  run_selection "${selected}"
+}
+
 case ${1:-status} in
   status)
     print_status
     ;;
   list)
     print_themes
+    ;;
+  list-machine)
+    print_theme_records
     ;;
   initialize)
     mkdir -p "${runtime_dir}"
@@ -524,11 +539,10 @@ case ${1:-status} in
     apply_theme "${selected}"
     ;;
   menu)
-    selected=$(choose_theme) || exit 0
-    mkdir -p "${runtime_dir}"
-    exec 9>"${lock_file}"
-    flock -n 9 || exit 0
-    run_selection "${selected}"
+    open_quickshell_menu || run_menu_fallback
+    ;;
+  menu-fallback)
+    run_menu_fallback
     ;;
   toggle | dark | light)
     mkdir -p "${runtime_dir}"
@@ -545,7 +559,7 @@ case ${1:-status} in
     run_selection "$1"
     ;;
   *)
-    printf 'Usage: %s [status|list|menu|toggle|dark|light|tokyonight-dark|tokyonight-light|kanagawa-dark|kanagawa-light|rose-pine-dark|everforest-dark|everforest-light|catppuccin-dark|catppuccin-light|gruvbox-dark|gruvbox-light|nightfox-dark]\n' "${0##*/}" >&2
+    printf 'Usage: %s [status|list|list-machine|menu|menu-fallback|toggle|dark|light|tokyonight-dark|tokyonight-light|kanagawa-dark|kanagawa-light|rose-pine-dark|everforest-dark|everforest-light|catppuccin-dark|catppuccin-light|gruvbox-dark|gruvbox-light|nightfox-dark]\n' "${0##*/}" >&2
     exit 2
     ;;
 esac
