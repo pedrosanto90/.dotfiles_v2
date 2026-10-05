@@ -6,8 +6,8 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 
 ## Features
 
-- Modular Sway configuration with Waybar, Wofi, Mako, locking, and idle handling
-- Illustrated Waybar tiling selector with seven workspace presets and automatic alternating splits
+- Modular Sway configuration with Quickshell, Wofi, Mako, locking, and idle handling
+- Illustrated Quickshell tiling selector with seven workspace presets and automatic alternating splits
 - Native Wayland graphical login through greetd and wlgreet
 - Ghostty built from the official release tarball when unavailable in Debian
 - Framework-free Zsh with Starship, fzf, zoxide, GitHub CLI, and a small alias set
@@ -26,9 +26,9 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 - Thunar, Yazi, Gwenview/Zathura image and PDF viewing, persistent clipboard history, screenshots, and USB automounting
 - Searchable Sway, tmux, and Neovim keybinding reference
 - Tokyo Night and Kanagawa palettes, Papirus icons, and JetBrainsMono Nerd Font
-- Synchronized light/dark theme families for GTK, Waybar, Ghostty, and Neovim
-- Pomodoro timer in Waybar with a GTK4 menu (spinners for the durations), and actionable Mako notifications
-- Clipboard history for text and images, available from Waybar through Wofi
+- Synchronized light/dark theme families for GTK, Quickshell, Ghostty, and Neovim
+- Pomodoro timer in the Quickshell bar with a GTK4 menu (spinners for the durations), and actionable Mako notifications
+- Clipboard history for text and images, available from the Quickshell bar through Wofi
 
 ## Requirements
 
@@ -287,12 +287,25 @@ Run the hardware-independent routing and theme-palette checks with
 
 The active desktop palette lives at
 `~/.config/debian-sway-dev/theme/current.json`. Quickshell watches this neutral
-palette directly; while Waybar remains in use, `theme-toggle` also maintains its
-legacy `colors.css` import so both interfaces stay synchronized.
+palette directly. `theme-toggle` still maintains the legacy Waybar `colors.css`
+files as a compatibility source for tmux and the tiling selector; it does not
+start a Waybar process.
+
+The Quickshell bar runs at the top of every screen and reserves 30 pixels of
+workspace. It includes Sway workspaces, clock, audio, battery, system tray, Pomodoro,
+tiling layout, clipboard history, theme, caffeine, Control Center, and power
+controls. It is visible when the shell starts. Show, hide, or toggle it through
+the shell IPC:
+
+```bash
+quickshell ipc -p ~/.config/quickshell/control-center/shell.qml call -- shell showBar
+quickshell ipc -p ~/.config/quickshell/control-center/shell.qml call -- shell hideBar
+quickshell ipc -p ~/.config/quickshell/control-center/shell.qml call -- shell toggleBar
+```
 
 ### Automatic window tiling
 
-Click the layout icon next to the Waybar tray to open a two-column picker with SVG previews. Select a preset to immediately arrange the current workspace. Each workspace remembers its own choice across sessions; new windows, closed windows, and windows moved between workspaces update the selected grid automatically.
+Click the layout icon in the Quickshell bar to open a two-column picker with SVG previews. Select a preset to immediately arrange the current workspace. Each workspace remembers its own choice across sessions; new windows, closed windows, and windows moved between workspaces update the selected grid automatically.
 
 | Preset (columns × rows) | Reference window count |
 | --- | --- |

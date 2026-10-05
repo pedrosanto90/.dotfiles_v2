@@ -450,44 +450,6 @@ refresh_tmux() {
   tmux source-file "${tmux_theme_file}"
 }
 
-stop_waybar() {
-  local attempt
-  pkill -TERM -x waybar 2>/dev/null || true
-  for attempt in {1..40}; do
-    pgrep -x waybar >/dev/null 2>&1 || return 0
-    sleep 0.05
-  done
-  pkill -KILL -x waybar 2>/dev/null || true
-  for attempt in {1..20}; do
-    pgrep -x waybar >/dev/null 2>&1 || return 0
-    sleep 0.05
-  done
-  return 1
-}
-
-restart_waybar() {
-  local attempt count
-  command -v swaymsg >/dev/null 2>&1 && [[ -n ${SWAYSOCK:-} ]] || {
-    notify_error 'Não existe uma sessão Sway ativa para reiniciar a Waybar.'
-    return 1
-  }
-
-  for attempt in 1 2; do
-    stop_waybar || break
-    swaymsg exec waybar >/dev/null
-    for _ in {1..60}; do
-      count=$(pgrep -xc waybar 2>/dev/null || true)
-      [[ ${count} == 1 ]] && return 0
-      [[ ${count} -gt 1 ]] && break
-      sleep 0.05
-    done
-  done
-
-  stop_waybar || true
-  notify_error 'A Waybar não reiniciou com uma única instância.'
-  return 1
-}
-
 select_mode() {
   local requested=$1 selected family mode
   selected=$(current_theme)
@@ -541,7 +503,6 @@ run_selection() {
   refresh_neovim
   refresh_ghostty
   refresh_tmux
-  restart_waybar
 }
 
 case ${1:-status} in

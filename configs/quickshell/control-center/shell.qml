@@ -11,6 +11,7 @@ ShellRoot {
     readonly property string activePopup: popupManager.activePopup
     readonly property var availablePopups: ["control-center"]
     property string osdKind: ""
+    property bool barVisible: true
     property var targetScreen: null
     readonly property var sink: Pipewire.defaultAudioSink
     readonly property var source: Pipewire.defaultAudioSource
@@ -107,10 +108,17 @@ ShellRoot {
         function open(name: string): bool { return root.openPopup(name); }
         function toggle(name: string): bool { return root.togglePopup(name); }
         function close(): void { root.closePopups(); }
+        function showBar(): void { root.barVisible = true; }
+        function hideBar(): void { root.barVisible = false; }
+        function toggleBar(): bool {
+            root.barVisible = !root.barVisible;
+            return root.barVisible;
+        }
         function status(): string {
             return JSON.stringify({activePopup: root.activePopup,
                 screen: root.targetScreen ? root.targetScreen.name : "",
-                availablePopups: root.availablePopups});
+                availablePopups: root.availablePopups,
+                barVisible: root.barVisible});
         }
     }
 
@@ -145,4 +153,5 @@ ShellRoot {
 
     ControlCenter { controller: root }
     MediaOsd { controller: root }
+    Bar { controller: root; shown: root.barVisible }
 }
