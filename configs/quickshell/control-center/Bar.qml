@@ -315,8 +315,8 @@ Scope {
                         text: ""
                         tooltip: "Clipboard history"
                         foregroundColor: Theme.accent
-                        onPrimaryClicked: root.run(["clipboard-history"])
-                        onSecondaryClicked: root.run(["clipboard-history"])
+                        onPrimaryClicked: root.controller.togglePopupOnScreen("clipboard", window.screen)
+                        onSecondaryClicked: root.controller.togglePopupOnScreen("clipboard", window.screen)
                     }
 
                     StatusButton {
@@ -384,6 +384,14 @@ Scope {
                     active: root.controller.activePopup === "battery"
                         && root.controller.targetScreen === window.screen
                     BatteryPopover {
+                        controller: root.controller
+                        barScreen: window.screen
+                    }
+                }
+                LazyLoader {
+                    active: root.controller.activePopup === "clipboard"
+                        && root.controller.targetScreen === window.screen
+                    ClipboardPopover {
                         controller: root.controller
                         barScreen: window.screen
                     }

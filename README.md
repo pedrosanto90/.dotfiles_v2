@@ -311,6 +311,11 @@ use the arrow keys to change selection, and press `Enter` to launch or `Escape`
 to close it. If the Quickshell instance is unavailable, the launcher wrapper
 falls back to Wofi.
 
+The clipboard icon opens a native searchable history backed by `cliphist`.
+Select an entry with the mouse or keyboard to restore it through `wl-copy`.
+Running `clipboard-history` opens the same popup and falls back to Wofi when the
+Quickshell instance is unavailable.
+
 ### Automatic window tiling
 
 Click the layout icon in the Quickshell bar to open a two-column picker with SVG previews. Select a preset to immediately arrange the current workspace. Each workspace remembers its own choice across sessions; new windows, closed windows, and windows moved between workspaces update the selected grid automatically.

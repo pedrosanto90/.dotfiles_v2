@@ -129,14 +129,24 @@ PanelWindow {
                 placeholderText: "Search applications…"
                 selectByMouse: true
                 Accessible.name: "Application search"
+                Keys.priority: Keys.BeforeItem
                 onTextChanged: {
                     results.currentIndex = 0;
                     results.positionViewAtBeginning();
                 }
                 onAccepted: root.launch(results.currentIndex)
-                Keys.onEscapePressed: root.controller.closePopups()
-                Keys.onDownPressed: root.moveSelection(1)
-                Keys.onUpPressed: root.moveSelection(-1)
+                Keys.onEscapePressed: event => {
+                    root.controller.closePopups();
+                    event.accepted = true;
+                }
+                Keys.onDownPressed: event => {
+                    root.moveSelection(1);
+                    event.accepted = true;
+                }
+                Keys.onUpPressed: event => {
+                    root.moveSelection(-1);
+                    event.accepted = true;
+                }
             }
 
             ListView {

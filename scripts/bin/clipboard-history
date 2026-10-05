@@ -3,38 +3,95 @@ set -euo pipefail
 
 readonly runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 readonly lock_file="${runtime_dir}/debian-sway-dev-clipboard.lock"
+readonly config="${XDG_CONFIG_HOME:-${HOME}/.config}/quickshell/control-center/shell.qml"
 
 notify_error() {
   command -v notify-send >/dev/null 2>&1 &&
     notify-send --urgency=critical 'Clipboard history' "$1" || true
 }
 
-for command in cliphist wl-copy wofi; do
-  command -v "${command}" >/dev/null 2>&1 || {
-    notify_error "Required command not found: ${command}"
-    exit 1
-  }
-done
-
-[[ -n ${WAYLAND_DISPLAY:-} ]] || {
-  notify_error 'A Wayland session is required.'
-  exit 1
+require_commands() {
+  local command
+  for command in "$@"; do
+    command -v "${command}" >/dev/null 2>&1 || {
+      notify_error "Required command not found: ${command}"
+      return 1
+    }
+  done
 }
 
-mkdir -p "${runtime_dir}"
-exec 9>"${lock_file}"
-flock -n 9 || exit 0
+list_entries() {
+  require_commands cliphist
+  exec cliphist list
+}
 
-selection=$(cliphist list | wofi --dmenu --insensitive --prompt 'Clipboard' \
-  --width 760 --height 520 || true)
-[[ -n ${selection} ]] || exit 0
+restore_entry() {
+  local entry_id=${1:-}
+  [[ ${entry_id} =~ ^[0-9]+$ ]] || {
+    printf 'Invalid clipboard entry ID: %s\n' "${entry_id}" >&2
+    return 2
+  }
+  require_commands cliphist wl-copy
+  [[ -n ${WAYLAND_DISPLAY:-} ]] || {
+    notify_error 'A Wayland session is required.'
+    return 1
+  }
+  if ! printf '%s' "${entry_id}" | cliphist decode | wl-copy; then
+    notify_error 'Could not restore the selected clipboard entry.'
+    return 1
+  fi
+}
 
-# wl-copy forks to keep serving the selected data. Release and close the menu
-# lock first so its background process cannot inherit it indefinitely.
-flock -u 9
-exec 9>&-
+open_fallback() {
+  local selection
+  require_commands cliphist wl-copy wofi
 
-if ! printf '%s\n' "${selection}" | cliphist decode | wl-copy; then
-  notify_error 'Could not restore the selected clipboard entry.'
-  exit 1
-fi
+  [[ -n ${WAYLAND_DISPLAY:-} ]] || {
+    notify_error 'A Wayland session is required.'
+    return 1
+  }
+
+  mkdir -p "${runtime_dir}"
+  exec 9>"${lock_file}"
+  flock -n 9 || return 0
+
+  selection=$(cliphist list | wofi --dmenu --insensitive --prompt 'Clipboard' \
+    --width 760 --height 520 || true)
+  [[ -n ${selection} ]] || return 0
+
+  # wl-copy forks to keep serving the selected data. Release and close the
+  # menu lock first so its background process cannot inherit it indefinitely.
+  flock -u 9
+  exec 9>&-
+
+  if ! printf '%s\n' "${selection}" | cliphist decode | wl-copy; then
+    notify_error 'Could not restore the selected clipboard entry.'
+    return 1
+  fi
+}
+
+case ${1:-} in
+  --list)
+    list_entries
+    ;;
+  --restore)
+    restore_entry "${2:-}"
+    ;;
+  --fallback)
+    open_fallback
+    ;;
+  '')
+    quickshell_bin=$(command -v quickshell || true)
+    [[ -n ${quickshell_bin} ]] || quickshell_bin="${HOME}/.local/bin/quickshell"
+    if [[ -x ${quickshell_bin} && -f ${config} ]] \
+      && timeout 2 "${quickshell_bin}" ipc -p "${config}" call -- shell toggle clipboard \
+        >/dev/null 2>&1; then
+      exit 0
+    fi
+    open_fallback
+    ;;
+  *)
+    printf 'Usage: clipboard-history [--list | --restore ID | --fallback]\n' >&2
+    exit 2
+    ;;
+esac
