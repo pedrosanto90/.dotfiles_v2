@@ -106,7 +106,7 @@ An existing Go tree is never deleted. During an upgrade, `/usr/local/go` moves t
 
 ## Installed software
 
-Debian packages cover Sway, greetd/wlgreet, Waybar, Wofi, Mako, Zsh, fzf, zoxide, tmux, Git, lazygit, ripgrep, fd (`fdfind`), bat (`batcat`), eza, jq, btop, fastfetch, the C/C++ toolchain, Python, Thunar/GVFS, Evolution, Gwenview, Zathura, wl-clipboard, cliphist, grim/slurp/swappy, PipeWire, WirePlumber, pavucontrol, playerctl, NetworkManager with VPN plugins, Blueman, BlueZ, lxpolkit, XDG portals, UPower, power-profiles-daemon, udisks2, udiskie, brightnessctl, Papirus, and nwg-look.
+Debian packages cover Sway, greetd/wlgreet, Waybar, Wofi, Mako, Zsh, fzf, zoxide, tmux, Git, lazygit, ripgrep, fd (`fdfind`), bat (`batcat`), eza, jq, btop, fastfetch, the C/C++ toolchain, Python, Thunar/GVFS, Evolution, Gwenview, Zathura, wl-clipboard, cliphist, grim/slurp/swappy, PipeWire, WirePlumber, pavucontrol, playerctl, NetworkManager with VPN plugins, Blueman, BlueZ, rfkill, lxpolkit, XDG portals, UPower, power-profiles-daemon, udisks2, udiskie, brightnessctl, Papirus, and nwg-look.
 
 ### Image and PDF viewing
 
@@ -294,8 +294,11 @@ start a Waybar process.
 The Quickshell bar runs at the top of every screen and reserves 30 pixels of
 workspace. It includes Sway workspaces, clock, audio, battery, system tray, Pomodoro,
 tiling layout, clipboard history, theme, caffeine, Control Center, and power
-controls. It is visible when the shell starts. Show, hide, or toggle it through
-the shell IPC:
+controls. Audio, network, Bluetooth, and battery icons open click-only popups;
+only one popup is shown at a time, and it closes with `Escape` or a click outside.
+Advanced network, Bluetooth, and audio configuration remains available from the
+corresponding popup. The bar is visible when the shell starts. Show, hide, or
+toggle it through the shell IPC:
 
 ```bash
 quickshell ipc -p ~/.config/quickshell/control-center/shell.qml call -- shell showBar

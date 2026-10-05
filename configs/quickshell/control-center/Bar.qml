@@ -1,6 +1,8 @@
 import QtQuick
 import Quickshell
 import Quickshell.I3
+import Quickshell.Bluetooth
+import Quickshell.Networking
 import Quickshell.Services.SystemTray
 import Quickshell.Services.UPower
 import Quickshell.Wayland
@@ -12,6 +14,13 @@ Scope {
     property bool showDate: false
     readonly property var battery: UPower.displayDevice
     readonly property real batteryPercent: battery.ready ? battery.percentage * 100 : 0
+    readonly property var wifiDevice: Networking.devices.values.find(
+        device => device.type === DeviceType.Wifi) || null
+    readonly property var activeWifi: wifiDevice
+        ? wifiDevice.networks.values.find(network => network.connected) || null : null
+    readonly property var wiredDevice: Networking.devices.values.find(
+        device => device.type === DeviceType.Wired && device.connected) || null
+    readonly property var bluetoothAdapter: Bluetooth.defaultAdapter
 
     StatusCommand { id: pomodoroStatus; command: ["pomodoro", "status"]; interval: 1000 }
     StatusCommand { id: layoutStatus; command: ["sway-layout", "status"]; interval: 2000 }
@@ -64,6 +73,24 @@ Scope {
             detail += " · " + hours + "h " + minutes + "m";
         }
         return detail;
+    }
+
+    function networkIcon() {
+        if (wiredDevice) return "󰈀";
+        if (!wifiDevice || !Networking.wifiEnabled) return "󰤮";
+        if (!activeWifi) return "󰤯";
+        const signal = activeWifi.signalStrength;
+        if (signal < 0.25) return "󰤟";
+        if (signal < 0.5) return "󰤢";
+        if (signal < 0.75) return "󰤥";
+        return "󰤨";
+    }
+
+    function isManagedTrayItem(item) {
+        const identity = (item.id + " " + item.title).toLowerCase();
+        return identity.indexOf("nm-applet") >= 0
+            || identity.indexOf("networkmanager") >= 0
+            || identity.indexOf("blueman") >= 0;
     }
 
     SystemClock {
@@ -173,6 +200,30 @@ Scope {
                             font.pixelSize: 12
                         }
 
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.controller.togglePopupOnScreen("audio", window.screen)
+                        }
+                    }
+
+                    StatusButton {
+                        id: networkButton
+                        height: statusArea.height
+                        text: root.networkIcon()
+                            + (root.activeWifi ? " " + root.activeWifi.name : "")
+                        foregroundColor: root.activeWifi || root.wiredDevice ? Theme.success : Theme.muted
+                        onPrimaryClicked: root.controller.togglePopupOnScreen("network", window.screen)
+                        onSecondaryClicked: root.controller.togglePopupOnScreen("network", window.screen)
+                    }
+
+                    StatusButton {
+                        id: bluetoothButton
+                        height: statusArea.height
+                        text: root.bluetoothAdapter && root.bluetoothAdapter.enabled ? "󰂯" : "󰂲"
+                        foregroundColor: Bluetooth.devices.count > 0 ? Theme.accent : Theme.muted
+                        onPrimaryClicked: root.controller.togglePopupOnScreen("bluetooth", window.screen)
+                        onSecondaryClicked: root.controller.togglePopupOnScreen("bluetooth", window.screen)
                     }
 
                     Rectangle {
@@ -194,6 +245,8 @@ Scope {
 
                         MouseArea {
                             anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.controller.togglePopupOnScreen("battery", window.screen)
                         }
                     }
 
@@ -203,7 +256,8 @@ Scope {
                         Rectangle {
                             id: trayButton
                             required property var modelData
-                            width: 30
+                            visible: !root.isManagedTrayItem(modelData)
+                            width: visible ? 30 : 0
                             height: statusArea.height
                             color: "transparent"
 
@@ -299,6 +353,39 @@ Scope {
                         foregroundColor: Theme.danger
                         onPrimaryClicked: root.run(["power-menu"])
                         onSecondaryClicked: root.run(["power-menu"])
+                    }
+                }
+
+                LazyLoader {
+                    active: root.controller.activePopup === "audio"
+                        && root.controller.targetScreen === window.screen
+                    AudioPopover {
+                        controller: root.controller
+                        barScreen: window.screen
+                    }
+                }
+                LazyLoader {
+                    active: root.controller.activePopup === "network"
+                        && root.controller.targetScreen === window.screen
+                    NetworkPopover {
+                        controller: root.controller
+                        barScreen: window.screen
+                    }
+                }
+                LazyLoader {
+                    active: root.controller.activePopup === "bluetooth"
+                        && root.controller.targetScreen === window.screen
+                    BluetoothPopover {
+                        controller: root.controller
+                        barScreen: window.screen
+                    }
+                }
+                LazyLoader {
+                    active: root.controller.activePopup === "battery"
+                        && root.controller.targetScreen === window.screen
+                    BatteryPopover {
+                        controller: root.controller
+                        barScreen: window.screen
                     }
                 }
             }

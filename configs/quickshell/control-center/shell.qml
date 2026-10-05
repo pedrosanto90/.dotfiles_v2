@@ -9,7 +9,7 @@ ShellRoot {
     id: root
     readonly property bool panelOpen: popupManager.activePopup === "control-center"
     readonly property string activePopup: popupManager.activePopup
-    readonly property var availablePopups: ["control-center"]
+    readonly property var availablePopups: ["control-center", "audio", "network", "bluetooth", "battery"]
     property string osdKind: ""
     property bool barVisible: true
     property var targetScreen: null
@@ -52,6 +52,12 @@ ShellRoot {
         chooseScreen();
         popupManager.toggle(name);
         if (name === "control-center" && panelOpen) refreshBrightness();
+        return true;
+    }
+    function togglePopupOnScreen(name, screen) {
+        if (!popupAvailable(name)) return false;
+        targetScreen = screen;
+        popupManager.toggle(name);
         return true;
     }
     function closePopups() {

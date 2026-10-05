@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+rfkill_bin=$(command -v rfkill 2>/dev/null || true)
+[[ -n ${rfkill_bin} ]] || rfkill_bin=/usr/sbin/rfkill
+
+notify_error() {
+  command -v notify-send >/dev/null 2>&1 \
+    && notify-send --urgency=critical 'Bluetooth' "$1" \
+    || printf 'Bluetooth: %s\n' "$1" >&2
+}
+
+powered() {
+  bluetoothctl show 2>/dev/null | grep -q $'\tPowered: yes'
+}
+
+unblock() {
+  [[ -x ${rfkill_bin} ]] || {
+    notify_error 'The rfkill command is not installed.'
+    return 1
+  }
+  "${rfkill_bin}" unblock bluetooth 2>/dev/null \
+    || pkexec "${rfkill_bin}" unblock bluetooth \
+    || return 1
+}
+
+power_on() {
+  unblock || {
+    notify_error 'Could not unblock the Bluetooth radio.'
+    return 1
+  }
+  bluetoothctl power on >/dev/null || {
+    notify_error 'Could not power on the Bluetooth adapter.'
+    return 1
+  }
+}
+
+case ${1:-toggle} in
+  on)
+    powered || power_on
+    ;;
+  off)
+    powered && bluetoothctl power off >/dev/null || true
+    ;;
+  toggle)
+    if powered; then
+      bluetoothctl power off >/dev/null
+    else
+      power_on
+    fi
+    ;;
+  status)
+    powered && printf 'on\n' || printf 'off\n'
+    ;;
+  *)
+    printf 'Usage: %s [on|off|toggle|status]\n' "${0##*/}" >&2
+    exit 2
+    ;;
+esac

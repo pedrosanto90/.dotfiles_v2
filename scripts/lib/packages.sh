@@ -18,7 +18,7 @@ readonly DEBIAN_PACKAGES=(
   network-manager-openconnect-gnome openconnect
   network-manager-l2tp-gnome network-manager-strongswan
   network-manager-vpnc-gnome network-manager-sstp-gnome wireguard-tools
-  bluez blueman
+  bluez blueman rfkill
   polkitd pkexec lxpolkit
   xdg-desktop-portal xdg-desktop-portal-wlr xdg-desktop-portal-gtk xdg-utils desktop-file-utils
   # Explicit because --no-install-recommends otherwise omits backlight permissions.
