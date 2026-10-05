@@ -176,7 +176,7 @@ Global TypeScript packages are intentionally omitted, with the exception of the 
 |---|---|
 | `Super + F1` | Open the searchable project keybinding reference |
 | `Super + Enter` | Open Ghostty |
-| `Super + D` | Open Wofi |
+| `Super + D` | Open the Quickshell application launcher |
 | `Super + B` | Open Brave on Wayland |
 | `Super + E` | Open Thunar |
 | `Super + Shift + N` | Open the network and VPN connection editor |
@@ -305,6 +305,11 @@ quickshell ipc -p ~/.config/quickshell/control-center/shell.qml call -- shell sh
 quickshell ipc -p ~/.config/quickshell/control-center/shell.qml call -- shell hideBar
 quickshell ipc -p ~/.config/quickshell/control-center/shell.qml call -- shell toggleBar
 ```
+
+`Super+D` opens the native application launcher. Type to search desktop entries,
+use the arrow keys to change selection, and press `Enter` to launch or `Escape`
+to close it. If the Quickshell instance is unavailable, the launcher wrapper
+falls back to Wofi.
 
 ### Automatic window tiling
 
