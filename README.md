@@ -8,6 +8,7 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 
 - Modular Sway configuration with Quickshell, Wofi, Mako, locking, and idle handling
 - Illustrated Quickshell tiling selector with seven workspace presets and automatic alternating splits
+- Automatic monitor arrangement and workspace binding for laptop, dual, and triple setups
 - Native Wayland graphical login through greetd and wlgreet
 - Ghostty built from the official release tarball when unavailable in Debian
 - Framework-free Zsh with Starship, fzf, zoxide, GitHub CLI, and a small alias set
@@ -57,7 +58,7 @@ Do not run the installer with `sudo`. It requests elevated privileges only for A
 After installation:
 
 1. Review `~/.config/sway/config.d/input.conf`. Keyboards default to US and can switch to Brazilian ABNT2.
-2. Press `Super+Shift+M` to arrange monitors graphically with nwg-displays. Saved layouts and workspace assignments are restored automatically on login.
+2. Connect your monitors: `sway-displays` arranges them and binds workspaces automatically for the laptop, dual, and triple setups (see [Display modes](#display-modes)). `Super+Shift+M` still opens nwg-displays for ad-hoc tweaks.
 3. Zsh is set as your login shell automatically; the change takes effect at the next login.
 4. Reboot the machine.
 5. Enter your username and password in the Tokyo Night wlgreet screen. If the installer preserved an existing display manager, select Sway from its session menu first.
@@ -409,6 +410,33 @@ swaymsg -t get_inputs | jq '.[] | select(.type == "keyboard") | {identifier, nam
 ```
 
 If the reported Elora name differs, update `ELORA_KEYBOARD_NAME` in `~/.local/bin/sway-keyboard-layout` and its source file under `scripts/bin/`.
+
+### Display modes
+
+`sway-displays watch` starts with the session, positions the connected monitors,
+and binds workspaces according to the current setup. It reacts to output
+plug/unplug events, so the layout is applied automatically when a monitor is
+connected or removed. Three setups are handled:
+
+| Setup | Arrangement | Primary | Workspaces 1–5 | Workspace 10 |
+| --- | --- | --- | --- | --- |
+| Laptop only | eDP-1 | eDP-1 | eDP-1 | eDP-1 |
+| Laptop + one external | eDP-1 left, external right | external (DP-1 or HDMI-A-1) | primary | eDP-1 |
+| Laptop + DP-1 + HDMI-A-1 | HDMI-A-1 left, DP-1 center, eDP-1 right | DP-1 | DP-1 | eDP-1 |
+
+Workspaces 6–9 and any others are left unbound: they open on whichever output
+is focused. Monitor positions are computed from the actual mode widths, so the
+arrangement adapts to different resolutions and scales.
+
+Inspect the plan currently in effect:
+
+```bash
+sway-displays status        # JSON: mode, primary, positions, bindings
+sway-displays apply         # re-apply the layout now
+```
+
+`Super + Shift + M` still opens `nwg-displays` for ad-hoc mode, scale, or
+rotation tweaks; the next output event re-asserts the managed layout.
 
 ## Wi-Fi ownership
 

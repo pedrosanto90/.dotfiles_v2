@@ -179,7 +179,8 @@ Scope {
                     anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
 
                     Repeater {
-                        model: I3.workspaces
+                        model: I3.workspaces.values.filter(workspace =>
+                            workspace.monitor && workspace.monitor.name === window.screen.name)
 
                         Rectangle {
                             id: workspaceButton

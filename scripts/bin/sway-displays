@@ -1,0 +1,175 @@
+#!/usr/bin/env bash
+# Arrange monitors and bind workspaces for the laptop / dual / triple setups.
+#
+# Modes (based on the active outputs):
+#   single  only eDP-1
+#   dual    eDP-1 + one external (DP-1 or HDMI-A-1); external is primary
+#   triple  eDP-1 + DP-1 + HDMI-A-1; HDMI-A-1 left, DP-1 center, eDP-1 right
+#
+# Workspaces 1-5 always live on the primary output; workspace 10 lives on the
+# laptop panel (eDP-1) whenever it is present; the rest are left unbound.
+set -euo pipefail
+
+log() { printf '[sway-displays] %s\n' "$*" >&2; }
+
+require_tools() {
+  command -v swaymsg >/dev/null 2>&1 || { log "swaymsg not found"; exit 1; }
+  command -v jq >/dev/null 2>&1 || { log "jq not found"; exit 1; }
+}
+
+json_outputs() { swaymsg -r -t get_outputs; }
+json_workspaces() { swaymsg -r -t get_workspaces; }
+
+MODE="unknown"
+PRIMARY=""
+INTERNAL=""
+declare -A WIDTH=()
+POSITION_CMDS=()
+BINDING_CMDS=()
+MOVE_CMDS=()
+
+compute_layout() {
+  local outputs=$1 workspaces=$2
+  MODE="unknown"
+  PRIMARY=""
+  INTERNAL=""
+  WIDTH=()
+  POSITION_CMDS=()
+  BINDING_CMDS=()
+  MOVE_CMDS=()
+
+  local name width hdmi="" dp="" internal=""
+  while IFS=$'\t' read -r name width; do
+    [[ -n ${name} ]] || continue
+    WIDTH[${name}]=${width:-0}
+    case ${name} in
+      eDP*) internal=${name} ;;
+      HDMI*) hdmi=${name} ;;
+      DP*) dp=${name} ;;
+    esac
+  done < <(jq -r '.[] | select(.active) |
+    [.name, (((.current_mode.width // 0) / (.scale // 1)) | floor)] | @tsv' <<<"${outputs}")
+  INTERNAL=${internal}
+
+  if [[ -n ${internal} && -n ${hdmi} && -n ${dp} ]]; then
+    MODE=triple
+    PRIMARY=${dp}
+    POSITION_CMDS=(
+      "output ${hdmi} position 0 0"
+      "output ${dp} position ${WIDTH[${hdmi}]:-0} 0"
+      "output ${internal} position $(( ${WIDTH[${hdmi}]:-0} + ${WIDTH[${dp}]:-0} )) 0"
+    )
+  elif [[ -n ${internal} && ( -n ${hdmi} || -n ${dp} ) ]]; then
+    MODE=dual
+    local external
+    external=${hdmi:-${dp}}
+    PRIMARY=${external}
+    POSITION_CMDS=(
+      "output ${internal} position 0 0"
+      "output ${external} position ${WIDTH[${internal}]:-0} 0"
+    )
+  elif [[ -n ${internal} ]]; then
+    MODE=single
+    PRIMARY=${internal}
+  elif [[ -n ${dp} || -n ${hdmi} ]]; then
+    MODE=external-only
+    PRIMARY=${dp:-${hdmi}}
+  fi
+
+  local n
+  if [[ -n ${PRIMARY} ]]; then
+    for n in 1 2 3 4 5; do
+      BINDING_CMDS+=("workspace ${n} output ${PRIMARY}")
+    done
+  fi
+  if [[ -n ${INTERNAL} ]]; then
+    BINDING_CMDS+=("workspace 10 output ${INTERNAL}")
+  fi
+
+  declare -A target=()
+  [[ -n ${PRIMARY} ]] && target[1]=${PRIMARY} && target[2]=${PRIMARY} \
+    && target[3]=${PRIMARY} && target[4]=${PRIMARY} && target[5]=${PRIMARY}
+  [[ -n ${INTERNAL} ]] && target[10]=${INTERNAL}
+
+  local num output
+  while IFS=$'\t' read -r num output; do
+    [[ -n ${num} && -n ${output} ]] || continue
+    [[ -n ${target[${num}]:-} ]] || continue
+    [[ ${output} == "${target[${num}]}" ]] && continue
+    MOVE_CMDS+=("[workspace=\"${num}\"] move workspace to output ${target[${num}]}")
+  done < <(jq -r '.[] | [.num, .output] | @tsv' <<<"${workspaces}")
+}
+
+run_command() {
+  if ! swaymsg "$1" >/dev/null 2>&1; then
+    log "command failed: $1"
+  fi
+}
+
+run_move() {
+  # Moving an empty workspace matches no node; ignore that failure.
+  swaymsg "$1" >/dev/null 2>&1 || true
+}
+
+apply_plan() {
+  require_tools
+  local outputs workspaces
+  outputs=$(json_outputs)
+  workspaces=$(json_workspaces)
+  compute_layout "${outputs}" "${workspaces}"
+
+  local cmd
+  for cmd in ${POSITION_CMDS[@]+"${POSITION_CMDS[@]}"}; do run_command "${cmd}"; done
+  for cmd in ${BINDING_CMDS[@]+"${BINDING_CMDS[@]}"}; do run_command "${cmd}"; done
+  for cmd in ${MOVE_CMDS[@]+"${MOVE_CMDS[@]}"}; do run_move "${cmd}"; done
+  log "applied mode=${MODE} primary=${PRIMARY:-none} internal=${INTERNAL:-none}"
+}
+
+emit_json_array() {
+  local -n values=$1
+  if [[ ${#values[@]} -eq 0 ]]; then
+    printf '[]'
+  else
+    printf '%s\0' "${values[@]}" | jq -R -s -c 'split("\u0000") | map(select(length > 0))'
+  fi
+}
+
+print_status() {
+  require_tools
+  local outputs workspaces
+  outputs=$(json_outputs)
+  workspaces=$(json_workspaces)
+  compute_layout "${outputs}" "${workspaces}"
+  jq -n \
+    --arg mode "${MODE}" \
+    --arg primary "${PRIMARY}" \
+    --arg internal "${INTERNAL}" \
+    --argjson positions "$(emit_json_array POSITION_CMDS)" \
+    --argjson bindings "$(emit_json_array BINDING_CMDS)" \
+    --argjson moves "$(emit_json_array MOVE_CMDS)" \
+    '{mode: $mode, primary: $primary, internal: $internal,
+      positions: $positions, bindings: $bindings, moves: $moves}'
+}
+
+watch_displays() {
+  require_tools
+  if command -v flock >/dev/null 2>&1; then
+    exec 9>"${XDG_RUNTIME_DIR:-/tmp}/sway-displays.lock"
+    flock -n 9 || { log "watch already running"; return 0; }
+  fi
+  apply_plan
+  swaymsg -m -t subscribe '["output"]' | while read -r _; do
+    sleep 0.4
+    apply_plan
+  done
+}
+
+case ${1:-apply} in
+  apply) apply_plan ;;
+  watch) watch_displays ;;
+  status) print_status ;;
+  *)
+    printf 'Usage: sway-displays [apply|watch|status]\n' >&2
+    exit 2
+    ;;
+esac
