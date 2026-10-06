@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+valid_uuid() {
+  [[ ${1:-} =~ ^[[:xdigit:]]{8}-[[:xdigit:]]{4}-[[:xdigit:]]{4}-[[:xdigit:]]{4}-[[:xdigit:]]{12}$ ]]
+}
+
+require_uuid() {
+  valid_uuid "${1:-}" || {
+    printf 'network-vpn: invalid connection UUID.\n' >&2
+    exit 2
+  }
+}
+
+list_vpns() {
+  local uuid type name service active_json
+  declare -A active=()
+
+  while IFS=: read -r uuid type; do
+    [[ -n ${uuid} ]] && active["${uuid}"]=1
+  done < <(nmcli --terse --fields UUID,TYPE connection show --active)
+
+  while IFS=: read -r uuid type; do
+    case ${type} in
+      vpn | wireguard) ;;
+      *) continue ;;
+    esac
+    name=$(nmcli --get-values connection.id connection show uuid "${uuid}")
+    if [[ ${type} == vpn ]]; then
+      service=$(nmcli --get-values vpn.service-type connection show uuid "${uuid}" || true)
+      service=${service##*.}
+      [[ -n ${service} ]] || service='VPN'
+    else
+      service='WireGuard'
+    fi
+    [[ -n ${active[${uuid}]:-} ]] && active_json=true || active_json=false
+    jq --null-input --compact-output \
+      --arg name "${name}" --arg uuid "${uuid}" --arg type "${service}" \
+      --argjson active "${active_json}" \
+      '{name: $name, uuid: $uuid, type: $type, active: $active}'
+  done < <(nmcli --terse --fields UUID,TYPE connection show)
+}
+
+case ${1:-list} in
+  list)
+    list_vpns | jq --slurp 'sort_by(.name | ascii_downcase)'
+    ;;
+  up)
+    require_uuid "${2:-}"
+    nmcli connection up uuid "$2"
+    ;;
+  down)
+    require_uuid "${2:-}"
+    nmcli connection down uuid "$2"
+    ;;
+  add)
+    exec nm-connection-editor --create --type=vpn
+    ;;
+  import)
+    exec nm-connection-editor --import
+    ;;
+  edit)
+    require_uuid "${2:-}"
+    exec nm-connection-editor --edit="$2"
+    ;;
+  *)
+    printf 'Usage: network-vpn [list|up UUID|down UUID|add|import|edit UUID]\n' >&2
+    exit 2
+    ;;
+esac

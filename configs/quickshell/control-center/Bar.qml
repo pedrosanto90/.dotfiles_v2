@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.I3
+import Quickshell.Io
 import Quickshell.Bluetooth
 import Quickshell.Networking
 import Quickshell.Services.SystemTray
@@ -21,6 +22,32 @@ Scope {
     readonly property var wiredDevice: Networking.devices.values.find(
         device => device.type === DeviceType.Wired && device.connected) || null
     readonly property var bluetoothAdapter: Bluetooth.defaultAdapter
+    property var activeVpns: []
+    readonly property bool vpnActive: activeVpns.length > 0
+
+    Process {
+        id: vpnStatus
+        command: ["network-vpn", "list"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const parsed = JSON.parse(text.trim() || "[]");
+                    root.activeVpns = Array.isArray(parsed)
+                        ? parsed.filter(vpn => vpn.active).map(vpn => vpn.name) : [];
+                } catch (error) {
+                    root.activeVpns = [];
+                }
+            }
+        }
+    }
+
+    Timer {
+        interval: 3000
+        repeat: true
+        running: true
+        triggeredOnStart: true
+        onTriggered: if (!vpnStatus.running) vpnStatus.running = true
+    }
 
     StatusCommand { id: pomodoroStatus; command: ["pomodoro", "status"]; interval: 1000 }
     StatusCommand { id: layoutStatus; command: ["sway-layout", "status"]; interval: 2000 }
@@ -260,8 +287,12 @@ Scope {
                         id: networkButton
                         height: statusArea.height
                         text: root.networkIcon()
+                            + (root.vpnActive ? " 󰖂" : "")
                             + (root.activeWifi ? " " + root.activeWifi.name : "")
-                        foregroundColor: root.activeWifi || root.wiredDevice ? Theme.success : Theme.muted
+                        tooltip: root.vpnActive
+                            ? "VPN: " + root.activeVpns.join(", ") : "Network"
+                        foregroundColor: root.vpnActive ? Theme.accent
+                            : root.activeWifi || root.wiredDevice ? Theme.success : Theme.muted
                         onPrimaryClicked: root.controller.togglePopupOnScreen("network", window.screen)
                         onSecondaryClicked: root.controller.togglePopupOnScreen("network", window.screen)
                     }

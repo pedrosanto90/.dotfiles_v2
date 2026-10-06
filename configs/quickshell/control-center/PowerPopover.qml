@@ -11,7 +11,6 @@ BarPopover {
     popupWidth: 400
     popupHeight: 400
     centered: true
-    compactCloseButton: true
 
     readonly property var actions: [
         {id: "lock", icon: "󰌾", label: "Lock", description: "Lock the current session", dangerous: false},
@@ -202,7 +201,7 @@ BarPopover {
         }
         RowLayout {
             Layout.fillWidth: true
-            Button {
+            PopoverButton {
                 Layout.fillWidth: true
                 text: "Cancel"
                 onClicked: {
@@ -210,9 +209,13 @@ BarPopover {
                     Qt.callLater(() => actionList.forceActiveFocus());
                 }
             }
-            Button {
+            PopoverButton {
                 Layout.fillWidth: true
                 text: "Confirm"
+                dangerous: {
+                    const action = root.actionById(root.pendingAction);
+                    return action ? action.dangerous : false;
+                }
                 enabled: !actionProcess.running
                 onClicked: root.execute(root.pendingAction)
             }

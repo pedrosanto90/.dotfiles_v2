@@ -14,7 +14,6 @@ PanelWindow {
     property int popupHeight: 320
     property bool centered: false
     property bool showCloseButton: true
-    property bool compactCloseButton: false
     default property alias content: contentColumn.data
 
     visible: controller.activePopup === popupName && controller.targetScreen === barScreen
@@ -75,25 +74,13 @@ PanelWindow {
                         font.pixelSize: 16
                         font.bold: true
                     }
-                    Button {
+                    IconButton {
                         id: closeButton
                         visible: root.showCloseButton
-                        Layout.preferredWidth: root.compactCloseButton ? 28 : 100
-                        Layout.preferredHeight: root.compactCloseButton ? 28 : 40
+                        text: "✕"
+                        glyphSize: 15
+                        Layout.alignment: Qt.AlignTop
                         onClicked: root.controller.closePopups()
-
-                        contentItem: Label {
-                            text: root.compactCloseButton ? "×" : "Close"
-                            color: closeButton.hovered ? Theme.foreground : Theme.muted
-                            font.pixelSize: root.compactCloseButton ? 16 : 13
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-
-                        background: Rectangle {
-                            radius: 6
-                            color: closeButton.hovered ? Theme.surface : "transparent"
-                        }
                     }
                 }
             }

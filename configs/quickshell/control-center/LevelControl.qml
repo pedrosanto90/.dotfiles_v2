@@ -19,7 +19,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Label { text: root.title; font.bold: true; Layout.fillWidth: true }
         Label { text: root.available ? Math.round(root.level * 100) + "%" : "Unavailable"; color: Theme.secondary }
-        Button {
+        PopoverButton {
             visible: root.canMute
             enabled: root.available
             text: root.muted ? "Unmute" : "Mute"

@@ -50,7 +50,11 @@ PanelWindow {
                 RowLayout {
                     Layout.fillWidth: true
                     Label { text: "Control Center"; font.pixelSize: 20; font.bold: true; Layout.fillWidth: true }
-                    Button { text: "Close"; onClicked: window.controller.closePopups() }
+                    IconButton {
+                        Layout.alignment: Qt.AlignTop
+                        text: "✕"
+                        onClicked: window.controller.closePopups()
+                    }
                 }
                 Label {
                     text: "Sound & media"
@@ -146,23 +150,23 @@ PanelWindow {
                 }
                 RowLayout {
                     Layout.alignment: Qt.AlignHCenter
-                    Button {
+                    PopoverButton {
                         text: "Previous"
                         enabled: !!window.player && window.player.canGoPrevious
                         onClicked: window.controller.transport("previous")
                     }
-                    Button {
+                    PopoverButton {
                         text: window.player && window.player.isPlaying ? "Pause" : "Play"
                         enabled: !!window.player && window.player.canTogglePlaying
                         onClicked: window.controller.transport("play-pause")
                     }
-                    Button {
+                    PopoverButton {
                         text: "Next"
                         enabled: !!window.player && window.player.canGoNext
                         onClicked: window.controller.transport("next")
                     }
                 }
-                Button {
+                PopoverButton {
                     Layout.fillWidth: true
                     text: "Audio devices & mixer…"
                     onClicked: {

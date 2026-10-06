@@ -299,8 +299,11 @@ tiling layout, clipboard history, theme, caffeine, Control Center, and power
 controls. Audio, network, Bluetooth, and battery icons open click-only popups;
 only one popup is shown at a time, and it closes with `Escape` or a click outside.
 Advanced network, Bluetooth, and audio configuration remains available from the
-corresponding popup. The bar is visible when the shell starts. Show, hide, or
-toggle it through the shell IPC:
+corresponding popup. The network popup combines Wi-Fi and VPN management:
+configured NetworkManager VPN and WireGuard profiles can be connected,
+disconnected, or edited directly, and new profiles can be created or imported
+through NetworkManager's connection editor. The bar is visible when the shell
+starts. Show, hide, or toggle it through the shell IPC:
 
 Hover over the system monitor icon to see current CPU, memory, and root filesystem
 usage in a compact informational panel. The panel stays open while the pointer is
@@ -431,7 +434,7 @@ sudo ./scripts/system/migrate-wlp1s0-to-networkmanager.sh --inspect
 
 ## VPN support
 
-VPN connections are managed by NetworkManager and appear in `nm-applet` in the Waybar tray. Press `Super + Shift + N` to create, import, or edit a connection graphically. The installer adds official Debian plugins and clients for:
+VPN connections are managed by NetworkManager. Open the network popup from the Quickshell bar to connect or disconnect a configured VPN; press `Super + Shift + N` to create, import, or edit a connection graphically. The `network-vpn` helper backs the popup: `network-vpn list` prints the VPN and WireGuard profiles as JSON, and `network-vpn up|down|add|import|edit` performs the matching action. The installer adds official Debian plugins and clients for:
 
 | VPN type | NetworkManager support |
 |---|---|

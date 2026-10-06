@@ -155,35 +155,35 @@ BarPopover {
 
     RowLayout {
         Layout.fillWidth: true
-        Button {
+        PopoverButton {
             Layout.fillWidth: true
             visible: root.pomodoroState === "idle"
             text: "Start focus"
             enabled: !root.busy
             onClicked: root.runAction("start")
         }
-        Button {
+        PopoverButton {
             Layout.fillWidth: true
             visible: root.pomodoroState === "paused"
             text: "Resume"
             enabled: !root.busy
             onClicked: root.runAction("resume")
         }
-        Button {
+        PopoverButton {
             Layout.fillWidth: true
             visible: root.pomodoroState === "running" || root.pomodoroState === "break"
             text: "Pause"
             enabled: !root.busy
             onClicked: root.runAction("pause")
         }
-        Button {
+        PopoverButton {
             Layout.fillWidth: true
             visible: root.pomodoroState !== "idle"
             text: "Skip"
             enabled: !root.busy
             onClicked: root.runAction("skip")
         }
-        Button {
+        PopoverButton {
             Layout.fillWidth: true
             visible: root.pomodoroState !== "idle"
             text: "Stop"
@@ -240,7 +240,7 @@ BarPopover {
         }
     }
 
-    Button {
+    PopoverButton {
         Layout.fillWidth: true
         text: "Save durations"
         enabled: !root.busy

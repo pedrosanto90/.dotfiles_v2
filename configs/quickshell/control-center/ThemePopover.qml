@@ -196,7 +196,7 @@ BarPopover {
         horizontalAlignment: Text.AlignHCenter
     }
 
-    Button {
+    PopoverButton {
         Layout.fillWidth: true
         text: applyProcess.running ? "Applying…"
             : root.canToggleMode ? "Toggle light / dark" : "Dark-only theme family"

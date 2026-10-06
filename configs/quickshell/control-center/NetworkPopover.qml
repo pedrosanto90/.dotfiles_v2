@@ -2,16 +2,19 @@ import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import Quickshell.Networking
 
 BarPopover {
     id: root
     popupName: "network"
     title: "Network"
-    popupHeight: 470
+    popupHeight: 690
     readonly property var wifiDevice: Networking.devices.values.find(
         device => device.type === DeviceType.Wifi) || null
     property var selectedNetwork: null
+    property var vpns: []
+    property string vpnError: ""
 
     function needsPsk(network) {
         return network.security === WifiSecurityType.WpaPsk
@@ -33,9 +36,68 @@ BarPopover {
         }
     }
 
+    function refreshVpns() {
+        if (!vpnListProcess.running && !vpnActionProcess.running)
+            vpnListProcess.running = true;
+    }
+
+    function toggleVpn(vpn) {
+        if (vpnActionProcess.running) return;
+        root.vpnError = "";
+        vpnActionProcess.command = ["network-vpn", vpn.active ? "down" : "up", vpn.uuid];
+        vpnActionProcess.running = true;
+    }
+
+    function editVpn(uuid) {
+        Quickshell.execDetached(["network-vpn", "edit", uuid]);
+        root.controller.closePopups();
+    }
+
     onVisibleChanged: {
         if (root.wifiDevice) root.wifiDevice.scannerEnabled = visible && Networking.wifiEnabled;
         if (!visible) root.selectedNetwork = null;
+        else root.refreshVpns();
+    }
+
+    Process {
+        id: vpnListProcess
+        command: ["network-vpn", "list"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const parsed = JSON.parse(text.trim() || "[]");
+                    root.vpns = Array.isArray(parsed) ? parsed : [];
+                    root.vpnError = "";
+                } catch (error) {
+                    root.vpnError = "Could not read the configured VPNs.";
+                }
+            }
+        }
+        onExited: (code, status) => {
+            if (code !== 0) root.vpnError = "Could not read the configured VPNs.";
+        }
+    }
+
+    Process {
+        id: vpnActionProcess
+        onExited: (code, status) => {
+            if (code !== 0) root.vpnError = "Could not change the selected VPN connection.";
+            vpnRefreshDelay.restart();
+        }
+    }
+
+    Timer {
+        id: vpnRefreshTimer
+        interval: 3000
+        repeat: true
+        running: root.visible
+        onTriggered: root.refreshVpns()
+    }
+
+    Timer {
+        id: vpnRefreshDelay
+        interval: 500
+        onTriggered: root.refreshVpns()
     }
 
     RowLayout {
@@ -46,7 +108,7 @@ BarPopover {
             color: Theme.foreground
             font.bold: true
         }
-        Switch {
+        ToggleSwitch {
             visible: !!root.wifiDevice
             checked: Networking.wifiEnabled
             enabled: Networking.wifiHardwareEnabled
@@ -66,7 +128,7 @@ BarPopover {
     ScrollView {
         id: networkScroll
         Layout.fillWidth: true
-        implicitHeight: 250
+        implicitHeight: 190
         visible: !!root.wifiDevice && Networking.wifiEnabled
         clip: true
         contentWidth: availableWidth
@@ -78,11 +140,12 @@ BarPopover {
             Repeater {
                 model: root.wifiDevice ? root.wifiDevice.networks : 0
 
-                Button {
+                PopoverButton {
                     required property var modelData
                     width: parent.width
                     text: (modelData.connected ? "● " : "") + modelData.name
                         + "   " + Math.round(modelData.signalStrength * 100) + "%"
+                    highlighted: modelData.connected
                     enabled: !modelData.stateChanging
                     onClicked: root.activate(modelData)
                 }
@@ -106,13 +169,26 @@ BarPopover {
             TextField {
                 id: passwordField
                 Layout.fillWidth: true
+                Layout.preferredHeight: 38
                 echoMode: TextInput.Password
                 placeholderText: "Wi-Fi password"
+                color: Theme.foreground
+                placeholderTextColor: Theme.muted
+                selectionColor: Theme.accent
+                selectedTextColor: Theme.selected
+                leftPadding: 10
+                rightPadding: 10
                 onAccepted: connectButton.clicked()
+                background: Rectangle {
+                    radius: 7
+                    color: Theme.surface
+                    border.color: passwordField.activeFocus ? Theme.accent : Theme.border
+                }
             }
-            Button {
+            PopoverButton {
                 id: connectButton
                 text: "Connect"
+                highlighted: true
                 enabled: passwordField.text.length >= 8
                 onClicked: {
                     if (root.selectedNetwork) root.selectedNetwork.connectWithPsk(passwordField.text);
@@ -123,7 +199,130 @@ BarPopover {
         }
     }
 
-    Button {
+    Rectangle {
+        Layout.fillWidth: true
+        Layout.preferredHeight: 1
+        color: Theme.border
+    }
+
+    RowLayout {
+        Layout.fillWidth: true
+
+        Label {
+            Layout.fillWidth: true
+            text: "VPN"
+            color: Theme.foreground
+            font.bold: true
+        }
+        Label {
+            text: root.vpns.filter(vpn => vpn.active).length > 0
+                ? root.vpns.filter(vpn => vpn.active).length + " active" : "Disconnected"
+            color: root.vpns.some(vpn => vpn.active) ? Theme.success : Theme.muted
+            font.pixelSize: 11
+        }
+    }
+
+    Label {
+        Layout.fillWidth: true
+        visible: root.vpnError.length > 0
+        text: root.vpnError
+        color: Theme.danger
+        wrapMode: Text.WordWrap
+    }
+
+    ScrollView {
+        id: vpnScroll
+        Layout.fillWidth: true
+        implicitHeight: Math.min(150, Math.max(48, root.vpns.length * 54))
+        clip: true
+        contentWidth: availableWidth
+
+        Column {
+            width: vpnScroll.availableWidth
+            spacing: 4
+
+            Repeater {
+                model: root.vpns
+
+                Rectangle {
+                    id: vpnRow
+                    required property var modelData
+                    width: parent.width
+                    height: 50
+                    radius: 8
+                    color: Theme.surface
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 8
+                        spacing: 8
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 1
+                            Label {
+                                Layout.fillWidth: true
+                                text: vpnRow.modelData.name
+                                textFormat: Text.PlainText
+                                color: Theme.foreground
+                                font.bold: true
+                                elide: Text.ElideRight
+                            }
+                            Label {
+                                text: vpnRow.modelData.type
+                                textFormat: Text.PlainText
+                                color: Theme.secondary
+                                font.pixelSize: 11
+                            }
+                        }
+                        ToggleSwitch {
+                            checked: vpnRow.modelData.active
+                            enabled: !vpnActionProcess.running
+                            onClicked: root.toggleVpn(vpnRow.modelData)
+                            Accessible.name: vpnRow.modelData.name
+                        }
+                        IconButton {
+                            text: "✎"
+                            glyphSize: 14
+                            enabled: !vpnActionProcess.running
+                            Accessible.name: "Edit " + vpnRow.modelData.name
+                            onClicked: root.editVpn(vpnRow.modelData.uuid)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Label {
+        Layout.fillWidth: true
+        visible: !vpnListProcess.running && root.vpns.length === 0 && root.vpnError.length === 0
+        text: "No VPN profiles configured"
+        color: Theme.secondary
+        horizontalAlignment: Text.AlignHCenter
+    }
+
+    RowLayout {
+        Layout.fillWidth: true
+        PopoverButton {
+            Layout.fillWidth: true
+            text: "Add VPN…"
+            onClicked: {
+                Quickshell.execDetached(["network-vpn", "add"]);
+                root.controller.closePopups();
+            }
+        }
+        PopoverButton {
+            Layout.fillWidth: true
+            text: "Import VPN…"
+            onClicked: {
+                Quickshell.execDetached(["network-vpn", "import"]);
+                root.controller.closePopups();
+            }
+        }
+    }
+
+    PopoverButton {
         Layout.fillWidth: true
         text: "Advanced network settings…"
         onClicked: {

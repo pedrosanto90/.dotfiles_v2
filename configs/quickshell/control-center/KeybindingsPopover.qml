@@ -11,7 +11,6 @@ BarPopover {
     popupWidth: 980
     popupHeight: 680
     centered: true
-    compactCloseButton: true
 
     property string requestedScope: "all"
     property var entries: []

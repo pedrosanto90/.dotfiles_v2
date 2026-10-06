@@ -24,13 +24,13 @@ BarPopover {
             font.bold: true
             elide: Text.ElideRight
         }
-        Button {
+        PopoverButton {
             visible: !!root.adapter
             text: root.adapter && root.adapter.enabled ? "Turn off" : "Turn on"
             onClicked: root.setEnabled(!root.adapter.enabled)
             Accessible.name: "Bluetooth"
         }
-        Button {
+        PopoverButton {
             visible: !!root.adapter && root.adapter.enabled
             text: root.adapter && root.adapter.discovering ? "Stop scan" : "Scan"
             onClicked: root.adapter.discovering = !root.adapter.discovering
@@ -67,7 +67,7 @@ BarPopover {
             Repeater {
                 model: root.adapter ? root.adapter.devices : 0
 
-                Button {
+                PopoverButton {
                     required property var modelData
                     width: parent.width
                     text: (modelData.connected ? "● " : "") + modelData.name
@@ -86,7 +86,7 @@ BarPopover {
         }
     }
 
-    Button {
+    PopoverButton {
         Layout.fillWidth: true
         text: "Advanced Bluetooth settings…"
         onClicked: {

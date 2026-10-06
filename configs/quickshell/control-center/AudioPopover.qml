@@ -31,7 +31,7 @@ BarPopover {
         onMuteRequested: root.controller.source.audio.muted = !muted
     }
 
-    Button {
+    PopoverButton {
         Layout.fillWidth: true
         text: "Audio devices & mixer…"
         onClicked: {
