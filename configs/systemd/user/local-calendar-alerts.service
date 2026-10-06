@@ -1,0 +1,6 @@
+[Unit]
+Description=Deliver local calendar reminders
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/local-calendar notify

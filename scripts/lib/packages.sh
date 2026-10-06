@@ -11,7 +11,7 @@ readonly DEBIAN_PACKAGES=(
   qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts
   qml6-module-qtquick-templates qml6-module-qtquick-window qml6-module-qtqml-workerscript
   wl-clipboard cliphist grim slurp swappy
-  pipewire pipewire-pulse wireplumber libspa-0.2-bluetooth pavucontrol playerctl
+  pipewire pipewire-bin pipewire-pulse wireplumber libspa-0.2-bluetooth pavucontrol playerctl
   network-manager network-manager-gnome nm-connection-editor
   wpasupplicant iw iproute2 iputils-ping
   network-manager-openvpn-gnome openvpn
@@ -23,7 +23,7 @@ readonly DEBIAN_PACKAGES=(
   xdg-desktop-portal xdg-desktop-portal-wlr xdg-desktop-portal-gtk xdg-utils desktop-file-utils
   # Explicit because --no-install-recommends otherwise omits backlight permissions.
   upower power-profiles-daemon udisks2 udiskie brightnessctl brightness-udev
-  papirus-icon-theme nwg-look fontconfig libnotify-bin librsvg2-common
+  papirus-icon-theme nwg-look fontconfig libnotify-bin librsvg2-common sound-theme-freedesktop
   sassc gtk2-engines-murrine gnome-themes-extra
   libgtk-4-dev libgtk4-layer-shell-dev libadwaita-1-dev libxml2-utils
   ca-certificates gnupg util-linux procps dbus-user-session libpam-systemd

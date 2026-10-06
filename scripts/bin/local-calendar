@@ -1,0 +1,244 @@
+#!/usr/bin/env python3
+"""Small local-only calendar store and notification dispatcher."""
+
+import argparse
+import contextlib
+from datetime import datetime
+import fcntl
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import tempfile
+import time
+import uuid
+
+
+def store_path() -> Path:
+    override = os.environ.get("LOCAL_CALENDAR_FILE")
+    if override:
+        return Path(override)
+    data_home = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share"))
+    return data_home / "debian-sway-dev/calendar/events.json"
+
+
+@contextlib.contextmanager
+def locked_store():
+    path = store_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lock_path = path.with_suffix(".lock")
+    with lock_path.open("a+") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        yield path
+
+
+def load(path: Path) -> list[dict]:
+    if not path.exists():
+        return []
+    try:
+        value = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError) as error:
+        raise SystemExit(f"local-calendar: could not read {path}: {error}") from error
+    if not isinstance(value, list):
+        raise SystemExit(f"local-calendar: invalid calendar data in {path}")
+    return value
+
+
+def save(path: Path, events: list[dict]) -> None:
+    events.sort(key=lambda event: (event["date"], event["time"], event["title"].casefold()))
+    descriptor, temporary = tempfile.mkstemp(prefix=".events.", suffix=".json", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "w") as output:
+            json.dump(events, output, ensure_ascii=False, indent=2)
+            output.write("\n")
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
+def valid_date(value: str) -> str:
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").strftime("%Y-%m-%d")
+    except ValueError as error:
+        raise argparse.ArgumentTypeError("date must use YYYY-MM-DD") from error
+
+
+def valid_time(value: str) -> str:
+    try:
+        return datetime.strptime(value, "%H:%M").strftime("%H:%M")
+    except ValueError as error:
+        raise argparse.ArgumentTypeError("time must use HH:MM") from error
+
+
+def valid_month(value: str) -> str:
+    try:
+        return datetime.strptime(value, "%Y-%m").strftime("%Y-%m")
+    except ValueError as error:
+        raise argparse.ArgumentTypeError("month must use YYYY-MM") from error
+
+
+def clean_title(value: str) -> str:
+    title = " ".join(value.split())
+    if not title:
+        raise SystemExit("local-calendar: title cannot be empty")
+    if len(title) > 200:
+        raise SystemExit("local-calendar: title cannot exceed 200 characters")
+    return title
+
+
+def event_timestamp(event: dict) -> int:
+    value = datetime.strptime(f'{event["date"]} {event["time"]}', "%Y-%m-%d %H:%M")
+    return int(time.mktime(value.timetuple()))
+
+
+def print_json(value) -> None:
+    print(json.dumps(value, ensure_ascii=False, separators=(",", ":")))
+
+
+def command_list(args) -> None:
+    with locked_store() as path:
+        events = load(path)
+    if args.month:
+        events = [event for event in events if event["date"].startswith(args.month + "-")]
+    elif args.date:
+        events = [event for event in events if event["date"] == args.date]
+    print_json(events)
+
+
+def command_add(args) -> None:
+    event = {
+        "id": str(uuid.uuid4()),
+        "title": clean_title(args.title),
+        "date": args.date,
+        "time": args.time,
+        "reminder": args.reminder,
+        "notified": False,
+        "created": int(time.time()),
+    }
+    with locked_store() as path:
+        events = load(path)
+        events.append(event)
+        save(path, events)
+    print_json(event)
+
+
+def command_update(args) -> None:
+    with locked_store() as path:
+        events = load(path)
+        for event in events:
+            if event.get("id") == args.id:
+                event.update(title=clean_title(args.title), date=args.date,
+                             time=args.time, reminder=args.reminder, notified=False)
+                save(path, events)
+                print_json(event)
+                return
+    raise SystemExit("local-calendar: event not found")
+
+
+def command_delete(args) -> None:
+    with locked_store() as path:
+        events = load(path)
+        remaining = [event for event in events if event.get("id") != args.id]
+        if len(remaining) == len(events):
+            raise SystemExit("local-calendar: event not found")
+        save(path, remaining)
+    print_json({"deleted": args.id})
+
+
+def take_due(now: int) -> list[dict]:
+    due = []
+    with locked_store() as path:
+        events = load(path)
+        changed = False
+        for event in events:
+            reminder = int(event.get("reminder", -1))
+            if reminder < 0 or event.get("notified", False):
+                continue
+            starts = event_timestamp(event)
+            alert_at = starts - reminder * 60
+            if alert_at <= now <= starts + 3600:
+                event["notified"] = True
+                due.append(dict(event))
+                changed = True
+        if changed:
+            save(path, events)
+    return due
+
+
+def command_due(args) -> None:
+    print_json(take_due(args.now if args.now is not None else int(time.time())))
+
+
+def command_notify(args) -> None:
+    due = take_due(args.now if args.now is not None else int(time.time()))
+    for event in due:
+        reminder = int(event["reminder"])
+        when = "now" if reminder == 0 else f"in {reminder} minutes"
+        body = f'{event["title"]}\n{event["date"]} at {event["time"]} ({when})'
+        try:
+            subprocess.run(
+                ["notify-send", "--app-name=Calendar", "--urgency=normal",
+                 "Calendar reminder", body], check=False,
+            )
+        except FileNotFoundError:
+            pass
+        sound = Path(os.environ.get(
+            "LOCAL_CALENDAR_SOUND",
+            "/usr/share/sounds/freedesktop/stereo/message.oga",
+        ))
+        player = shutil.which("pw-play")
+        if player and sound.is_file():
+            subprocess.run(
+                [player, str(sound)], check=False,
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            )
+    print_json(due)
+
+
+def add_event_arguments(parser) -> None:
+    parser.add_argument("--title", required=True)
+    parser.add_argument("--date", required=True, type=valid_date)
+    parser.add_argument("--time", required=True, type=valid_time)
+    parser.add_argument("--reminder", required=True, type=int,
+                        choices=(-1, 0, 5, 10, 15, 30, 60, 1440))
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="local-calendar")
+    commands = parser.add_subparsers(dest="command", required=True)
+
+    list_parser = commands.add_parser("list")
+    scope = list_parser.add_mutually_exclusive_group(required=True)
+    scope.add_argument("--month", type=valid_month)
+    scope.add_argument("--date", type=valid_date)
+    list_parser.set_defaults(handler=command_list)
+
+    add_parser = commands.add_parser("add")
+    add_event_arguments(add_parser)
+    add_parser.set_defaults(handler=command_add)
+
+    update_parser = commands.add_parser("update")
+    update_parser.add_argument("id")
+    add_event_arguments(update_parser)
+    update_parser.set_defaults(handler=command_update)
+
+    delete_parser = commands.add_parser("delete")
+    delete_parser.add_argument("id")
+    delete_parser.set_defaults(handler=command_delete)
+
+    for name, handler in (("due", command_due), ("notify", command_notify)):
+        due_parser = commands.add_parser(name)
+        due_parser.add_argument("--now", type=int)
+        due_parser.set_defaults(handler=handler)
+    return parser
+
+
+def main() -> None:
+    args = build_parser().parse_args()
+    args.handler(args)
+
+
+if __name__ == "__main__":
+    main()

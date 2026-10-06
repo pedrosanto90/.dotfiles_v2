@@ -48,6 +48,7 @@ configure_network_manager_wifi() {
 }
 
 enable_services() {
+  systemctl --user daemon-reload || log_warn "Reload user services after starting a graphical session."
   # Keep the global D-Bus supplicant backend available to NetworkManager.
   enable_system_service wpa_supplicant.service
   enable_system_service NetworkManager.service
@@ -61,6 +62,7 @@ enable_services() {
   enable_user_service pipewire.socket
   enable_user_service pipewire-pulse.socket
   enable_user_service wireplumber.service
+  enable_user_service local-calendar-alerts.timer
 }
 
 verify_docker_installation() {

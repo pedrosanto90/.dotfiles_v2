@@ -441,6 +441,15 @@ Scope {
                         onPrimaryClicked: root.controller.togglePopupOnScreen("power", window.screen)
                         onSecondaryClicked: root.controller.togglePopupOnScreen("power", window.screen)
                     }
+
+                    StatusButton {
+                        height: statusArea.height
+                        text: ""
+                        tooltip: "Calendar"
+                        foregroundColor: Theme.accent
+                        onPrimaryClicked: root.controller.togglePopupOnScreen("calendar", window.screen)
+                        onSecondaryClicked: root.controller.togglePopupOnScreen("calendar", window.screen)
+                    }
                 }
 
                 BarTooltip {
@@ -498,6 +507,14 @@ Scope {
                     active: root.controller.activePopup === "battery"
                         && root.controller.targetScreen === window.screen
                     BatteryPopover {
+                        controller: root.controller
+                        barScreen: window.screen
+                    }
+                }
+                LazyLoader {
+                    active: root.controller.activePopup === "calendar"
+                        && root.controller.targetScreen === window.screen
+                    CalendarPopover {
                         controller: root.controller
                         barScreen: window.screen
                     }

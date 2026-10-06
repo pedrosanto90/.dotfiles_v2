@@ -19,6 +19,7 @@ PanelWindow {
     readonly property var activeWifi: wifiDevice
         ? wifiDevice.networks.values.find(network => network.connected) || null : null
     readonly property var bluetoothAdapter: Bluetooth.defaultAdapter
+    property var todayEvents: []
     visible: controller.panelOpen
     screen: controller.targetScreen
     anchors { top: true; right: true; bottom: true; left: true }
@@ -30,7 +31,12 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
-    onVisibleChanged: if (visible) focusScope.forceActiveFocus()
+    onVisibleChanged: {
+        if (visible) {
+            focusScope.forceActiveFocus();
+            refreshCalendar();
+        }
+    }
 
     function batteryDuration(seconds) {
         if (seconds <= 0) return "Calculating…";
@@ -44,6 +50,14 @@ PanelWindow {
         statusRefresh.restart();
     }
 
+    function refreshCalendar() {
+        if (!calendarProcess.running) {
+            calendarProcess.command = ["local-calendar", "list", "--date",
+                Qt.formatDate(new Date(), "yyyy-MM-dd")];
+            calendarProcess.running = true;
+        }
+    }
+
     StatusCommand { id: caffeineStatus; command: ["caffeine-toggle", "status"]; interval: 5000 }
     StatusCommand { id: notificationStatus; command: ["notification-mode", "status"]; interval: 3000 }
 
@@ -54,6 +68,27 @@ PanelWindow {
             caffeineStatus.refresh();
             notificationStatus.refresh();
         }
+    }
+
+    Process {
+        id: calendarProcess
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const parsed = JSON.parse(text.trim() || "[]");
+                    window.todayEvents = Array.isArray(parsed) ? parsed : [];
+                } catch (error) {
+                    window.todayEvents = [];
+                }
+            }
+        }
+    }
+
+    Timer {
+        interval: 60000
+        repeat: true
+        running: window.visible
+        onTriggered: window.refreshCalendar()
     }
 
     MouseArea {
@@ -167,6 +202,53 @@ PanelWindow {
                         Accessible.name: "Caffeine"
                         onClicked: window.runToggle(["caffeine-toggle", "toggle"])
                     }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    Label {
+                        Layout.fillWidth: true
+                        text: "Today"
+                        color: Theme.accent
+                        font.pixelSize: 15
+                        font.bold: true
+                    }
+                    PopoverButton {
+                        text: "Open calendar"
+                        onClicked: window.controller.openPopup("calendar")
+                    }
+                }
+                Label {
+                    Layout.fillWidth: true
+                    visible: window.todayEvents.length === 0
+                    text: "No events for today"
+                    color: Theme.secondary
+                }
+                Repeater {
+                    model: window.todayEvents.slice(0, 3)
+                    RowLayout {
+                        required property var modelData
+                        Layout.fillWidth: true
+                        spacing: 8
+                        Label {
+                            text: parent.modelData.time
+                            color: Theme.accent
+                            font.bold: true
+                        }
+                        Label {
+                            Layout.fillWidth: true
+                            text: parent.modelData.title
+                            textFormat: Text.PlainText
+                            color: Theme.foreground
+                            elide: Text.ElideRight
+                        }
+                    }
+                }
+                Label {
+                    Layout.fillWidth: true
+                    visible: window.todayEvents.length > 3
+                    text: "+ " + (window.todayEvents.length - 3) + " more"
+                    color: Theme.secondary
+                    font.pixelSize: 11
                 }
                 ColumnLayout {
                     Layout.fillWidth: true

@@ -297,7 +297,7 @@ running `btop` instance to reload when the desktop theme changes.
 
 The Quickshell bar runs at the top of every screen and reserves 30 pixels of
 workspace. It includes Sway workspaces, clock, a combined CPU/memory/disk monitor,
-audio, battery, system tray, Pomodoro,
+calendar, audio, battery, system tray, Pomodoro,
 tiling layout, clipboard history, theme, caffeine, Control Center, and power
 controls. Audio, network, Bluetooth, and battery icons open click-only popups;
 only one popup is shown at a time, and it closes with `Escape` or a click outside.
@@ -310,6 +310,16 @@ level and remaining time and switches the system power profile (power saver,
 balanced, performance) through power-profiles-daemon; the active profile also
 appears in the battery tooltip. The bar is visible when the shell starts. Show,
 hide, or toggle it through the shell IPC:
+
+The calendar icon at the right edge of the bar, beside the power button, opens a local monthly calendar. Select a day
+to add, edit, or remove timed events and choose an alert from the available
+reminder intervals. Events are stored only in
+`~/.local/share/debian-sway-dev/calendar/events.json`. The
+`local-calendar-alerts.timer` user unit checks once per minute and delivers due
+reminders through the desktop notification service with an audible alert. The
+Control Center also shows up to three events scheduled for today and links to
+the full calendar. Clicking the clock itself
+continues to switch between the time and full date.
 
 Caffeine stops the idle daemon while active and starts a fresh instance when
 disabled. Restarting the daemon resets its timers, so leaving caffeine mode does
