@@ -32,7 +32,7 @@ PanelWindow {
     visible: shown
     screen: barScreen
     anchors { top: true; right: true }
-    margins { top: 34; right: root.rightOffset }
+    margins { top: 5; right: root.rightOffset }
     implicitWidth: 310
     implicitHeight: 206
     exclusiveZone: 0
