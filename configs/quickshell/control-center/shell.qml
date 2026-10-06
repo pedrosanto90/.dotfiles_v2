@@ -15,6 +15,8 @@ ShellRoot {
     property var targetScreen: null
     readonly property var sink: Pipewire.defaultAudioSink
     readonly property var source: Pipewire.defaultAudioSource
+    readonly property var outputDevices: Pipewire.nodes.values.filter(
+        node => !!node.audio && node.isSink && !node.isStream)
     readonly property var players: Mpris.players.values
     property string selectedPlayer: ""
     readonly property var player: players.find(p => p.dbusName === selectedPlayer)
@@ -28,7 +30,9 @@ ShellRoot {
 
     PopupManager { id: popupManager }
 
-    PwObjectTracker { objects: [root.sink, root.source].filter(n => n !== null) }
+    PwObjectTracker {
+        objects: [root.sink, root.source].concat(root.outputDevices).filter(n => n !== null)
+    }
 
     function chooseScreen() {
         const name = I3.focusedMonitor ? I3.focusedMonitor.name : "";
@@ -97,6 +101,11 @@ ShellRoot {
         else if (action === "next" && active.canGoNext) active.next();
         else if (action === "previous" && active.canGoPrevious) active.previous();
         else return false;
+        return true;
+    }
+    function selectOutput(index) {
+        if (index < 0 || index >= outputDevices.length) return false;
+        Pipewire.preferredDefaultAudioSink = outputDevices[index];
         return true;
     }
 

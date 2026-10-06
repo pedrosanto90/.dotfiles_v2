@@ -2,12 +2,23 @@ import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Bluetooth
+import Quickshell.Io
+import Quickshell.Networking
+import Quickshell.Services.UPower
 import Quickshell.Wayland
 
 PanelWindow {
     id: window
     required property var controller
     readonly property var player: controller.player
+    readonly property var battery: UPower.displayDevice
+    readonly property real batteryPercent: battery.ready ? battery.percentage * 100 : 0
+    readonly property var wifiDevice: Networking.devices.values.find(
+        device => device.type === DeviceType.Wifi) || null
+    readonly property var activeWifi: wifiDevice
+        ? wifiDevice.networks.values.find(network => network.connected) || null : null
+    readonly property var bluetoothAdapter: Bluetooth.defaultAdapter
     visible: controller.panelOpen
     screen: controller.targetScreen
     anchors { top: true; right: true; bottom: true; left: true }
@@ -20,6 +31,30 @@ PanelWindow {
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
     onVisibleChanged: if (visible) focusScope.forceActiveFocus()
+
+    function batteryDuration(seconds) {
+        if (seconds <= 0) return "Calculating…";
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        return hours > 0 ? hours + " h " + minutes + " min" : minutes + " min";
+    }
+
+    function runToggle(command) {
+        Quickshell.execDetached(command);
+        statusRefresh.restart();
+    }
+
+    StatusCommand { id: caffeineStatus; command: ["caffeine-toggle", "status"]; interval: 5000 }
+    StatusCommand { id: notificationStatus; command: ["notification-mode", "status"]; interval: 3000 }
+
+    Timer {
+        id: statusRefresh
+        interval: 500
+        onTriggered: {
+            caffeineStatus.refresh();
+            notificationStatus.refresh();
+        }
+    }
 
     MouseArea {
         anchors.fill: parent
@@ -76,10 +111,128 @@ PanelWindow {
                     }
                 }
                 Label {
+                    text: "Quick controls"
+                    font.pixelSize: 15
+                    font.bold: true
+                    color: Theme.accent
+                }
+                GridLayout {
+                    Layout.fillWidth: true
+                    columns: 2
+                    columnSpacing: 8
+                    rowSpacing: 8
+
+                    QuickToggle {
+                        Layout.fillWidth: true
+                        text: "Wi-Fi"
+                        glyph: active ? "󰤨" : "󰤮"
+                        subtitle: !window.wifiDevice ? "Unavailable"
+                            : window.activeWifi ? window.activeWifi.name
+                            : Networking.wifiEnabled ? "Not connected" : "Off"
+                        active: !!window.wifiDevice && Networking.wifiEnabled
+                        enabled: !!window.wifiDevice && Networking.wifiHardwareEnabled
+                        detailsAvailable: true
+                        Accessible.name: "Wi-Fi"
+                        onClicked: Networking.wifiEnabled = !Networking.wifiEnabled
+                        onDetailsRequested: window.controller.openPopup("network")
+                    }
+                    QuickToggle {
+                        Layout.fillWidth: true
+                        text: "Bluetooth"
+                        glyph: active ? "󰂯" : "󰂲"
+                        subtitle: !window.bluetoothAdapter ? "Unavailable"
+                            : window.bluetoothAdapter.enabled ? "On" : "Off"
+                        active: !!window.bluetoothAdapter && window.bluetoothAdapter.enabled
+                        enabled: !!window.bluetoothAdapter
+                        detailsAvailable: true
+                        Accessible.name: "Bluetooth"
+                        onClicked: window.runToggle(["bluetooth-toggle", active ? "off" : "on"])
+                        onDetailsRequested: window.controller.openPopup("bluetooth")
+                    }
+                    QuickToggle {
+                        Layout.fillWidth: true
+                        text: "Do not disturb"
+                        glyph: "󰂛"
+                        subtitle: active ? "Urgent only" : "Notifications on"
+                        active: notificationStatus.data.class === "active"
+                        Accessible.name: "Do not disturb"
+                        onClicked: window.runToggle(["notification-mode", "toggle"])
+                    }
+                    QuickToggle {
+                        Layout.fillWidth: true
+                        text: "Caffeine"
+                        glyph: active ? "󰅶" : "󰛊"
+                        subtitle: active ? "Staying awake" : "Normal sleep"
+                        active: caffeineStatus.data.class === "active"
+                        Accessible.name: "Caffeine"
+                        onClicked: window.runToggle(["caffeine-toggle", "toggle"])
+                    }
+                }
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    visible: window.battery.ready && window.battery.isLaptopBattery
+                        && window.battery.isPresent
+                    spacing: 6
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Label {
+                            text: "Battery"
+                            color: Theme.foreground
+                            font.bold: true
+                        }
+                        Label {
+                            Layout.fillWidth: true
+                            text: Math.round(window.batteryPercent) + "% · "
+                                + (UPower.onBattery
+                                    ? window.batteryDuration(window.battery.timeToEmpty) + " remaining"
+                                    : window.battery.timeToFull > 0
+                                        ? window.batteryDuration(window.battery.timeToFull) + " until full"
+                                        : "Connected to power")
+                            color: window.batteryPercent <= 15 ? Theme.danger : Theme.secondary
+                            horizontalAlignment: Text.AlignRight
+                            elide: Text.ElideRight
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 6
+                        PopoverButton {
+                            Layout.fillWidth: true
+                            text: "Power saver"
+                            highlighted: PowerProfiles.profile === PowerProfile.PowerSaver
+                            onClicked: PowerProfiles.profile = PowerProfile.PowerSaver
+                        }
+                        PopoverButton {
+                            Layout.fillWidth: true
+                            text: "Balanced"
+                            highlighted: PowerProfiles.profile === PowerProfile.Balanced
+                            onClicked: PowerProfiles.profile = PowerProfile.Balanced
+                        }
+                        PopoverButton {
+                            Layout.fillWidth: true
+                            text: "Performance"
+                            highlighted: PowerProfiles.profile === PowerProfile.Performance
+                            enabled: PowerProfiles.hasPerformanceProfile
+                            onClicked: PowerProfiles.profile = PowerProfile.Performance
+                        }
+                    }
+                }
+                Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Theme.border }
+                Label {
                     text: "Sound & media"
                     font.pixelSize: 15
                     font.bold: true
                     color: Theme.accent
+                }
+                ThemeComboBox {
+                    Layout.fillWidth: true
+                    visible: window.controller.outputDevices.length > 1
+                    model: window.controller.outputDevices.map(node =>
+                        node.description || node.nickname || node.name)
+                    currentIndex: window.controller.outputDevices.indexOf(window.controller.sink)
+                    onActivated: index => window.controller.selectOutput(index)
+                    Accessible.name: "Audio output device"
                 }
                 LevelControl {
                     Layout.fillWidth: true

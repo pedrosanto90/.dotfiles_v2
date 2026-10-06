@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly mode='do-not-disturb'
+
+is_active() {
+  local current
+  while IFS= read -r current; do
+    [[ ${current} == "${mode}" ]] && return 0
+  done < <(makoctl mode 2>/dev/null || true)
+  return 1
+}
+
+print_status() {
+  if is_active; then
+    printf '{"text":"󰂛","class":"active","tooltip":"Do not disturb enabled — urgent notifications remain visible"}\n'
+  else
+    printf '{"text":"󰂚","class":"inactive","tooltip":"Do not disturb disabled"}\n'
+  fi
+}
+
+case ${1:-status} in
+  toggle)
+    makoctl mode -t "${mode}"
+    ;;
+  status)
+    print_status
+    ;;
+  *)
+    printf 'Usage: %s [status|toggle]\n' "${0##*/}" >&2
+    exit 2
+    ;;
+esac

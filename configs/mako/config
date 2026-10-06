@@ -18,3 +18,9 @@ on-button-right=invoke-default-action
 [urgency=high]
 border-color=#f7768eff
 default-timeout=0
+
+[mode=do-not-disturb]
+invisible=1
+
+[mode=do-not-disturb urgency=high]
+invisible=0

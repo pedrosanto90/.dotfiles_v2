@@ -215,13 +215,15 @@ dedicated sliders icon near the power button or press `Super+Ctrl+M` to open it;
 close it with the Close button or `Escape` while it has focus. The Waybar volume
 module is a read-only indicator: clicking or scrolling it has no effect.
 
-Sound and media is the first section of the Control Center. It controls the
-default PipeWire output and microphone, the laptop backlight, and MPRIS players
-(including supported browser media sessions). With multiple players, use the
-selector to choose which one the panel and media keys control. Playback and
-seeking controls follow each player's reported capabilities. Device selection
-and advanced mixing remain available through Pavucontrol. The panel is structured
-so more Control Center sections can be added later.
+The Control Center starts with compact controls for Wi-Fi, Bluetooth,
+notifications, caffeine, battery power profiles, and the default audio output.
+Its sound and media section controls the default PipeWire output and microphone,
+the laptop backlight, and MPRIS players (including supported browser media
+sessions). With multiple players, use the selector to choose which one the panel
+and media keys control. Playback and seeking controls follow each player's
+reported capabilities. Detailed device management and advanced mixing remain
+available through the existing popups and Pavucontrol. Do not disturb hides
+normal notifications while leaving urgent notifications visible.
 
 Volume, microphone mute and brightness keys display a short, non-focus-stealing
 OSD on the focused Sway monitor. Volume increases are capped at 100%; brightness
@@ -308,6 +310,10 @@ level and remaining time and switches the system power profile (power saver,
 balanced, performance) through power-profiles-daemon; the active profile also
 appears in the battery tooltip. The bar is visible when the shell starts. Show,
 hide, or toggle it through the shell IPC:
+
+Caffeine stops the idle daemon while active and starts a fresh instance when
+disabled. Restarting the daemon resets its timers, so leaving caffeine mode does
+not immediately lock or suspend the session because of accumulated idle time.
 
 Hover over the system monitor icon to see current CPU, memory, and root filesystem
 usage in a compact informational panel. The panel stays open while the pointer is

@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+stop_idle() {
+  local pid state
+  while IFS= read -r pid; do
+    [[ ${pid} =~ ^[0-9]+$ ]] || continue
+    state=$(ps -o stat= -p "${pid}" 2>/dev/null || true)
+    if [[ ${state} == *T* ]]; then
+      # A stopped swayidle cannot handle SIGTERM until it resumes. Killing it
+      # directly prevents an expired timeout from locking during that resume.
+      kill -KILL "${pid}" 2>/dev/null || true
+    else
+      kill -TERM "${pid}" 2>/dev/null || true
+    fi
+  done < <(pgrep -x swayidle || true)
+
+  for _ in {1..20}; do
+    pgrep -x swayidle >/dev/null || return 0
+    sleep 0.05
+  done
+  pkill -KILL -x swayidle 2>/dev/null || true
+}
+
+start_idle() {
+  # Starting from a new process resets both idle timers. This is intentional:
+  # resuming a stopped process may immediately run a timeout accumulated while
+  # caffeine was active.
+  stop_idle
+  setsid -f swayidle -w \
+    timeout 300 "${HOME}/.local/bin/sway-lock" \
+    timeout 600 'systemctl suspend' \
+    before-sleep "${HOME}/.local/bin/sway-lock"
+}
+
+case ${1:-start} in
+  start|restart)
+    start_idle
+    ;;
+  stop)
+    stop_idle
+    ;;
+  *)
+    printf 'Usage: %s [start|restart|stop]\n' "${0##*/}" >&2
+    exit 2
+    ;;
+esac

@@ -29,8 +29,9 @@ enable_caffeine() {
     sleep infinity &
   printf '%s\n' "$!" >"${pid_file}"
 
-  # Keep swayidle alive but pause its lock and suspend timers.
-  pkill -STOP -x swayidle 2>/dev/null || true
+  # Stop the idle daemon instead of suspending it. Resuming a stopped swayidle
+  # can immediately execute a timeout accumulated while caffeine was active.
+  sway-idle stop
 }
 
 disable_caffeine() {
@@ -43,17 +44,18 @@ disable_caffeine() {
     kill -- "-${pid}" 2>/dev/null || kill "${pid}" 2>/dev/null || true
   fi
   rm -f -- "${pid_file}"
-  pkill -CONT -x swayidle 2>/dev/null || true
+  sway-idle start
 }
 
 print_status() {
   if is_active; then
     printf '{"text":"%s","class":"active","tooltip":"Caffeine enabled — automatic locking and suspend disabled"}\n' "${icon_on}"
   else
-    # A stale pid file must not leave swayidle paused after an inhibitor crash.
+    # A stale pid file must not leave the idle daemon disabled after an
+    # inhibitor crash.
     if [[ -e ${pid_file} ]]; then
       rm -f -- "${pid_file}"
-      pkill -CONT -x swayidle 2>/dev/null || true
+      sway-idle start
     fi
     printf '{"text":"%s","class":"inactive","tooltip":"Caffeine disabled — click to keep the computer awake"}\n' "${icon_off}"
   fi
