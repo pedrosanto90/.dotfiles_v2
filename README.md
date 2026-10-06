@@ -303,8 +303,11 @@ Advanced network, Bluetooth, and audio configuration remains available from the
 corresponding popup. The network popup combines Wi-Fi and VPN management:
 configured NetworkManager VPN and WireGuard profiles can be connected,
 disconnected, or edited directly, and new profiles can be created or imported
-through NetworkManager's connection editor. The bar is visible when the shell
-starts. Show, hide, or toggle it through the shell IPC:
+through NetworkManager's connection editor. The battery popup shows the charge
+level and remaining time and switches the system power profile (power saver,
+balanced, performance) through power-profiles-daemon; the active profile also
+appears in the battery tooltip. The bar is visible when the shell starts. Show,
+hide, or toggle it through the shell IPC:
 
 Hover over the system monitor icon to see current CPU, memory, and root filesystem
 usage in a compact informational panel. The panel stays open while the pointer is

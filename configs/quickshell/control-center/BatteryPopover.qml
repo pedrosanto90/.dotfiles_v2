@@ -7,7 +7,7 @@ BarPopover {
     id: root
     popupName: "battery"
     title: "Battery"
-    popupHeight: 250
+    popupHeight: 350
     readonly property var battery: UPower.displayDevice
     readonly property real percentage: battery.ready ? battery.percentage * 100 : 0
 
@@ -16,6 +16,14 @@ BarPopover {
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
         return hours > 0 ? hours + " h " + minutes + " min" : minutes + " min";
+    }
+
+    function degradationText(reason) {
+        if (reason === PerformanceDegradationReason.HighTemperature)
+            return "Performance is limited due to high temperature.";
+        if (reason === PerformanceDegradationReason.LapDetected)
+            return "Performance is limited because the laptop is on your lap.";
+        return "";
     }
 
     Label {
@@ -54,5 +62,51 @@ BarPopover {
                 : "Fully charged or not charging"
         color: Theme.secondary
         horizontalAlignment: Text.AlignHCenter
+    }
+
+    Rectangle {
+        Layout.fillWidth: true
+        implicitHeight: 1
+        color: Theme.border
+    }
+
+    Label {
+        Layout.fillWidth: true
+        text: "Power profile"
+        color: Theme.foreground
+        font.bold: true
+    }
+
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: 6
+
+        PopoverButton {
+            Layout.fillWidth: true
+            text: "Power saver"
+            highlighted: PowerProfiles.profile === PowerProfile.PowerSaver
+            onClicked: PowerProfiles.profile = PowerProfile.PowerSaver
+        }
+        PopoverButton {
+            Layout.fillWidth: true
+            text: "Balanced"
+            highlighted: PowerProfiles.profile === PowerProfile.Balanced
+            onClicked: PowerProfiles.profile = PowerProfile.Balanced
+        }
+        PopoverButton {
+            Layout.fillWidth: true
+            text: "Performance"
+            highlighted: PowerProfiles.profile === PowerProfile.Performance
+            enabled: PowerProfiles.hasPerformanceProfile
+            onClicked: PowerProfiles.profile = PowerProfile.Performance
+        }
+    }
+
+    Label {
+        Layout.fillWidth: true
+        visible: root.degradationText(PowerProfiles.degradationReason).length > 0
+        text: root.degradationText(PowerProfiles.degradationReason)
+        color: Theme.warning
+        wrapMode: Text.WordWrap
     }
 }

@@ -13,6 +13,9 @@ Scope {
     required property var controller
     property bool shown: false
     property bool showDate: false
+    property string barTooltip: ""
+    property var barTooltipScreen: null
+    property int barTooltipOffset: 8
     readonly property var battery: UPower.displayDevice
     readonly property real batteryPercent: battery.ready ? battery.percentage * 100 : 0
     readonly property var wifiDevice: Networking.devices.values.find(
@@ -101,6 +104,12 @@ Scope {
             detail += " · " + hours + "h " + minutes + "m";
         }
         return detail;
+    }
+
+    function powerProfileLabel() {
+        if (PowerProfiles.profile === PowerProfile.PowerSaver) return "Power saver";
+        if (PowerProfiles.profile === PowerProfile.Performance) return "Performance";
+        return "Balanced";
     }
 
     function networkIcon() {
@@ -243,7 +252,6 @@ Scope {
                         id: systemStatsButton
                         height: statusArea.height
                         text: systemStatsStatus.data.text
-                        tooltip: systemStatsStatus.data.tooltip
                         foregroundColor: {
                             const peak = Math.max(Number(systemStatsStatus.data.cpu || 0),
                                 Number(systemStatsStatus.data.memory || 0),
@@ -307,27 +315,25 @@ Scope {
                         onSecondaryClicked: root.controller.togglePopupOnScreen("bluetooth", window.screen)
                     }
 
-                    Rectangle {
+                    StatusButton {
                         id: batteryButton
-                        visible: root.battery.ready && root.battery.isLaptopBattery && root.battery.isPresent
-                        width: visible ? batteryText.implicitWidth + 18 : 0
                         height: statusArea.height
-                        color: "transparent"
-
-                        Text {
-                            id: batteryText
-                            anchors.centerIn: parent
-                            text: root.batteryIcon() + " " + Math.round(root.batteryPercent) + "%"
-                            color: root.batteryPercent <= 15 ? Theme.danger
-                                : root.batteryPercent <= 30 ? Theme.orange : Theme.foreground
-                            font.family: "JetBrainsMono Nerd Font"
-                            font.pixelSize: 12
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.controller.togglePopupOnScreen("battery", window.screen)
+                        visible: root.battery.ready && root.battery.isLaptopBattery && root.battery.isPresent
+                        text: root.batteryIcon() + " " + Math.round(root.batteryPercent) + "%"
+                        tooltip: root.batteryTooltip() + " · " + root.powerProfileLabel()
+                        foregroundColor: root.batteryPercent <= 15 ? Theme.danger
+                            : root.batteryPercent <= 30 ? Theme.orange : Theme.foreground
+                        onPrimaryClicked: root.controller.togglePopupOnScreen("battery", window.screen)
+                        onSecondaryClicked: root.controller.togglePopupOnScreen("battery", window.screen)
+                        onHoveredChanged: {
+                            if (hovered) {
+                                root.barTooltip = batteryButton.tooltip;
+                                root.barTooltipScreen = window.screen;
+                                root.barTooltipOffset = Math.max(8, statusArea.width
+                                    - (batteryButton.x + batteryButton.width / 2));
+                            } else if (root.barTooltipScreen === window.screen) {
+                                root.barTooltip = "";
+                            }
                         }
                     }
 
@@ -435,6 +441,13 @@ Scope {
                         onPrimaryClicked: root.controller.togglePopupOnScreen("power", window.screen)
                         onSecondaryClicked: root.controller.togglePopupOnScreen("power", window.screen)
                     }
+                }
+
+                BarTooltip {
+                    barScreen: window.screen
+                    text: root.controller.activePopup.length === 0
+                        && root.barTooltipScreen === window.screen ? root.barTooltip : ""
+                    rightOffset: root.barTooltipOffset
                 }
 
                 LazyLoader {
