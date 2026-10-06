@@ -12,12 +12,15 @@ PanelWindow {
     required property string title
     property int popupWidth: 380
     property int popupHeight: 320
+    property bool centered: false
+    property bool showCloseButton: true
+    property bool compactCloseButton: false
     default property alias content: contentColumn.data
 
     visible: controller.activePopup === popupName && controller.targetScreen === barScreen
     screen: barScreen
     anchors { top: true; right: true; bottom: true; left: true }
-    margins.top: 30
+    margins.top: root.centered ? 0 : 30
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
     aboveWindows: true
@@ -40,7 +43,8 @@ PanelWindow {
         id: card
         width: root.popupWidth
         height: Math.min(root.popupHeight, root.screen ? root.screen.height - 48 : root.popupHeight)
-        anchors { top: parent.top; right: parent.right; topMargin: 6; rightMargin: 8 }
+        x: root.centered ? Math.round((parent.width - width) / 2) : parent.width - width - 8
+        y: root.centered ? Math.round((parent.height - height) / 2) : 6
         radius: 12
         color: Theme.background
         border.color: Theme.border
@@ -72,8 +76,24 @@ PanelWindow {
                         font.bold: true
                     }
                     Button {
-                        text: "Close"
+                        id: closeButton
+                        visible: root.showCloseButton
+                        Layout.preferredWidth: root.compactCloseButton ? 28 : 100
+                        Layout.preferredHeight: root.compactCloseButton ? 28 : 40
                         onClicked: root.controller.closePopups()
+
+                        contentItem: Label {
+                            text: root.compactCloseButton ? "×" : "Close"
+                            color: closeButton.hovered ? Theme.foreground : Theme.muted
+                            font.pixelSize: root.compactCloseButton ? 16 : 13
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+                        background: Rectangle {
+                            radius: 6
+                            color: closeButton.hovered ? Theme.surface : "transparent"
+                        }
                     }
                 }
             }

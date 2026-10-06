@@ -327,6 +327,11 @@ Right-clicking the indicator performs the quick start/pause/resume action.
 `Super+P` or `pomodoro menu` opens the same panel and retains the GTK dialog as a
 fallback when Quickshell is unavailable.
 
+The power icon opens a native keyboard-accessible menu. Lock and suspend run
+immediately; reboot and power-off require a separate confirmation step.
+`power-menu` opens the same popup and retains Wofi as a fallback when Quickshell
+is unavailable.
+
 ### Automatic window tiling
 
 Click the layout icon in the Quickshell bar to open a native two-column picker with live QML previews. Select a preset to immediately arrange the current workspace. Each workspace remembers its own choice across sessions; new windows, closed windows, and windows moved between workspaces update the selected grid automatically. Running `sway-layout menu` opens the same popover and falls back to the illustrated Wofi picker when Quickshell is unavailable.

@@ -351,8 +351,8 @@ Scope {
                         text: ""
                         tooltip: "Power menu"
                         foregroundColor: Theme.danger
-                        onPrimaryClicked: root.run(["power-menu"])
-                        onSecondaryClicked: root.run(["power-menu"])
+                        onPrimaryClicked: root.controller.togglePopupOnScreen("power", window.screen)
+                        onSecondaryClicked: root.controller.togglePopupOnScreen("power", window.screen)
                     }
                 }
 
@@ -416,6 +416,14 @@ Scope {
                     active: root.controller.activePopup === "pomodoro"
                         && root.controller.targetScreen === window.screen
                     PomodoroPopover {
+                        controller: root.controller
+                        barScreen: window.screen
+                    }
+                }
+                LazyLoader {
+                    active: root.controller.activePopup === "power"
+                        && root.controller.targetScreen === window.screen
+                    PowerPopover {
                         controller: root.controller
                         barScreen: window.screen
                     }

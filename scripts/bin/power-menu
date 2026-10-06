@@ -5,24 +5,67 @@ readonly LOCK='󰌾  Lock'
 readonly SUSPEND='󰒲  Suspend'
 readonly REBOOT='󰜉  Reboot'
 readonly POWEROFF='  Power off'
+readonly shell_config="${XDG_CONFIG_HOME:-${HOME}/.config}/quickshell/control-center/shell.qml"
 
-selection=$(
-  printf '%s\n' "${LOCK}" "${SUSPEND}" "${REBOOT}" "${POWEROFF}" |
-    wofi --dmenu --insensitive --prompt 'Power' --width 360 --height 280
-) || exit 0
+execute_action() {
+  case ${1:-} in
+    lock)
+      "${HOME}/.local/bin/sway-lock"
+      ;;
+    suspend)
+      "${HOME}/.local/bin/sway-lock"
+      systemctl suspend
+      ;;
+    reboot)
+      systemctl reboot
+      ;;
+    poweroff)
+      systemctl poweroff
+      ;;
+    *)
+      printf 'Unknown power action: %s\n' "${1:-}" >&2
+      return 2
+      ;;
+  esac
+}
 
-case "${selection}" in
-  "${LOCK}")
-    "${HOME}/.local/bin/sway-lock"
-    ;;
-  "${SUSPEND}")
-    "${HOME}/.local/bin/sway-lock"
-    systemctl suspend
-    ;;
-  "${REBOOT}")
-    systemctl reboot
-    ;;
-  "${POWEROFF}")
-    systemctl poweroff
+fallback_menu() {
+  local selection
+  command -v wofi >/dev/null 2>&1 || {
+    printf 'power-menu: Wofi is not installed.\n' >&2
+    return 1
+  }
+  selection=$(
+    printf '%s\n' "${LOCK}" "${SUSPEND}" "${REBOOT}" "${POWEROFF}" |
+      wofi --dmenu --insensitive --prompt 'Power' --width 360 --height 280
+  ) || return 0
+
+  case ${selection} in
+    "${LOCK}") execute_action lock ;;
+    "${SUSPEND}") execute_action suspend ;;
+    "${REBOOT}") execute_action reboot ;;
+    "${POWEROFF}") execute_action poweroff ;;
+  esac
+}
+
+open_menu() {
+  local quickshell_bin
+  quickshell_bin=$(command -v quickshell || true)
+  [[ -n ${quickshell_bin} ]] || quickshell_bin="${HOME}/.local/bin/quickshell"
+  if [[ -x ${quickshell_bin} && -f ${shell_config} ]] \
+    && timeout 2 "${quickshell_bin}" ipc -p "${shell_config}" call -- shell toggle power \
+      >/dev/null 2>&1; then
+    return 0
+  fi
+  fallback_menu
+}
+
+case ${1:-menu} in
+  menu) open_menu ;;
+  menu-fallback) fallback_menu ;;
+  execute) execute_action "${2:-}" ;;
+  *)
+    printf 'Usage: power-menu [menu|menu-fallback|execute lock|suspend|reboot|poweroff]\n' >&2
+    exit 2
     ;;
 esac
