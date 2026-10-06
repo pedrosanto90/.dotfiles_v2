@@ -296,7 +296,12 @@ start a Waybar process. It also generates a matching `btop` theme and asks any
 running `btop` instance to reload when the desktop theme changes.
 
 The Quickshell bar runs at the top of every screen and reserves 30 pixels of
-workspace. It includes Sway workspaces, clock, a combined CPU/memory/disk monitor,
+workspace. Every bar lists all workspaces, sorted by number: the focused one is
+highlighted, a workspace visible on another monitor keeps its active accent,
+and a workspace living on a different screen is dimmed with a small monitor
+letter (`E` eDP, `D` DP, `H` HDMI) so you can see where it will focus. Clicking
+a workspace switches to it, moving focus to its monitor. The bar also includes a
+clock, a combined CPU/memory/disk monitor,
 calendar, audio, battery, system tray, Pomodoro,
 tiling layout, clipboard history, theme, caffeine, Control Center, and power
 controls. Audio, network, Bluetooth, and battery icons open click-only popups;
@@ -474,21 +479,38 @@ and binds workspaces according to the current setup. It reacts to output
 plug/unplug events, so the layout is applied automatically when a monitor is
 connected or removed. Three setups are handled:
 
-| Setup | Arrangement | Primary | Workspaces 1–5 | Workspace 10 |
-| --- | --- | --- | --- | --- |
-| Laptop only | eDP-1 | eDP-1 | eDP-1 | eDP-1 |
-| Laptop + one external | eDP-1 left, external right | external (DP-1 or HDMI-A-1) | primary | eDP-1 |
-| Laptop + DP-1 + HDMI-A-1 | HDMI-A-1 left, DP-1 center, eDP-1 right | DP-1 | DP-1 | eDP-1 |
+| Setup | Arrangement | Primary | Workspaces 1–5 | Workspace 6 | Workspace 10 |
+| --- | --- | --- | --- | --- | --- |
+| Laptop only | eDP-1 | eDP-1 | eDP-1 | unbound | eDP-1 |
+| Laptop + one external | eDP-1 left, external right | external (DP-1 or HDMI-A-1) | primary | unbound | eDP-1 |
+| Laptop + DP-1 + HDMI-A-1 | HDMI-A-1 left, DP-1 center, eDP-1 right | DP-1 | DP-1 | HDMI-A-1 | eDP-1 |
 
-Workspaces 6–9 and any others are left unbound: they open on whichever output
-is focused. Monitor positions are computed from the actual mode widths, so the
-arrangement adapts to different resolutions and scales.
+Workspaces 7–9 and any others are left unbound: they open on whichever output
+is focused. Any workspace stranded on an output that is no longer active — for
+example after unplugging a monitor — is swept back to the primary output, so
+nothing is left hidden on a disconnected display. Because an empty workspace
+cannot be moved (Sway discards it as soon as it loses focus), an output left
+displaying an empty workspace that belongs to a different output — such as the
+default workspace Sway hands a freshly plugged monitor — is switched to one of
+its own bound workspaces instead. Monitor positions are computed from the
+actual mode widths, so the arrangement adapts to different resolutions and
+scales.
+
+Workspace switches (`Super + 1…0`, the Colemak workspace mode, and clicks in
+the bar) go through `sway-workspace`, which switches to the workspace and then
+moves it to the output this plan assigns. Sway *appends* to a workspace's
+output list on every `workspace N output X` call and uses the first available
+entry, so a binding left over from an earlier layout (for example `5` →
+`eDP-1` from laptop-only mode) would otherwise send the workspace to the wrong
+monitor. `sway-displays target <number>` prints the managed output for one
+workspace and is what the helper consults.
 
 Inspect the plan currently in effect:
 
 ```bash
-sway-displays status        # JSON: mode, primary, positions, bindings
-sway-displays apply         # re-apply the layout now
+sway-displays status                  # JSON: mode, primary, positions, bindings, moves, focus
+sway-displays target 5                # managed output for workspace 5 (empty if unbound)
+sway-displays apply                   # re-apply the layout now
 ```
 
 `Super + Shift + M` still opens `nwg-displays` for ad-hoc mode, scale, or

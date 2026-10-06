@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Switch to a workspace, keeping it on the output sway-displays manages it onto.
+#
+# Sway accumulates workspace -> output bindings: every `workspace N output X`
+# appends to the list and the first available output in it wins. A stale binding
+# from an earlier monitor layout can therefore send a workspace to the wrong
+# screen. Switching and then moving the focused workspace to its managed output
+# overrides that, for empty and non-empty workspaces alike.
+set -euo pipefail
+
+readonly displays="${HOME}/.local/bin/sway-displays"
+
+if [[ $# -ne 1 ]]; then
+  printf 'Usage: sway-workspace <number>\n' >&2
+  exit 2
+fi
+
+number=$1
+target=$("${displays}" target "${number}" 2>/dev/null || true)
+
+swaymsg "workspace number ${number}" >/dev/null
+
+if [[ -n ${target} ]]; then
+  # Moving an empty workspace is fine while it is focused; ignore the failure if
+  # the target output vanished between the two calls.
+  swaymsg "move workspace to output ${target}" >/dev/null 2>&1 || true
+fi

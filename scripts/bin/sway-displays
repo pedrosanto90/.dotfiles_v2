@@ -6,8 +6,13 @@
 #   dual    eDP-1 + one external (DP-1 or HDMI-A-1); external is primary
 #   triple  eDP-1 + DP-1 + HDMI-A-1; HDMI-A-1 left, DP-1 center, eDP-1 right
 #
-# Workspaces 1-5 always live on the primary output; workspace 10 lives on the
-# laptop panel (eDP-1) whenever it is present; the rest are left unbound.
+# Workspaces 1-5 always live on the primary output; workspace 6 lives on the
+# HDMI-A-1 panel in the triple setup; workspace 10 lives on the laptop panel
+# (eDP-1) whenever it is present; the rest are left unbound. Any workspace
+# stranded on an output that is no longer active is swept back to the primary.
+# An output left showing an empty workspace owned by another output is switched
+# to one of its own bound workspaces (empty workspaces cannot be moved). The
+# Quickshell bar shows every workspace on every output.
 set -euo pipefail
 
 log() { printf '[sway-displays] %s\n' "$*" >&2; }
@@ -27,6 +32,8 @@ declare -A WIDTH=()
 POSITION_CMDS=()
 BINDING_CMDS=()
 MOVE_CMDS=()
+FOCUS_CMDS=()
+declare -A TARGET=()
 
 compute_layout() {
   local outputs=$1 workspaces=$2
@@ -34,9 +41,11 @@ compute_layout() {
   PRIMARY=""
   INTERNAL=""
   WIDTH=()
+  TARGET=()
   POSITION_CMDS=()
   BINDING_CMDS=()
   MOVE_CMDS=()
+  FOCUS_CMDS=()
 
   local name width hdmi="" dp="" internal=""
   while IFS=$'\t' read -r name width; do
@@ -82,22 +91,62 @@ compute_layout() {
       BINDING_CMDS+=("workspace ${n} output ${PRIMARY}")
     done
   fi
+  if [[ ${MODE} == triple && -n ${hdmi} ]]; then
+    BINDING_CMDS+=("workspace 6 output ${hdmi}")
+  fi
   if [[ -n ${INTERNAL} ]]; then
     BINDING_CMDS+=("workspace 10 output ${INTERNAL}")
   fi
 
-  declare -A target=()
-  [[ -n ${PRIMARY} ]] && target[1]=${PRIMARY} && target[2]=${PRIMARY} \
-    && target[3]=${PRIMARY} && target[4]=${PRIMARY} && target[5]=${PRIMARY}
-  [[ -n ${INTERNAL} ]] && target[10]=${INTERNAL}
+  [[ -n ${PRIMARY} ]] && TARGET[1]=${PRIMARY} && TARGET[2]=${PRIMARY} \
+    && TARGET[3]=${PRIMARY} && TARGET[4]=${PRIMARY} && TARGET[5]=${PRIMARY}
+  [[ ${MODE} == triple && -n ${hdmi} ]] && TARGET[6]=${hdmi}
+  [[ -n ${INTERNAL} ]] && TARGET[10]=${INTERNAL}
 
-  local num output
+  local num output desired
   while IFS=$'\t' read -r num output; do
     [[ -n ${num} && -n ${output} ]] || continue
-    [[ -n ${target[${num}]:-} ]] || continue
-    [[ ${output} == "${target[${num}]}" ]] && continue
-    MOVE_CMDS+=("[workspace=\"${num}\"] move workspace to output ${target[${num}]}")
+    if [[ -n ${TARGET[${num}]:-} ]]; then
+      desired=${TARGET[${num}]}
+    elif [[ -z ${WIDTH[${output}]:-} && -n ${PRIMARY} ]]; then
+      # Workspace stranded on an output that is no longer active.
+      desired=${PRIMARY}
+    else
+      continue
+    fi
+    [[ ${output} == "${desired}" ]] && continue
+    MOVE_CMDS+=("[workspace=\"${num}\"] move workspace to output ${desired}")
   done < <(jq -r '.[] | [.num, .output] | @tsv' <<<"${workspaces}")
+
+  # A workspace with no windows cannot be moved: sway destroys it as soon as it
+  # loses focus. When an output is displaying such an ownerless workspace (for
+  # example the default workspace sway hands a freshly plugged monitor), switch
+  # that output to one of its own bound workspaces instead. Focus is restored
+  # to the originally focused output afterwards.
+  local ws out lowest
+  declare -A home=()
+  for ws in "${!TARGET[@]}"; do
+    out=${TARGET[${ws}]}
+    if [[ -z ${home[${out}]:-} || ${ws} -lt ${home[${out}]} ]]; then
+      home[${out}]=${ws}
+    fi
+  done
+
+  local original_focus
+  original_focus=$(jq -r '.[] | select(.focused) | .output' <<<"${workspaces}")
+  local vnum vout
+  while IFS=$'\t' read -r vnum vout; do
+    [[ -n ${vnum} && -n ${vout} ]] || continue
+    [[ -n ${TARGET[${vnum}]:-} ]] || continue
+    [[ ${TARGET[${vnum}]} == "${vout}" ]] && continue
+    lowest=${home[${vout}]:-}
+    [[ -n ${lowest} ]] || continue
+    FOCUS_CMDS+=("focus output ${vout}")
+    FOCUS_CMDS+=("workspace number ${lowest}")
+  done < <(jq -r '.[] | select(.visible) | [.num, .output] | @tsv' <<<"${workspaces}")
+  if [[ ${#FOCUS_CMDS[@]} -gt 0 && -n ${original_focus} ]]; then
+    FOCUS_CMDS+=("focus output ${original_focus}")
+  fi
 }
 
 run_command() {
@@ -122,6 +171,7 @@ apply_plan() {
   for cmd in ${POSITION_CMDS[@]+"${POSITION_CMDS[@]}"}; do run_command "${cmd}"; done
   for cmd in ${BINDING_CMDS[@]+"${BINDING_CMDS[@]}"}; do run_command "${cmd}"; done
   for cmd in ${MOVE_CMDS[@]+"${MOVE_CMDS[@]}"}; do run_move "${cmd}"; done
+  for cmd in ${FOCUS_CMDS[@]+"${FOCUS_CMDS[@]}"}; do run_command "${cmd}"; done
   log "applied mode=${MODE} primary=${PRIMARY:-none} internal=${INTERNAL:-none}"
 }
 
@@ -147,29 +197,56 @@ print_status() {
     --argjson positions "$(emit_json_array POSITION_CMDS)" \
     --argjson bindings "$(emit_json_array BINDING_CMDS)" \
     --argjson moves "$(emit_json_array MOVE_CMDS)" \
+    --argjson focus "$(emit_json_array FOCUS_CMDS)" \
     '{mode: $mode, primary: $primary, internal: $internal,
-      positions: $positions, bindings: $bindings, moves: $moves}'
+      positions: $positions, bindings: $bindings, moves: $moves, focus: $focus}'
+}
+
+print_target() {
+  # Print the output a workspace number is managed onto, or nothing when it is
+  # left unbound. Used by `sway-workspace` to place a workspace after a switch.
+  local num=${1:-}
+  [[ -n ${num} ]] || return 0
+  require_tools
+  local outputs
+  outputs=$(json_outputs)
+  compute_layout "${outputs}" "[]"
+  printf '%s' "${TARGET[${num}]:-}"
+}
+
+watch_loop() {
+  apply_plan
+  # Reconnect if the IPC subscription drops, for example while Sway is
+  # reloading its configuration and briefly refuses new subscriptions.
+  while true; do
+    swaymsg -m -t subscribe '["output"]' | while read -r _; do
+      sleep 0.4
+      apply_plan
+    done || true
+    sleep 1
+  done
 }
 
 watch_displays() {
   require_tools
   if command -v flock >/dev/null 2>&1; then
-    exec 9>"${XDG_RUNTIME_DIR:-/tmp}/sway-displays.lock"
-    flock -n 9 || { log "watch already running"; return 0; }
+    # --close keeps the lock out of the children, so a lingering `swaymsg`
+    # subscription from a killed watcher cannot keep the lock held and block a
+    # later Sway reload from starting a fresh watcher.
+    exec flock -n --close "${XDG_RUNTIME_DIR:-/tmp}/sway-displays.lock" \
+      "${BASH_SOURCE[0]}" __watch-loop
   fi
-  apply_plan
-  swaymsg -m -t subscribe '["output"]' | while read -r _; do
-    sleep 0.4
-    apply_plan
-  done
+  watch_loop
 }
 
 case ${1:-apply} in
   apply) apply_plan ;;
   watch) watch_displays ;;
+  __watch-loop) watch_loop ;;
   status) print_status ;;
+  target) print_target "${2:-}" ;;
   *)
-    printf 'Usage: sway-displays [apply|watch|status]\n' >&2
+    printf 'Usage: sway-displays [apply|watch|status|target <number>]\n' >&2
     exit 2
     ;;
 esac

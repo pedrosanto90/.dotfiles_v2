@@ -21,9 +21,9 @@ def output(name, width=1920, *, active=True):
     }
 
 
-def workspace(num, output_name):
+def workspace(num, output_name, *, visible=False, focused=False):
     return {"num": num, "name": str(num), "output": output_name,
-            "focused": False, "urgent": False}
+            "visible": visible, "focused": focused, "urgent": False}
 
 
 class SwayDisplaysTest(unittest.TestCase):
@@ -126,8 +126,17 @@ sys.exit(0)
             "workspace 3 output DP-1",
             "workspace 4 output DP-1",
             "workspace 5 output DP-1",
+            "workspace 6 output HDMI-A-1",
             "workspace 10 output eDP-1",
         ])
+
+    def test_triple_moves_workspace_six_to_hdmi(self):
+        result, commands = self.run_script(
+            "apply",
+            outputs=[output("eDP-1"), output("DP-1"), output("HDMI-A-1")],
+            workspaces=[workspace(6, "eDP-1")])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('[workspace="6"] move workspace to output HDMI-A-1', commands)
 
     def test_moves_existing_bound_workspaces_only(self):
         result, commands = self.run_script(
@@ -142,6 +151,37 @@ sys.exit(0)
         self.assertFalse(any("workspace 6 output" in command for command in commands))
         self.assertFalse(any("workspace 9 output" in command for command in commands))
 
+    def test_sweeps_workspace_stranded_on_inactive_output(self):
+        result, commands = self.run_script(
+            "apply",
+            outputs=[output("eDP-1"), output("DP-1")],
+            workspaces=[workspace(7, "HDMI-A-1")])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('[workspace="7"] move workspace to output DP-1', commands)
+
+    def test_rehomes_output_showing_a_foreign_workspace(self):
+        result, _ = self.run_script(
+            "status",
+            outputs=[output("eDP-1"), output("DP-1"), output("HDMI-A-1")],
+            workspaces=[workspace(5, "eDP-1", visible=True),
+                        workspace(3, "DP-1", visible=True, focused=True)])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)["focus"], [
+            "focus output eDP-1",
+            "workspace number 10",
+            "focus output DP-1",
+        ])
+
+    def test_keeps_outputs_showing_their_own_workspace(self):
+        result, _ = self.run_script(
+            "status",
+            outputs=[output("eDP-1"), output("DP-1"), output("HDMI-A-1")],
+            workspaces=[workspace(3, "DP-1", visible=True, focused=True),
+                        workspace(6, "HDMI-A-1", visible=True),
+                        workspace(10, "eDP-1", visible=True)])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)["focus"], [])
+
     def test_status_reports_the_layout_plan(self):
         result, _ = self.run_script(
             "status",
@@ -152,7 +192,23 @@ sys.exit(0)
         self.assertEqual(status["primary"], "DP-1")
         self.assertEqual(status["internal"], "eDP-1")
         self.assertIn("workspace 1 output DP-1", status["bindings"])
+        self.assertIn("workspace 6 output HDMI-A-1", status["bindings"])
         self.assertIn("workspace 10 output eDP-1", status["bindings"])
+
+    def test_target_reports_the_managed_output(self):
+        monitors = [output("eDP-1"), output("DP-1"), output("HDMI-A-1")]
+        for number, expected in (("5", "DP-1"), ("6", "HDMI-A-1"),
+                                 ("10", "eDP-1")):
+            result, _ = self.run_script("target", number, outputs=monitors)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout, expected)
+
+    def test_target_is_empty_for_an_unbound_workspace(self):
+        result, _ = self.run_script(
+            "target", "7",
+            outputs=[output("eDP-1"), output("DP-1"), output("HDMI-A-1")])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, "")
 
 
 if __name__ == "__main__":

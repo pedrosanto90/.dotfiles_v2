@@ -27,6 +27,8 @@ Scope {
     readonly property var bluetoothAdapter: Bluetooth.defaultAdapter
     property var activeVpns: []
     readonly property bool vpnActive: activeVpns.length > 0
+    readonly property var workspaceList: [...I3.workspaces.values].sort(
+        (a, b) => a.number - b.number)
 
     Process {
         id: vpnStatus
@@ -130,6 +132,22 @@ Scope {
             || identity.indexOf("blueman") >= 0;
     }
 
+    function monitorTag(monitor) {
+        if (!monitor || !monitor.name) return "?";
+        if (monitor.name.indexOf("eDP") === 0) return "E";
+        if (monitor.name.indexOf("HDMI") === 0) return "H";
+        if (monitor.name.indexOf("DP") === 0) return "D";
+        return monitor.name.charAt(0).toUpperCase();
+    }
+
+    function monitorColor(monitor) {
+        const tag = monitorTag(monitor);
+        if (tag === "E") return Theme.purple;
+        if (tag === "D") return Theme.accent;
+        if (tag === "H") return Theme.orange;
+        return Theme.muted;
+    }
+
     SystemClock {
         id: clock
         precision: SystemClock.Minutes
@@ -188,31 +206,51 @@ Scope {
                     anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
 
                     Repeater {
-                        model: I3.workspaces.values.filter(workspace =>
-                            workspace.monitor && workspace.monitor.name === window.screen.name)
+                        model: root.workspaceList
 
                         Rectangle {
                             id: workspaceButton
                             required property var modelData
-                            width: Math.max(32, workspaceLabel.implicitWidth + 16)
+                            readonly property bool onThisScreen: modelData.monitor
+                                && modelData.monitor.name === window.screen.name
+                            width: Math.max(32, content.implicitWidth + 16)
                             height: workspaces.height
                             color: modelData.urgent ? Theme.danger
-                                : modelData.active ? Theme.accent : "transparent"
+                                : modelData.focused ? Theme.accent : "transparent"
 
-                            Text {
-                                id: workspaceLabel
+                            Row {
+                                id: content
                                 anchors.centerIn: parent
-                                text: workspaceButton.modelData.name
-                                color: workspaceButton.modelData.active || workspaceButton.modelData.urgent
-                                    ? Theme.selected : Theme.muted
-                                font.family: "JetBrainsMono Nerd Font"
-                                font.pixelSize: 12
+                                spacing: 3
+
+                                Text {
+                                    id: workspaceLabel
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: workspaceButton.modelData.name
+                                    color: workspaceButton.modelData.focused
+                                        || workspaceButton.modelData.urgent ? Theme.selected
+                                        : workspaceButton.modelData.active ? Theme.accent
+                                        : Theme.muted
+                                    opacity: workspaceButton.onThisScreen ? 1.0 : 0.65
+                                    font.family: "JetBrainsMono Nerd Font"
+                                    font.pixelSize: 12
+                                }
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    visible: !workspaceButton.onThisScreen && workspaceButton.modelData.monitor
+                                    text: root.monitorTag(workspaceButton.modelData.monitor)
+                                    color: root.monitorColor(workspaceButton.modelData.monitor)
+                                    font.family: "JetBrainsMono Nerd Font"
+                                    font.pixelSize: 9
+                                }
                             }
 
                             MouseArea {
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: workspaceButton.modelData.activate()
+                                onClicked: root.run(["sway-workspace",
+                                    workspaceButton.modelData.name])
                             }
                         }
                     }
