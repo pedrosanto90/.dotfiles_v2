@@ -10,6 +10,7 @@ BarPopover {
     title: "Pomodoro"
     popupWidth: 440
     popupHeight: 520
+    centered: true
 
     property string pomodoroState: "idle"
     property string phase: "idle"
