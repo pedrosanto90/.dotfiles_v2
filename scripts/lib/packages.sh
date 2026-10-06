@@ -8,6 +8,8 @@ readonly DEBIAN_PACKAGES=(
   python3 python3-pip python3-venv python3-dev python3-i3ipc pipx
   php composer libapache2-mod-php
   thunar thunar-archive-plugin gvfs gvfs-backends evolution gwenview qt6-wayland zathura
+  gnome-online-accounts gnome-online-accounts-gtk evolution-ews python3-gi
+  gir1.2-ecal-2.0 gir1.2-edataserver-1.2 gir1.2-ical-3.0
   qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts
   qml6-module-qtquick-templates qml6-module-qtquick-window qml6-module-qtqml-workerscript
   wl-clipboard cliphist grim slurp swappy

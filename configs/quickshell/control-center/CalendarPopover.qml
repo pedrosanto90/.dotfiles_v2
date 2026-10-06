@@ -1,14 +1,15 @@
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Io
 
 BarPopover {
     id: root
     popupName: "calendar"
     title: "Calendar"
-    popupWidth: 720
-    popupHeight: 570
+    popupWidth: 860
+    popupHeight: 620
     centered: true
 
     property date displayedMonth: new Date()
@@ -17,9 +18,10 @@ BarPopover {
     property bool editing: false
     property string editingId: ""
     property string errorMessage: ""
+    property string syncMessage: ""
     readonly property var reminderValues: [-1, 0, 5, 10, 15, 30, 60, 1440]
     readonly property var selectedEvents: events.filter(event =>
-        event.date === root.dateKey(root.selectedDate))
+        root.eventCoversDate(event, root.dateKey(root.selectedDate)))
 
     function dateKey(value) {
         return Qt.formatDate(value, "yyyy-MM-dd");
@@ -28,6 +30,28 @@ BarPopover {
     function monthKey() {
         return displayedMonth.getFullYear() + "-"
             + String(displayedMonth.getMonth() + 1).padStart(2, "0");
+    }
+
+    function eventCoversDate(event, key) {
+        const end = event.endDate || event.date;
+        if (event.date > key || end < key) return false;
+        return event.allDay || key !== end || end === event.date || event.endTime !== "00:00";
+    }
+
+    function eventTimeLabel(event) {
+        if (event.allDay) return "All day";
+        if (event.endDate && event.endDate !== event.date)
+            return event.time + " → " + event.endDate + (event.endTime ? " " + event.endTime : "");
+        if (event.endTime && event.endTime !== event.time)
+            return event.time + "–" + event.endTime;
+        return event.time;
+    }
+
+    function sourceLabel(event) {
+        if (!event.readOnly) return root.reminderLabel(event.reminder);
+        if (event.source && event.source !== event.calendar)
+            return event.calendar + " · " + event.source;
+        return event.calendar || event.source || "Online calendar";
     }
 
     function selectToday() {
@@ -71,6 +95,7 @@ BarPopover {
     }
 
     function beginEdit(event) {
+        if (event.readOnly) return;
         editing = true;
         editingId = event.id;
         titleField.text = event.title;
@@ -108,6 +133,21 @@ BarPopover {
         runAction(["local-calendar", "delete", id]);
     }
 
+    function refreshOnline() {
+        if (!syncProcess.running) {
+            syncMessage = "Refreshing online calendars…";
+            syncProcess.command = ["local-calendar", "sync"];
+            syncProcess.running = true;
+        }
+    }
+
+    function refreshStatus() {
+        if (!statusProcess.running) {
+            statusProcess.command = ["local-calendar", "status"];
+            statusProcess.running = true;
+        }
+    }
+
     function runAction(command) {
         if (actionProcess.running) return;
         errorMessage = "";
@@ -115,7 +155,11 @@ BarPopover {
         actionProcess.running = true;
     }
 
-    onVisibleChanged: if (visible) selectToday()
+    onVisibleChanged: if (visible) {
+        selectToday();
+        refreshStatus();
+        refreshOnline();
+    }
 
     Process {
         id: listProcess
@@ -132,6 +176,7 @@ BarPopover {
         }
         onExited: (code, status) => {
             if (code !== 0) root.errorMessage = "Could not read calendar events.";
+            onlineStatusRefresh.restart();
         }
     }
 
@@ -144,6 +189,39 @@ BarPopover {
             } else {
                 root.errorMessage = "Could not save the calendar change.";
             }
+        }
+    }
+
+    Process {
+        id: syncProcess
+        onExited: (code, status) => {
+            root.refresh();
+            onlineStatusRefresh.restart();
+        }
+    }
+
+    Timer {
+        id: onlineStatusRefresh
+        interval: 300
+        onTriggered: root.refreshStatus()
+    }
+
+    Process {
+        id: statusProcess
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const status = JSON.parse(text.trim() || "{}");
+                    const errors = Array.isArray(status.errors) ? status.errors : [];
+                    root.syncMessage = errors.length > 0
+                        ? "Online calendar: " + errors.join(" · ") : "";
+                } catch (error) {
+                    root.syncMessage = "Could not read online calendar status.";
+                }
+            }
+        }
+        onExited: (code, status) => {
+            if (code !== 0) root.syncMessage = "Could not read online calendar status.";
         }
     }
 
@@ -208,7 +286,8 @@ BarPopover {
                     id: dayCell
                     required property var model
                     readonly property string key: root.dateKey(model.date)
-                    readonly property int eventCount: root.events.filter(event => event.date === key).length
+                    readonly property int eventCount: root.events.filter(event =>
+                        root.eventCoversDate(event, key)).length
                     readonly property bool selected: key === root.dateKey(root.selectedDate)
                     radius: 7
                     color: selected ? Theme.accent
@@ -268,6 +347,21 @@ BarPopover {
                 }
             }
 
+            RowLayout {
+                Layout.fillWidth: true
+                PopoverButton {
+                    Layout.fillWidth: true
+                    text: syncProcess.running ? "Refreshing…" : "Refresh"
+                    enabled: !syncProcess.running
+                    onClicked: root.refreshOnline()
+                }
+                PopoverButton {
+                    Layout.fillWidth: true
+                    text: "Accounts"
+                    onClicked: Quickshell.execDetached(["gnome-online-accounts-gtk"])
+                }
+            }
+
             ColumnLayout {
                 Layout.fillWidth: true
                 visible: root.editing
@@ -315,6 +409,15 @@ BarPopover {
 
             Label {
                 Layout.fillWidth: true
+                visible: root.syncMessage.length > 0
+                text: root.syncMessage
+                color: Theme.danger
+                font.pixelSize: 11
+                wrapMode: Text.WordWrap
+            }
+
+            Label {
+                Layout.fillWidth: true
                 Layout.fillHeight: true
                 visible: !root.editing && root.selectedEvents.length === 0
                 text: "No events for this day."
@@ -340,7 +443,7 @@ BarPopover {
                             id: eventRow
                             required property var modelData
                             width: parent.width
-                            height: 66
+                            height: 76
                             radius: 8
                             color: Theme.surface
                             border.color: Theme.border
@@ -349,10 +452,18 @@ BarPopover {
                                 anchors.fill: parent
                                 anchors.margins: 8
                                 spacing: 7
+                                Rectangle {
+                                    implicitWidth: 4
+                                    Layout.fillHeight: true
+                                    radius: 2
+                                    color: eventRow.modelData.color || Theme.accent
+                                }
                                 Label {
-                                    text: eventRow.modelData.time
+                                    text: root.eventTimeLabel(eventRow.modelData)
                                     color: Theme.accent
                                     font.bold: true
+                                    Layout.maximumWidth: 105
+                                    wrapMode: Text.Wrap
                                 }
                                 ColumnLayout {
                                     Layout.fillWidth: true
@@ -366,17 +477,21 @@ BarPopover {
                                         elide: Text.ElideRight
                                     }
                                     Label {
-                                        text: root.reminderLabel(eventRow.modelData.reminder)
+                                        Layout.fillWidth: true
+                                        text: root.sourceLabel(eventRow.modelData)
                                         color: Theme.secondary
                                         font.pixelSize: 11
+                                        elide: Text.ElideRight
                                     }
                                 }
                                 IconButton {
+                                    visible: !eventRow.modelData.readOnly
                                     text: "󰏫"
                                     Accessible.name: "Edit event"
                                     onClicked: root.beginEdit(eventRow.modelData)
                                 }
                                 IconButton {
+                                    visible: !eventRow.modelData.readOnly
                                     text: "󰆴"
                                     dangerous: true
                                     Accessible.name: "Delete event"

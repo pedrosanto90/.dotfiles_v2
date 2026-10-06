@@ -58,6 +58,20 @@ PanelWindow {
         }
     }
 
+    function eventTimeLabel(event) {
+        if (event.allDay) return "All day";
+        if (event.endTime && event.endTime !== event.time && event.endDate === event.date)
+            return event.time + "–" + event.endTime;
+        return event.time;
+    }
+
+    function eventSourceLabel(event) {
+        if (!event.readOnly) return "Local";
+        if (event.source && event.source !== event.calendar)
+            return event.calendar + " · " + event.source;
+        return event.calendar || event.source || "Online calendar";
+    }
+
     StatusCommand { id: caffeineStatus; command: ["caffeine-toggle", "status"]; interval: 5000 }
     StatusCommand { id: notificationStatus; command: ["notification-mode", "status"]; interval: 3000 }
 
@@ -226,20 +240,38 @@ PanelWindow {
                 Repeater {
                     model: window.todayEvents.slice(0, 3)
                     RowLayout {
+                        id: todayEventRow
                         required property var modelData
                         Layout.fillWidth: true
                         spacing: 8
+                        Rectangle {
+                            implicitWidth: 3
+                            Layout.fillHeight: true
+                            radius: 2
+                            color: todayEventRow.modelData.color || Theme.accent
+                        }
                         Label {
-                            text: parent.modelData.time
+                            text: window.eventTimeLabel(todayEventRow.modelData)
                             color: Theme.accent
                             font.bold: true
                         }
-                        Label {
+                        ColumnLayout {
                             Layout.fillWidth: true
-                            text: parent.modelData.title
-                            textFormat: Text.PlainText
-                            color: Theme.foreground
-                            elide: Text.ElideRight
+                            spacing: 0
+                            Label {
+                                Layout.fillWidth: true
+                                text: todayEventRow.modelData.title
+                                textFormat: Text.PlainText
+                                color: Theme.foreground
+                                elide: Text.ElideRight
+                            }
+                            Label {
+                                Layout.fillWidth: true
+                                text: window.eventSourceLabel(todayEventRow.modelData)
+                                color: Theme.secondary
+                                font.pixelSize: 10
+                                elide: Text.ElideRight
+                            }
                         }
                     }
                 }

@@ -63,6 +63,7 @@ enable_services() {
   enable_user_service pipewire-pulse.socket
   enable_user_service wireplumber.service
   enable_user_service local-calendar-alerts.timer
+  enable_user_service local-calendar-sync.timer
 }
 
 verify_docker_installation() {

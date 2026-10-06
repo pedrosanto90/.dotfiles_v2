@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
-"""Small local-only calendar store and notification dispatcher."""
+#!/usr/bin/python3
+"""Offline-first local calendar with read-only Evolution integration."""
 
 import argparse
 import contextlib
-from datetime import datetime
+from datetime import datetime, timedelta
 import fcntl
 import json
 import os
@@ -13,6 +13,8 @@ import subprocess
 import tempfile
 import time
 import uuid
+
+import local_calendar_eds
 
 
 def store_path() -> Path:
@@ -97,6 +99,34 @@ def print_json(value) -> None:
     print(json.dumps(value, ensure_ascii=False, separators=(",", ":")))
 
 
+def present_local(event: dict) -> dict:
+    value = dict(event)
+    value.update({
+        "source": "local",
+        "calendar": "Local",
+        "color": "#89b4fa",
+        "readOnly": False,
+        "allDay": False,
+        "endDate": event["date"],
+        "endTime": event["time"],
+        "occurrenceId": f'local:{event["id"]}',
+    })
+    return value
+
+
+def requested_range(args) -> tuple[str, str]:
+    if args.month:
+        start = datetime.strptime(args.month, "%Y-%m")
+        if start.month == 12:
+            end = start.replace(year=start.year + 1, month=1)
+        else:
+            end = start.replace(month=start.month + 1)
+    else:
+        start = datetime.strptime(args.date, "%Y-%m-%d")
+        end = start + timedelta(days=1)
+    return start.strftime("%Y-%m-%d"), end.strftime("%Y-%m-%d")
+
+
 def command_list(args) -> None:
     with locked_store() as path:
         events = load(path)
@@ -104,7 +134,19 @@ def command_list(args) -> None:
         events = [event for event in events if event["date"].startswith(args.month + "-")]
     elif args.date:
         events = [event for event in events if event["date"] == args.date]
-    print_json(events)
+    combined = [present_local(event) for event in events]
+    start_date, end_date = requested_range(args)
+    try:
+        external, _sources, _errors = local_calendar_eds.list_events(start_date, end_date)
+        combined.extend(external)
+    except Exception:
+        # Local data must remain available even if EDS or D-Bus is unavailable.
+        pass
+    combined.sort(key=lambda event: (
+        event.get("date", ""), not event.get("allDay", False),
+        event.get("time", ""), event.get("title", "").casefold(), event.get("id", ""),
+    ))
+    print_json(combined)
 
 
 def command_add(args) -> None:
@@ -121,10 +163,11 @@ def command_add(args) -> None:
         events = load(path)
         events.append(event)
         save(path, events)
-    print_json(event)
+    print_json(present_local(event))
 
 
 def command_update(args) -> None:
+    reject_external_id(args.id)
     with locked_store() as path:
         events = load(path)
         for event in events:
@@ -132,12 +175,13 @@ def command_update(args) -> None:
                 event.update(title=clean_title(args.title), date=args.date,
                              time=args.time, reminder=args.reminder, notified=False)
                 save(path, events)
-                print_json(event)
+                print_json(present_local(event))
                 return
     raise SystemExit("local-calendar: event not found")
 
 
 def command_delete(args) -> None:
+    reject_external_id(args.id)
     with locked_store() as path:
         events = load(path)
         remaining = [event for event in events if event.get("id") != args.id]
@@ -145,6 +189,19 @@ def command_delete(args) -> None:
             raise SystemExit("local-calendar: event not found")
         save(path, remaining)
     print_json({"deleted": args.id})
+
+
+def reject_external_id(identifier: str) -> None:
+    if identifier.startswith("eds:"):
+        raise SystemExit("local-calendar: external events are read-only")
+
+
+def command_sync(_args) -> None:
+    print_json(local_calendar_eds.sync())
+
+
+def command_status(_args) -> None:
+    print_json(local_calendar_eds.status())
 
 
 def take_due(now: int) -> list[dict]:
@@ -227,6 +284,9 @@ def build_parser() -> argparse.ArgumentParser:
     delete_parser = commands.add_parser("delete")
     delete_parser.add_argument("id")
     delete_parser.set_defaults(handler=command_delete)
+
+    commands.add_parser("sync").set_defaults(handler=command_sync)
+    commands.add_parser("status").set_defaults(handler=command_status)
 
     for name, handler in (("due", command_due), ("notify", command_notify)):
         due_parser = commands.add_parser(name)

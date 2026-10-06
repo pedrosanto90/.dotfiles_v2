@@ -311,15 +311,52 @@ balanced, performance) through power-profiles-daemon; the active profile also
 appears in the battery tooltip. The bar is visible when the shell starts. Show,
 hide, or toggle it through the shell IPC:
 
-The calendar icon at the right edge of the bar, beside the power button, opens a local monthly calendar. Select a day
-to add, edit, or remove timed events and choose an alert from the available
-reminder intervals. Events are stored only in
-`~/.local/share/debian-sway-dev/calendar/events.json`. The
-`local-calendar-alerts.timer` user unit checks once per minute and delivers due
-reminders through the desktop notification service with an audible alert. The
-Control Center also shows up to three events scheduled for today and links to
-the full calendar. Clicking the clock itself
-continues to switch between the time and full date.
+The calendar icon at the right edge of the bar, beside the power button, opens
+an offline-first monthly calendar. Select a day to add, edit, or remove local
+timed events and choose an alert from the available reminder intervals. Local
+events are stored only in
+`~/.local/share/debian-sway-dev/calendar/events.json`; online events are read
+from Evolution Data Server's local cache and are never copied there. Enabled
+Google, Outlook.com, Microsoft 365, and Exchange calendars appear read-only,
+with their calendar colour and source. All-day, multi-day, recurring events,
+exceptions, and local-time conversion are handled by EDS.
+
+The popover shows cached data immediately, asks EDS to refresh in the
+background, and retains local and cached events if one source fails. Use
+**Refresh** for an explicit update and **Accounts** to open the standalone GNOME
+Online Accounts manager. `local-calendar sync` performs the same refresh;
+`local-calendar status` prints the last successful synchronization, discovered
+sources, and per-source errors as JSON. `local-calendar-sync.timer` repeats the
+refresh every 15 minutes.
+
+To connect an account:
+
+1. Open **Accounts** in the calendar, then add a Google, Microsoft 365/Outlook,
+   or Exchange account and leave its Calendar service enabled. A managed
+   company tenant may require an administrator to approve GNOME Online Accounts.
+2. Open Evolution's Calendar view to enable or disable individual and secondary
+   calendars. Every enabled online calendar is picked up automatically.
+3. Run `local-calendar sync` followed by `local-calendar status` to confirm that
+   each source is available. If credentials expire, reopen **Accounts**, select
+   the affected account, and authenticate again; the cached data remains
+   visible while the source is unavailable.
+
+`local-calendar-alerts.timer` checks local reminders once per minute and delivers
+them through the desktop notification service with an audible alert.
+`evolution-alarm-notify` starts with Sway for external events and uses only the
+reminders stored at their source; an external event without a reminder remains
+silent. Choose which online calendars may notify in Evolution's calendar/reminder
+preferences. The Control Center shows up to three local or online events for
+today, including all-day events and their source, and links to the full calendar.
+Clicking the clock itself continues to switch between the time and full date.
+
+EDS owns OAuth tokens, renewal, keyring storage, recurrence expansion, timezone
+data, and its cache. The integration is intentionally read-only: adding,
+updating, deleting, responding to invitations, and editing reminders for online
+events remain in the provider or Evolution. See the
+[EDS Calendar API](https://gnome.pages.gitlab.gnome.org/evolution-data-server/libecal/),
+[GOA provider documentation](https://gnome.pages.gitlab.gnome.org/gnome-online-accounts/services.html),
+and [Evolution reminder help](https://gnome.pages.gitlab.gnome.org/evolution/help/calendar-alarms-and-reminders.html).
 
 Caffeine stops the idle daemon while active and starts a fresh instance when
 disabled. Restarting the daemon resets its timers, so leaving caffeine mode does
