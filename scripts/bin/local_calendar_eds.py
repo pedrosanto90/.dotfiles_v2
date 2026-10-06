@@ -232,11 +232,15 @@ def _overlaps(event: dict[str, Any], start_date: str, end_date: str) -> bool:
     return event_start < end_date and event_end >= start_date
 
 
+def _events_in_range(events, start_date: str, end_date: str) -> list[dict[str, Any]]:
+    return [event for event in events
+            if isinstance(event, dict) and _overlaps(event, start_date, end_date)]
+
+
 def list_events(start_date: str, end_date: str) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[str]]:
     fixture = _fixture()
     if fixture is not None:
-        events = [event for event in fixture.get("events", [])
-                  if isinstance(event, dict) and _overlaps(event, start_date, end_date)]
+        events = _events_in_range(fixture.get("events", []), start_date, end_date)
         return events, fixture.get("sources", []), fixture.get("errors", [])
 
     ECal, _EDataServer, ICalGLib, _registry, sources = _registry_sources()
@@ -274,7 +278,7 @@ def list_events(start_date: str, end_date: str) -> tuple[list[dict[str, Any]], l
         "sources": source_status,
         "errors": errors,
     })
-    return events, source_status, errors
+    return _events_in_range(events, start_date, end_date), source_status, errors
 
 
 def sync() -> dict[str, Any]:

@@ -113,6 +113,22 @@ class EDSNormalisationTest(unittest.TestCase):
         )
         self.assertIsNone(event)
 
+    def test_daily_range_excludes_previous_all_day_boundary_occurrences(self):
+        previous = {
+            "date": "2026-10-05", "endDate": "2026-10-05",
+            "time": "", "endTime": "", "allDay": True,
+        }
+        spanning = {
+            "date": "2026-10-05", "endDate": "2026-10-06",
+            "time": "", "endTime": "", "allDay": True,
+        }
+
+        filtered = EDS._events_in_range(
+            [previous, spanning], "2026-10-06", "2026-10-07",
+        )
+
+        self.assertEqual(filtered, [spanning])
+
     def test_recurring_occurrences_have_stable_distinct_ids(self):
         old_tz = os.environ.get("TZ")
         os.environ["TZ"] = "Europe/Lisbon"
