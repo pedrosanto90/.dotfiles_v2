@@ -7,6 +7,7 @@ readonly config_file="${state_home}/pomodoro.conf"
 readonly state_file="${runtime_dir}/debian-sway-dev-pomodoro.state"
 readonly pid_file="${runtime_dir}/debian-sway-dev-pomodoro.pid"
 readonly lock_file="${runtime_dir}/debian-sway-dev-pomodoro.lock"
+readonly shell_config="${XDG_CONFIG_HOME:-${HOME}/.config}/quickshell/control-center/shell.qml"
 
 readonly icon_idle='󰔟'
 readonly icon_focus='󰔛'
@@ -369,7 +370,7 @@ print_status() {
 
   local icon class click_hint session_info tooltip
   if [[ -z ${phase} ]]; then
-    printf '{"text":"%s","class":"idle","tooltip":"Pomodoro stopped\\nClick: start focus (%s min) · Right-click: menu · Super+P"}\n' \
+    printf '{"text":"%s","class":"idle","tooltip":"Pomodoro stopped\\nClick: menu · Right-click: start focus (%s min) · Super+P"}\n' \
       "${icon_idle}" "${dur_focus}"
     return 0
   fi
@@ -396,10 +397,34 @@ print_status() {
   session_info=$(printf '%s completed (long break every %s)' \
     "${sessions}" "${cycle_length}")
 
-  printf '{"text":"%s %s","class":"%s","tooltip":"%s — %s\\nSessions: %s\\nClick: %s · Right-click: menu · Super+P"}\n' \
+  printf '{"text":"%s %s","class":"%s","tooltip":"%s — %s\\nSessions: %s\\nClick: menu · Right-click: %s · Super+P"}\n' \
     "${icon}" "$(format_time "${remaining}")" "${class}" \
     "$(phase_label "${phase}")" "$(format_time "${remaining}")" \
     "${session_info}" "${click_hint}"
+}
+
+print_details() {
+  read_state
+  read_durations
+
+  local state=idle current_phase=idle seconds=0 duration=$(( dur_focus * 60 )) now
+  if [[ -n ${phase} ]]; then
+    current_phase=${phase}
+    duration=$(( $(phase_minutes "${phase}") * 60 ))
+    if (( ends_at > 0 )); then
+      now=$(date +%s)
+      seconds=$(( ends_at - now ))
+      (( seconds > 0 )) || seconds=0
+      [[ ${phase} == focus ]] && state=running || state=break
+    else
+      seconds=${remaining}
+      state=paused
+    fi
+  fi
+
+  printf '{"state":"%s","phase":"%s","remaining":%s,"duration":%s,"sessions":%s,"focusDuration":%s,"shortDuration":%s,"longDuration":%s}\n' \
+    "${state}" "${current_phase}" "${seconds}" "${duration}" "${sessions}" \
+    "${dur_focus}" "${dur_short}" "${dur_long}"
 }
 
 menu_gui() {
@@ -428,12 +453,23 @@ menu_gui() {
 }
 
 cmd_menu() {
+  local quickshell_bin
+  quickshell_bin=$(command -v quickshell || true)
+  [[ -n ${quickshell_bin} ]] || quickshell_bin="${HOME}/.local/bin/quickshell"
+  if [[ -x ${quickshell_bin} && -f ${shell_config} ]] \
+    && timeout 2 "${quickshell_bin}" ipc -p "${shell_config}" call -- shell toggle pomodoro \
+      >/dev/null 2>&1; then
+    return 0
+  fi
   menu_gui
 }
 
 case ${1:-status} in
   status)
     print_status
+    ;;
+  details)
+    print_details
     ;;
   toggle)
     with_lock cmd_toggle
@@ -456,6 +492,9 @@ case ${1:-status} in
   menu)
     cmd_menu
     ;;
+  menu-fallback)
+    menu_gui
+    ;;
   set-durations)
     with_lock cmd_set_durations "${2:-}" "${3:-}" "${4:-}"
     ;;
@@ -466,7 +505,7 @@ case ${1:-status} in
     run_watcher
     ;;
   *)
-    printf 'Usage: %s [status|toggle|start [minutes]|pause|resume|skip|stop|menu|set-durations focus short long]\n' "${0##*/}" >&2
+    printf 'Usage: %s [status|details|toggle|start [minutes]|pause|resume|skip|stop|menu|menu-fallback|set-durations focus short long]\n' "${0##*/}" >&2
     exit 2
     ;;
 esac

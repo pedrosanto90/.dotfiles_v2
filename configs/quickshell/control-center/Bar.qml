@@ -297,8 +297,8 @@ Scope {
                         foregroundColor: pomodoroStatus.data.class === "running" ? Theme.success
                             : pomodoroStatus.data.class === "break" ? Theme.accent
                             : pomodoroStatus.data.class === "paused" ? Theme.orange : Theme.muted
-                        onPrimaryClicked: root.run(["pomodoro", "toggle"])
-                        onSecondaryClicked: root.run(["pomodoro", "menu"])
+                        onPrimaryClicked: root.controller.togglePopupOnScreen("pomodoro", window.screen)
+                        onSecondaryClicked: root.run(["pomodoro", "toggle"])
                     }
 
                     StatusButton {
@@ -408,6 +408,14 @@ Scope {
                     active: root.controller.activePopup === "tiling"
                         && root.controller.targetScreen === window.screen
                     TilingPopover {
+                        controller: root.controller
+                        barScreen: window.screen
+                    }
+                }
+                LazyLoader {
+                    active: root.controller.activePopup === "pomodoro"
+                        && root.controller.targetScreen === window.screen
+                    PomodoroPopover {
                         controller: root.controller
                         barScreen: window.screen
                     }
