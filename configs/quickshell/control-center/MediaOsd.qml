@@ -26,13 +26,13 @@ PanelWindow {
 
     Rectangle {
         anchors.fill: parent
-        radius: 14
+        radius: 12
         color: Theme.background
         border.color: Theme.border
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 18
-            spacing: 12
+            anchors.margins: 14
+            spacing: 10
             RowLayout {
                 Layout.fillWidth: true
                 Text {
@@ -48,18 +48,9 @@ PanelWindow {
                     font.pixelSize: 14
                 }
             }
-            Rectangle {
+            ThemeProgressBar {
                 Layout.fillWidth: true
-                implicitHeight: 6
-                radius: 3
-                color: Theme.border
-                Rectangle {
-                    height: parent.height
-                    width: parent.width * (window.muted ? 0 : Math.min(1, Math.max(0, window.level)))
-                    radius: 3
-                    color: Theme.accent
-                    Behavior on width { NumberAnimation { duration: 100 } }
-                }
+                value: window.muted ? 0 : Math.min(1, Math.max(0, window.level))
             }
         }
     }

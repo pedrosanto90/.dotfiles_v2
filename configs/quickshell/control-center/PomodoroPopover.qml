@@ -138,7 +138,7 @@ BarPopover {
         horizontalAlignment: Text.AlignHCenter
     }
 
-    ProgressBar {
+    ThemeProgressBar {
         Layout.fillWidth: true
         from: 0
         to: 1
@@ -208,34 +208,31 @@ BarPopover {
         ColumnLayout {
             Layout.fillWidth: true
             Label { text: "Focus"; color: Theme.secondary }
-            SpinBox {
+            ThemeSpinBox {
                 id: focusDuration
                 Layout.fillWidth: true
                 from: 1
                 to: 180
-                editable: true
             }
         }
         ColumnLayout {
             Layout.fillWidth: true
             Label { text: "Short break"; color: Theme.secondary }
-            SpinBox {
+            ThemeSpinBox {
                 id: shortDuration
                 Layout.fillWidth: true
                 from: 1
                 to: 180
-                editable: true
             }
         }
         ColumnLayout {
             Layout.fillWidth: true
             Label { text: "Long break"; color: Theme.secondary }
-            SpinBox {
+            ThemeSpinBox {
                 id: longDuration
                 Layout.fillWidth: true
                 from: 1
                 to: 180
-                editable: true
             }
         }
     }

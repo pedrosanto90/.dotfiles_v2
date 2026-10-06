@@ -16,6 +16,13 @@ BarPopover {
     property var vpns: []
     property string vpnError: ""
 
+    function signalIcon(strength) {
+        if (strength < 0.25) return "󰤟";
+        if (strength < 0.5) return "󰤢";
+        if (strength < 0.75) return "󰤥";
+        return "󰤨";
+    }
+
     function needsPsk(network) {
         return network.security === WifiSecurityType.WpaPsk
             || network.security === WifiSecurityType.Wpa2Psk
@@ -132,6 +139,7 @@ BarPopover {
         visible: !!root.wifiDevice && Networking.wifiEnabled
         clip: true
         contentWidth: availableWidth
+        ScrollBar.vertical: ThemeScrollBar { }
 
         Column {
             width: networkScroll.availableWidth
@@ -140,14 +148,57 @@ BarPopover {
             Repeater {
                 model: root.wifiDevice ? root.wifiDevice.networks : 0
 
-                PopoverButton {
+                Rectangle {
+                    id: wifiRow
                     required property var modelData
                     width: parent.width
-                    text: (modelData.connected ? "● " : "") + modelData.name
-                        + "   " + Math.round(modelData.signalStrength * 100) + "%"
-                    highlighted: modelData.connected
-                    enabled: !modelData.stateChanging
-                    onClicked: root.activate(modelData)
+                    height: 50
+                    radius: 8
+                    color: rowMouse.containsMouse ? Theme.border : Theme.surface
+                    border.width: wifiRow.modelData.connected ? 1 : 0
+                    border.color: Theme.accent
+                    opacity: wifiRow.modelData.stateChanging ? 0.6 : 1
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 8
+                        spacing: 8
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 1
+                            Label {
+                                Layout.fillWidth: true
+                                text: wifiRow.modelData.name
+                                textFormat: Text.PlainText
+                                color: Theme.foreground
+                                font.bold: true
+                                elide: Text.ElideRight
+                            }
+                            Label {
+                                text: Math.round(wifiRow.modelData.signalStrength * 100) + "%"
+                                    + (wifiRow.modelData.connected ? " · Connected"
+                                        : wifiRow.modelData.known ? " · Saved" : "")
+                                textFormat: Text.PlainText
+                                color: Theme.secondary
+                                font.pixelSize: 11
+                            }
+                        }
+                        Label {
+                            text: root.signalIcon(wifiRow.modelData.signalStrength)
+                            textFormat: Text.PlainText
+                            color: wifiRow.modelData.connected ? Theme.success : Theme.muted
+                        }
+                    }
+
+                    MouseArea {
+                        id: rowMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        enabled: !wifiRow.modelData.stateChanging
+                        onClicked: root.activate(wifiRow.modelData)
+                    }
                 }
             }
         }
@@ -166,24 +217,12 @@ BarPopover {
         }
         RowLayout {
             Layout.fillWidth: true
-            TextField {
+            ThemeField {
                 id: passwordField
                 Layout.fillWidth: true
-                Layout.preferredHeight: 38
                 echoMode: TextInput.Password
                 placeholderText: "Wi-Fi password"
-                color: Theme.foreground
-                placeholderTextColor: Theme.muted
-                selectionColor: Theme.accent
-                selectedTextColor: Theme.selected
-                leftPadding: 10
-                rightPadding: 10
                 onAccepted: connectButton.clicked()
-                background: Rectangle {
-                    radius: 7
-                    color: Theme.surface
-                    border.color: passwordField.activeFocus ? Theme.accent : Theme.border
-                }
             }
             PopoverButton {
                 id: connectButton
@@ -236,6 +275,7 @@ BarPopover {
         implicitHeight: Math.min(150, Math.max(48, root.vpns.length * 54))
         clip: true
         contentWidth: availableWidth
+        ScrollBar.vertical: ThemeScrollBar { }
 
         Column {
             width: vpnScroll.availableWidth

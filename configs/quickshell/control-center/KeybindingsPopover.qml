@@ -81,17 +81,10 @@ BarPopover {
         }
     }
 
-    TextField {
+    ThemeField {
         id: searchField
         Layout.fillWidth: true
-        Layout.preferredHeight: 40
         placeholderText: "Search keys, actions, categories, or applications…"
-        color: Theme.foreground
-        placeholderTextColor: Theme.muted
-        selectionColor: Theme.accent
-        selectedTextColor: Theme.selected
-        leftPadding: 12
-        rightPadding: 12
         selectByMouse: true
         Accessible.name: "Keybinding search"
         Keys.priority: Keys.BeforeItem
@@ -107,13 +100,6 @@ BarPopover {
         Keys.onUpPressed: event => {
             root.moveSelection(-1);
             event.accepted = true;
-        }
-
-        background: Rectangle {
-            radius: 8
-            color: Theme.surface
-            border.width: searchField.activeFocus ? 2 : 1
-            border.color: searchField.activeFocus ? Theme.accent : Theme.border
         }
     }
 
@@ -144,7 +130,7 @@ BarPopover {
         clip: true
         spacing: 3
         boundsBehavior: Flickable.StopAtBounds
-        ScrollBar.vertical: ScrollBar { }
+        ScrollBar.vertical: ThemeScrollBar { }
 
         delegate: Rectangle {
             id: bindingRow

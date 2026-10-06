@@ -88,7 +88,7 @@ BarPopover {
         }
     }
 
-    TextField {
+    ThemeField {
         id: searchField
         Layout.fillWidth: true
         placeholderText: "Search clipboard…"
@@ -139,7 +139,7 @@ BarPopover {
         clip: true
         spacing: 4
         boundsBehavior: Flickable.StopAtBounds
-        ScrollBar.vertical: ScrollBar { }
+        ScrollBar.vertical: ThemeScrollBar { }
 
         delegate: Rectangle {
             id: clipboardRow

@@ -17,7 +17,7 @@ ColumnLayout {
 
     RowLayout {
         Layout.fillWidth: true
-        Label { text: root.title; font.bold: true; Layout.fillWidth: true }
+        Label { text: root.title; color: Theme.foreground; font.bold: true; Layout.fillWidth: true }
         Label { text: root.available ? Math.round(root.level * 100) + "%" : "Unavailable"; color: Theme.secondary }
         PopoverButton {
             visible: root.canMute

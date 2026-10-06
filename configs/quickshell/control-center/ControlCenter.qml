@@ -10,46 +10,65 @@ PanelWindow {
     readonly property var player: controller.player
     visible: controller.panelOpen
     screen: controller.targetScreen
-    anchors { top: true; right: true }
-    margins { top: 42; right: 12 }
-    implicitWidth: 400
-    implicitHeight: Math.min(content.implicitHeight + 36, screen ? screen.height - 70 : 700)
+    anchors { top: true; right: true; bottom: true; left: true }
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
+    aboveWindows: true
+    focusable: true
     WlrLayershell.namespace: "dotfiles-control-center"
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
-    Rectangle {
-        anchors.fill: parent
-        radius: 14
-        color: Theme.background
-        border.color: Theme.border
+    onVisibleChanged: if (visible) focusScope.forceActiveFocus()
 
-        ScrollView {
-            anchors.fill: parent
-            anchors.margins: 18
+    MouseArea {
+        anchors.fill: parent
+        onClicked: window.controller.closePopups()
+    }
+
+    FocusScope {
+        id: focusScope
+        anchors.fill: parent
+        focus: true
+        Keys.onEscapePressed: window.controller.closePopups()
+
+        Rectangle {
+            id: card
+            width: 400
+            height: Math.min(content.implicitHeight + 28,
+                window.screen ? window.screen.height - 90 : 700)
+            anchors { top: parent.top; right: parent.right; topMargin: 42; rightMargin: 12 }
+            radius: 12
+            color: Theme.background
+            border.color: Theme.border
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: event => event.accepted = true
+            }
+
+            ScrollView {
+                anchors.fill: parent
+                anchors.margins: 14
             contentWidth: availableWidth
             clip: true
             focus: true
             Keys.onEscapePressed: window.controller.closePopups()
-            palette.window: Theme.background
-            palette.windowText: Theme.foreground
-            palette.text: Theme.foreground
-            palette.button: Theme.border
-            palette.buttonText: Theme.foreground
-            palette.base: Theme.background
-            palette.highlight: Theme.accent
-            palette.accent: Theme.accent
-            palette.highlightedText: Theme.selected
+            ScrollBar.vertical: ThemeScrollBar { }
 
             ColumnLayout {
                 id: content
                 width: parent.width
-                spacing: 14
+                spacing: 10
                 RowLayout {
                     Layout.fillWidth: true
-                    Label { text: "Control Center"; font.pixelSize: 20; font.bold: true; Layout.fillWidth: true }
+                    Label {
+                        text: "Control Center"
+                        color: Theme.foreground
+                        font.pixelSize: 20
+                        font.bold: true
+                        Layout.fillWidth: true
+                    }
                     IconButton {
                         Layout.alignment: Qt.AlignTop
                         text: "✕"
@@ -93,7 +112,7 @@ PanelWindow {
                     onAdjusted: value => window.controller.setBrightness(value)
                 }
                 Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Theme.border }
-                ComboBox {
+                ThemeComboBox {
                     Layout.fillWidth: true
                     visible: window.controller.players.length > 1
                     model: window.controller.players.map(p => p.identity)
@@ -110,7 +129,13 @@ PanelWindow {
                         radius: 8
                         color: Theme.border
                         clip: true
-                        Label { anchors.centerIn: parent; text: "♪"; font.pixelSize: 30; visible: artwork.status !== Image.Ready }
+                        Label {
+                            anchors.centerIn: parent
+                            text: "♪"
+                            color: Theme.secondary
+                            font.pixelSize: 30
+                            visible: artwork.status !== Image.Ready
+                        }
                         Image {
                             id: artwork
                             anchors.fill: parent
@@ -126,6 +151,7 @@ PanelWindow {
                             Layout.fillWidth: true
                             text: window.player ? (window.player.trackTitle || "Unknown title") : "Nothing playing"
                             textFormat: Text.PlainText
+                            color: Theme.foreground
                             font.bold: true
                             elide: Text.ElideRight
                         }
@@ -150,19 +176,26 @@ PanelWindow {
                 }
                 RowLayout {
                     Layout.alignment: Qt.AlignHCenter
-                    PopoverButton {
-                        text: "Previous"
+                    spacing: 16
+                    IconButton {
+                        glyphSize: 18
+                        text: "󰒮"
                         enabled: !!window.player && window.player.canGoPrevious
+                        Accessible.name: "Previous"
                         onClicked: window.controller.transport("previous")
                     }
-                    PopoverButton {
-                        text: window.player && window.player.isPlaying ? "Pause" : "Play"
+                    IconButton {
+                        glyphSize: 20
+                        text: window.player && window.player.isPlaying ? "󰏤" : "󰐊"
                         enabled: !!window.player && window.player.canTogglePlaying
+                        Accessible.name: window.player && window.player.isPlaying ? "Pause" : "Play"
                         onClicked: window.controller.transport("play-pause")
                     }
-                    PopoverButton {
-                        text: "Next"
+                    IconButton {
+                        glyphSize: 18
+                        text: "󰒭"
                         enabled: !!window.player && window.player.canGoNext
+                        Accessible.name: "Next"
                         onClicked: window.controller.transport("next")
                     }
                 }
@@ -175,6 +208,7 @@ PanelWindow {
                     }
                 }
             }
+        }
         }
     }
     Timer {

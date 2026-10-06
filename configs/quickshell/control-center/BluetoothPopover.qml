@@ -24,10 +24,10 @@ BarPopover {
             font.bold: true
             elide: Text.ElideRight
         }
-        PopoverButton {
+        ToggleSwitch {
             visible: !!root.adapter
-            text: root.adapter && root.adapter.enabled ? "Turn off" : "Turn on"
-            onClicked: root.setEnabled(!root.adapter.enabled)
+            checked: !!root.adapter && root.adapter.enabled
+            onToggled: root.setEnabled(checked)
             Accessible.name: "Bluetooth"
         }
         PopoverButton {
@@ -59,6 +59,7 @@ BarPopover {
         visible: !!root.adapter && root.adapter.enabled && root.adapter.devices.count > 0
         clip: true
         contentWidth: availableWidth
+        ScrollBar.vertical: ThemeScrollBar { }
 
         Column {
             width: deviceScroll.availableWidth
@@ -67,19 +68,65 @@ BarPopover {
             Repeater {
                 model: root.adapter ? root.adapter.devices : 0
 
-                PopoverButton {
+                Rectangle {
+                    id: deviceRow
                     required property var modelData
                     width: parent.width
-                    text: (modelData.connected ? "● " : "") + modelData.name
-                        + (modelData.batteryAvailable
-                            ? "   " + Math.round(modelData.battery * 100) + "%" : "")
-                    enabled: !modelData.pairing
-                        && modelData.state !== BluetoothDeviceState.Connecting
-                        && modelData.state !== BluetoothDeviceState.Disconnecting
-                    onClicked: {
-                        if (modelData.connected) modelData.disconnect();
-                        else if (modelData.paired) modelData.connect();
-                        else modelData.pair();
+                    height: 50
+                    radius: 8
+                    color: rowMouse.containsMouse ? Theme.border : Theme.surface
+                    border.width: deviceRow.modelData.connected ? 1 : 0
+                    border.color: Theme.accent
+                    opacity: deviceRow.modelData.pairing
+                        || deviceRow.modelData.state === BluetoothDeviceState.Connecting
+                        || deviceRow.modelData.state === BluetoothDeviceState.Disconnecting ? 0.6 : 1
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 8
+                        spacing: 8
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 1
+                            Label {
+                                Layout.fillWidth: true
+                                text: deviceRow.modelData.name
+                                textFormat: Text.PlainText
+                                color: Theme.foreground
+                                font.bold: true
+                                elide: Text.ElideRight
+                            }
+                            Label {
+                                text: deviceRow.modelData.pairing ? "Pairing…"
+                                    : deviceRow.modelData.connected ? "Connected"
+                                    : deviceRow.modelData.paired ? "Paired" : "Available"
+                                textFormat: Text.PlainText
+                                color: Theme.secondary
+                                font.pixelSize: 11
+                            }
+                        }
+                        Label {
+                            visible: deviceRow.modelData.batteryAvailable
+                            text: Math.round(deviceRow.modelData.battery * 100) + "%"
+                            textFormat: Text.PlainText
+                            color: Theme.secondary
+                        }
+                    }
+
+                    MouseArea {
+                        id: rowMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        enabled: !deviceRow.modelData.pairing
+                            && deviceRow.modelData.state !== BluetoothDeviceState.Connecting
+                            && deviceRow.modelData.state !== BluetoothDeviceState.Disconnecting
+                        onClicked: {
+                            if (deviceRow.modelData.connected) deviceRow.modelData.disconnect();
+                            else if (deviceRow.modelData.paired) deviceRow.modelData.connect();
+                            else deviceRow.modelData.pair();
+                        }
                     }
                 }
             }

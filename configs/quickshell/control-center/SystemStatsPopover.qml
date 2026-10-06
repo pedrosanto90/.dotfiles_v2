@@ -94,21 +94,12 @@ PanelWindow {
                         }
                     }
 
-                    Item {
+                    ThemeProgressBar {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 5
-
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: 3
-                            color: Theme.border
-                        }
-                        Rectangle {
-                            width: parent.width * Math.max(0, Math.min(100, modelData.value)) / 100
-                            height: parent.height
-                            radius: 3
-                            color: modelData.color
-                        }
+                        from: 0
+                        to: 100
+                        value: Math.max(0, Math.min(100, modelData.value))
+                        color: modelData.color
                     }
                 }
             }

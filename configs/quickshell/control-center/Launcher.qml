@@ -101,7 +101,7 @@ PanelWindow {
         width: Math.min(760, parent.width - 40)
         height: Math.min(610, parent.height - 100)
         anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: 70 }
-        radius: 14
+        radius: 12
         color: Theme.background
         border.color: Theme.border
 
@@ -112,8 +112,8 @@ PanelWindow {
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 18
-            spacing: 12
+            anchors.margins: 14
+            spacing: 10
 
             Label {
                 Layout.fillWidth: true
@@ -123,7 +123,7 @@ PanelWindow {
                 font.bold: true
             }
 
-            TextField {
+            ThemeField {
                 id: searchField
                 Layout.fillWidth: true
                 placeholderText: "Search applications…"
@@ -158,7 +158,7 @@ PanelWindow {
                 clip: true
                 spacing: 4
                 boundsBehavior: Flickable.StopAtBounds
-                ScrollBar.vertical: ScrollBar { }
+                ScrollBar.vertical: ThemeScrollBar { }
 
                 delegate: Rectangle {
                     id: applicationRow

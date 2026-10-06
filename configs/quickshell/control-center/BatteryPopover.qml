@@ -27,11 +27,13 @@ BarPopover {
         horizontalAlignment: Text.AlignHCenter
     }
 
-    ProgressBar {
+    ThemeProgressBar {
         Layout.fillWidth: true
         from: 0
         to: 100
         value: root.percentage
+        color: root.percentage <= 15 ? Theme.danger
+            : root.percentage <= 30 ? Theme.orange : Theme.accent
         Accessible.name: "Battery charge"
     }
 
