@@ -5,6 +5,7 @@ readonly MARKER='@keybind '
 mode="auto"
 scope=""
 source_root=""
+readonly shell_config="${XDG_CONFIG_HOME:-${HOME}/.config}/quickshell/control-center/shell.qml"
 
 usage() {
   cat <<'EOF'
@@ -16,6 +17,7 @@ Options:
   -s, --scope NAME   Filter by scope: sway, tmux, or neovim
   -t, --terminal     Use the fzf terminal interface
   -l, --list         Print the catalog without an interactive interface
+      --machine      Print tab-separated records for desktop integrations
       --root PATH    Read configs from a project checkout instead of ~/.config
   -h, --help         Show this help
 EOF
@@ -39,6 +41,10 @@ while (($#)); do
       ;;
     -l|--list)
       mode="list"
+      shift
+      ;;
+    --machine)
+      mode="machine"
       shift
       ;;
     --root)
@@ -89,7 +95,7 @@ discover_sources() {
   fi
 }
 
-build_catalog() {
+build_records() {
   local records
 
   records=$(
@@ -110,12 +116,20 @@ build_catalog() {
     [[ -n $records ]] || die "unknown or empty scope: $scope"
   fi
 
+  printf '%s\n' "$records"
+}
+
+format_catalog() {
   awk -F '|' '
     NF == 4 {
       scope = toupper(substr($1, 1, 1)) substr($1, 2)
       printf "%-8s  %-18s  %-25s  %s\n", scope, $2, $3, $4
     }
-  ' <<<"$records"
+  '
+}
+
+format_machine() {
+  awk -F '|' 'NF == 4 { printf "%s\t%s\t%s\t%s\n", $1, $2, $3, $4 }'
 }
 
 show_terminal() {
@@ -137,19 +151,35 @@ show_wofi() {
       --width 1100 --height 700 >/dev/null || true
 }
 
+open_quickshell() {
+  local quickshell_bin selected_scope
+  quickshell_bin=$(command -v quickshell || true)
+  [[ -n $quickshell_bin ]] || quickshell_bin="${HOME}/.local/bin/quickshell"
+  selected_scope=${scope:-all}
+  [[ -x $quickshell_bin && -f $shell_config ]] \
+    && timeout 2 "$quickshell_bin" ipc -p "$shell_config" call -- \
+      keybindings open "$selected_scope" >/dev/null 2>&1
+}
+
 discover_sources
 ((${#sources[@]})) || die "no installed or project configuration was found"
-catalog=$(build_catalog)
+records=$(build_records)
+catalog=$(format_catalog <<<"$records")
 
 case "$mode" in
   list)
     printf '%s\n' "$catalog"
     ;;
+  machine)
+    format_machine <<<"$records"
+    ;;
   terminal)
     show_terminal "$catalog"
     ;;
   auto)
-    if [[ -n ${WAYLAND_DISPLAY:-} ]] && command -v wofi >/dev/null 2>&1; then
+    if [[ -n ${WAYLAND_DISPLAY:-} ]] && open_quickshell; then
+      exit 0
+    elif [[ -n ${WAYLAND_DISPLAY:-} ]] && command -v wofi >/dev/null 2>&1; then
       show_wofi "$catalog"
     else
       show_terminal "$catalog"

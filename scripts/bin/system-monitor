@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly app_id='dev.debianswaydev.system-monitor'
+
+if command -v swaymsg >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 \
+  && swaymsg -t get_tree | jq -e --arg app_id "${app_id}" \
+    'any(.. | objects; .app_id? == $app_id)' >/dev/null; then
+  swaymsg "[app_id=\"${app_id}\"] focus" >/dev/null
+  exit 0
+fi
+
+monitor=$(command -v btop || command -v htop || true)
+if [[ -z ${monitor} ]]; then
+  printf 'system-monitor: neither btop nor htop is installed.\n' >&2
+  exit 1
+fi
+
+ghostty_bin=$(command -v ghostty || true)
+[[ -n ${ghostty_bin} ]] || ghostty_bin="${HOME}/.local/bin/ghostty"
+if [[ ! -x ${ghostty_bin} ]]; then
+  printf 'system-monitor: Ghostty is not installed.\n' >&2
+  exit 1
+fi
+
+command=(
+  "${ghostty_bin}"
+  --class="${app_id}"
+  --title='System Monitor'
+  -e "${monitor}"
+)
+
+if [[ ${SYSTEM_MONITOR_FOREGROUND:-0} == 1 ]]; then
+  exec "${command[@]}"
+fi
+
+setsid -f "${command[@]}" </dev/null >/dev/null 2>&1

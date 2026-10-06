@@ -289,16 +289,23 @@ The active desktop palette lives at
 `~/.config/debian-sway-dev/theme/current.json`. Quickshell watches this neutral
 palette directly. `theme-toggle` still maintains the legacy Waybar `colors.css`
 files as a compatibility source for tmux and the tiling selector; it does not
-start a Waybar process.
+start a Waybar process. It also generates a matching `btop` theme and asks any
+running `btop` instance to reload when the desktop theme changes.
 
 The Quickshell bar runs at the top of every screen and reserves 30 pixels of
-workspace. It includes Sway workspaces, clock, audio, battery, system tray, Pomodoro,
+workspace. It includes Sway workspaces, clock, a combined CPU/memory/disk monitor,
+audio, battery, system tray, Pomodoro,
 tiling layout, clipboard history, theme, caffeine, Control Center, and power
 controls. Audio, network, Bluetooth, and battery icons open click-only popups;
 only one popup is shown at a time, and it closes with `Escape` or a click outside.
 Advanced network, Bluetooth, and audio configuration remains available from the
 corresponding popup. The bar is visible when the shell starts. Show, hide, or
 toggle it through the shell IPC:
+
+Hover over the system monitor icon to see current CPU, memory, and root filesystem
+usage in a compact informational panel. The panel stays open while the pointer is
+over either the icon or the panel and does not take keyboard focus. Click the icon
+to open `btop` (or `htop` as a fallback) in a centered floating Ghostty window.
 
 ```bash
 quickshell ipc -p ~/.config/quickshell/control-center/shell.qml call -- shell showBar
@@ -361,10 +368,14 @@ sway-layout status            # Waybar JSON status
 
 ### Searchable keybinding reference
 
-Press `Super + F1` or run `keybindings` to open the complete project-defined keybinding catalog in Wofi. Search by key, action, category, or application. Selecting an entry never executes it; the menu is reference-only.
+Press `Super + F1` or run `keybindings` to open the complete project-defined
+keybinding catalog in a centered Quickshell panel. Search by key, action,
+category, or application; use `--scope` to open only Sway, tmux, or Neovim entries.
+Selecting an entry never executes it; the panel is reference-only. Wofi remains
+available as a fallback when Quickshell is unavailable.
 
 ```bash
-keybindings                         # Wofi in Sway, fzf in a terminal
+keybindings                         # Quickshell in Sway, Wofi as fallback
 keybindings --terminal              # force the fzf interface
 keybindings --list                  # print a non-interactive list
 keybindings --scope sway            # sway, tmux, or neovim only

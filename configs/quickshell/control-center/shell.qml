@@ -9,7 +9,7 @@ ShellRoot {
     id: root
     readonly property bool panelOpen: popupManager.activePopup === "control-center"
     readonly property string activePopup: popupManager.activePopup
-    readonly property var availablePopups: ["control-center", "audio", "network", "bluetooth", "battery", "clipboard", "theme", "tiling", "pomodoro", "power", "launcher"]
+    readonly property var availablePopups: ["control-center", "audio", "network", "bluetooth", "battery", "clipboard", "theme", "tiling", "pomodoro", "power", "keybindings", "launcher"]
     property string osdKind: ""
     property bool barVisible: true
     property var targetScreen: null
@@ -24,6 +24,7 @@ ShellRoot {
     property string brightnessDevice: ""
     property string brightnessError: ""
     property int pendingBrightness: -1
+    property string keybindingsScope: "all"
 
     PopupManager { id: popupManager }
 
@@ -62,6 +63,10 @@ ShellRoot {
     }
     function closePopups() {
         popupManager.closeAll();
+    }
+    function openKeybindings(scope) {
+        keybindingsScope = ["sway", "tmux", "neovim"].indexOf(scope) >= 0 ? scope : "all";
+        return openPopup("keybindings");
     }
     function show(kind) {
         if (["volume", "microphone", "brightness"].indexOf(kind) < 0) return;
@@ -128,6 +133,11 @@ ShellRoot {
         }
     }
 
+    IpcHandler {
+        target: "keybindings"
+        function open(scope: string): bool { return root.openKeybindings(scope); }
+    }
+
     Process {
         id: brightnessRead
         command: ["brightnessctl", "--class=backlight", "--machine-readable", "info"]
@@ -159,6 +169,7 @@ ShellRoot {
 
     ControlCenter { controller: root }
     Launcher { controller: root }
+    KeybindingsPopover { controller: root; barScreen: root.targetScreen; requestedScope: root.keybindingsScope }
     MediaOsd { controller: root }
     Bar { controller: root; shown: root.barVisible }
 }

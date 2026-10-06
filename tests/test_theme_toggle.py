@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import shutil
 import tempfile
 import unittest
 
@@ -21,6 +22,12 @@ class ThemeToggleTest(unittest.TestCase):
         config = root / "config/quickshell/control-center"
         config.mkdir(parents=True)
         (config / "shell.qml").touch()
+        palettes = root / "config/debian-sway-dev/theme/palettes"
+        palettes.mkdir(parents=True)
+        shutil.copy(
+            SCRIPT.parents[2] / "configs/debian-sway-dev/theme/palettes/tokyonight-dark.json",
+            palettes / "tokyonight-dark.json",
+        )
 
         quickshell = bin_dir / "quickshell"
         quickshell.write_text('''#!/usr/bin/python3
@@ -29,6 +36,9 @@ with open(os.environ["TEST_LOG"], "a") as log:
     log.write(json.dumps(sys.argv[1:]) + "\\n")
 ''')
         quickshell.chmod(0o755)
+        pkill = bin_dir / "pkill"
+        pkill.write_text("#!/usr/bin/env sh\nexit 0\n")
+        pkill.chmod(0o755)
 
         self.env = dict(
             os.environ,
@@ -60,6 +70,22 @@ with open(os.environ["TEST_LOG"], "a") as log:
         self.assertEqual(result.returncode, 0)
         calls = [json.loads(line) for line in self.log.read_text().splitlines()]
         self.assertEqual(calls[0][-3:], ["shell", "toggle", "theme"])
+
+    def test_btop_sync_generates_theme_and_preserves_config(self):
+        btop_dir = Path(self.env["XDG_CONFIG_HOME"]) / "btop"
+        btop_dir.mkdir(parents=True)
+        (btop_dir / "btop.conf").write_text(
+            'color_theme = "Default"\nupdate_ms = 1500\n'
+        )
+
+        result = self.run_script("btop-sync", "tokyonight-dark")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        theme = (btop_dir / "themes/debian-sway-dev.theme").read_text()
+        config = (btop_dir / "btop.conf").read_text()
+        self.assertIn('theme[main_bg]="#16161e"', theme)
+        self.assertIn('theme[hi_fg]="#7aa2f7"', theme)
+        self.assertIn('color_theme = "debian-sway-dev"', config)
+        self.assertIn("update_ms = 1500", config)
 
 
 if __name__ == "__main__":

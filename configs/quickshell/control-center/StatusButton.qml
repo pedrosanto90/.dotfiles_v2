@@ -5,6 +5,7 @@ Rectangle {
     property string text: ""
     property string tooltip: ""
     property color foregroundColor: Theme.foreground
+    readonly property alias hovered: pointerArea.containsMouse
     signal primaryClicked()
     signal secondaryClicked()
 
@@ -22,7 +23,9 @@ Rectangle {
     }
 
     MouseArea {
+        id: pointerArea
         anchors.fill: parent
+        hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: event => {

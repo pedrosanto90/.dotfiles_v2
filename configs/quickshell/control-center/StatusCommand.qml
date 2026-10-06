@@ -22,11 +22,10 @@ Scope {
                 if (output.length === 0) return;
                 try {
                     const parsed = JSON.parse(output);
-                    root.data = {
-                        text: String(parsed.text || ""),
-                        class: String(parsed.class || ""),
-                        tooltip: String(parsed.tooltip || "")
-                    };
+                    parsed.text = String(parsed.text || "");
+                    parsed.class = String(parsed.class || "");
+                    parsed.tooltip = String(parsed.tooltip || "");
+                    root.data = parsed;
                 } catch (error) {
                     console.warn("Could not parse status from", root.command[0], error);
                 }

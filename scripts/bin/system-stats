@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+"""Print lightweight CPU, memory, and root filesystem usage as JSON."""
+
+import json
+from pathlib import Path
+import shutil
+import time
+
+
+def read_cpu_times():
+    fields = Path("/proc/stat").read_text().splitlines()[0].split()[1:]
+    values = [int(value) for value in fields]
+    idle = values[3] + (values[4] if len(values) > 4 else 0)
+    return sum(values), idle
+
+
+def cpu_usage():
+    total_before, idle_before = read_cpu_times()
+    time.sleep(0.1)
+    total_after, idle_after = read_cpu_times()
+    elapsed = total_after - total_before
+    if elapsed <= 0:
+        return 0
+    return round(100 * (1 - (idle_after - idle_before) / elapsed))
+
+
+def memory_usage():
+    values = {}
+    for line in Path("/proc/meminfo").read_text().splitlines():
+        name, raw = line.split(":", 1)
+        values[name] = int(raw.split()[0]) * 1024
+    total = values["MemTotal"]
+    used = total - values.get("MemAvailable", values.get("MemFree", 0))
+    percentage = round(used * 100 / total) if total else 0
+    return used, total, percentage
+
+
+def main():
+    memory_used, memory_total, memory_percent = memory_usage()
+    disk = shutil.disk_usage("/")
+    disk_percent = round(disk.used * 100 / disk.total) if disk.total else 0
+    print(json.dumps({
+        "text": "",
+        "class": "system",
+        "tooltip": "System resources",
+        "cpu": cpu_usage(),
+        "memory": memory_percent,
+        "memoryUsed": memory_used,
+        "memoryTotal": memory_total,
+        "disk": disk_percent,
+        "diskUsed": disk.used,
+        "diskTotal": disk.total,
+    }, separators=(",", ":")))
+
+
+if __name__ == "__main__":
+    main()

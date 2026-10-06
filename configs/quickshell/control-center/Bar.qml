@@ -26,6 +26,7 @@ Scope {
     StatusCommand { id: layoutStatus; command: ["sway-layout", "status"]; interval: 2000 }
     StatusCommand { id: themeStatus; command: ["theme-toggle", "status"]; interval: 5000 }
     StatusCommand { id: caffeineStatus; command: ["caffeine-toggle", "status"]; interval: 5000 }
+    StatusCommand { id: systemStatsStatus; command: ["system-stats"]; interval: 2000 }
 
     Timer {
         id: refreshStatuses
@@ -104,6 +105,7 @@ Scope {
         PanelWindow {
             id: window
             required property var modelData
+            property bool systemStatsShown: false
             screen: modelData
             visible: root.shown
             anchors { left: true; right: true; top: true }
@@ -115,6 +117,32 @@ Scope {
             WlrLayershell.namespace: "dotfiles-bar"
             WlrLayershell.layer: WlrLayer.Top
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+
+            function showSystemStats() {
+                systemStatsClose.stop();
+                systemStatsOpen.restart();
+            }
+
+            function scheduleSystemStatsClose() {
+                systemStatsOpen.stop();
+                systemStatsClose.restart();
+            }
+
+            Timer {
+                id: systemStatsOpen
+                interval: 120
+                onTriggered: window.systemStatsShown = true
+            }
+
+            Timer {
+                id: systemStatsClose
+                interval: 280
+                onTriggered: {
+                    const panelHovered = systemStatsLoader.item && systemStatsLoader.item.hovered;
+                    if (!systemStatsButton.hovered && !panelHovered)
+                        window.systemStatsShown = false;
+                }
+            }
 
             Item {
                 anchors.fill: parent
@@ -182,6 +210,27 @@ Scope {
                     id: statusArea
                     anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
                     spacing: 2
+
+                    StatusButton {
+                        id: systemStatsButton
+                        height: statusArea.height
+                        text: systemStatsStatus.data.text
+                        tooltip: systemStatsStatus.data.tooltip
+                        foregroundColor: {
+                            const peak = Math.max(Number(systemStatsStatus.data.cpu || 0),
+                                Number(systemStatsStatus.data.memory || 0),
+                                Number(systemStatsStatus.data.disk || 0));
+                            return peak >= 90 ? Theme.danger : peak >= 75 ? Theme.warning : Theme.accent;
+                        }
+                        onHoveredChanged: {
+                            if (hovered) window.showSystemStats();
+                            else window.scheduleSystemStatsClose();
+                        }
+                        onPrimaryClicked: {
+                            window.systemStatsShown = false;
+                            root.run(["system-monitor"]);
+                        }
+                    }
 
                     Rectangle {
                         id: audioButton
@@ -353,6 +402,26 @@ Scope {
                         foregroundColor: Theme.danger
                         onPrimaryClicked: root.controller.togglePopupOnScreen("power", window.screen)
                         onSecondaryClicked: root.controller.togglePopupOnScreen("power", window.screen)
+                    }
+                }
+
+                LazyLoader {
+                    id: systemStatsLoader
+                    active: window.systemStatsShown
+                    SystemStatsPopover {
+                        shown: true
+                        barScreen: window.screen
+                        stats: systemStatsStatus.data
+                        rightOffset: Math.max(8,
+                            statusArea.width - systemStatsButton.x - systemStatsButton.width)
+                    }
+                }
+
+                Connections {
+                    target: systemStatsLoader.item
+                    function onHoveredChanged() {
+                        if (target.hovered) systemStatsClose.stop();
+                        else if (!systemStatsButton.hovered) systemStatsClose.restart();
                     }
                 }
 
