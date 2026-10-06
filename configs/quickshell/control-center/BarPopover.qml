@@ -10,6 +10,7 @@ PanelWindow {
     required property var barScreen
     required property string popupName
     required property string title
+    property int popupWidth: 380
     property int popupHeight: 320
     default property alias content: contentColumn.data
 
@@ -37,7 +38,7 @@ PanelWindow {
 
     Rectangle {
         id: card
-        width: 380
+        width: root.popupWidth
         height: Math.min(root.popupHeight, root.screen ? root.screen.height - 48 : root.popupHeight)
         anchors { top: parent.top; right: parent.right; topMargin: 6; rightMargin: 8 }
         radius: 12

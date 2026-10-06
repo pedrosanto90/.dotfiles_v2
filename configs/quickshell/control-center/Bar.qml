@@ -306,8 +306,8 @@ Scope {
                         text: layoutStatus.data.text
                         tooltip: layoutStatus.data.tooltip
                         foregroundColor: Theme.accent
-                        onPrimaryClicked: root.run(["sway-layout", "menu"])
-                        onSecondaryClicked: root.run(["sway-layout", "menu"])
+                        onPrimaryClicked: root.controller.togglePopupOnScreen("tiling", window.screen)
+                        onSecondaryClicked: root.controller.togglePopupOnScreen("tiling", window.screen)
                     }
 
                     StatusButton {
@@ -400,6 +400,14 @@ Scope {
                     active: root.controller.activePopup === "theme"
                         && root.controller.targetScreen === window.screen
                     ThemePopover {
+                        controller: root.controller
+                        barScreen: window.screen
+                    }
+                }
+                LazyLoader {
+                    active: root.controller.activePopup === "tiling"
+                        && root.controller.targetScreen === window.screen
+                    TilingPopover {
                         controller: root.controller
                         barScreen: window.screen
                     }

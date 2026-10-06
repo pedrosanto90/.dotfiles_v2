@@ -7,4 +7,20 @@ if [[ -f ${source_root}/configs/sway/tiling.py ]]; then
 else
   backend="${XDG_CONFIG_HOME:-${HOME}/.config}/sway/tiling.py"
 fi
-exec /usr/bin/python3 "${backend}" "${@:-menu}"
+
+action=${1:-menu}
+if [[ ${action} == menu ]]; then
+  config="${XDG_CONFIG_HOME:-${HOME}/.config}/quickshell/control-center/shell.qml"
+  quickshell_bin=$(command -v quickshell || true)
+  [[ -n ${quickshell_bin} ]] || quickshell_bin="${HOME}/.local/bin/quickshell"
+  if [[ -x ${quickshell_bin} && -f ${config} ]] \
+    && timeout 2 "${quickshell_bin}" ipc -p "${config}" call -- shell toggle tiling \
+      >/dev/null 2>&1; then
+    exit 0
+  fi
+  set -- menu-fallback
+elif (( $# == 0 )); then
+  set -- menu-fallback
+fi
+
+exec /usr/bin/python3 "${backend}" "$@"

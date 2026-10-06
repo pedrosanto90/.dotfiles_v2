@@ -9,7 +9,7 @@ ShellRoot {
     id: root
     readonly property bool panelOpen: popupManager.activePopup === "control-center"
     readonly property string activePopup: popupManager.activePopup
-    readonly property var availablePopups: ["control-center", "audio", "network", "bluetooth", "battery", "clipboard", "theme", "launcher"]
+    readonly property var availablePopups: ["control-center", "audio", "network", "bluetooth", "battery", "clipboard", "theme", "tiling", "launcher"]
     property string osdKind: ""
     property bool barVisible: true
     property var targetScreen: null

@@ -242,8 +242,16 @@ def watch(ipc):
 
 
 def active_workspace(ipc):
-    focused = ipc.get_tree().find_focused()
+    tree = ipc.get_tree()
+    focused = tree.find_focused()
     workspace = focused.workspace() if focused else None
+    if workspace is None:
+        focused_workspace = next(
+            (item for item in ipc.get_workspaces() if item.focused), None)
+        if focused_workspace is not None:
+            workspace = next(
+                (item for item in tree.workspaces()
+                 if item.name == focused_workspace.name), None)
     if workspace is None:
         raise RuntimeError("Não foi possível identificar o workspace atual.")
     return workspace
@@ -257,6 +265,24 @@ def status(ipc):
         "text": "󰕰" if preset == "alternate" else f"󰕰 {label}",
         "tooltip": f"Layout: {label}\nWorkspace {workspace.name}\nClicar para escolher um padrão",
         "class": preset,
+    }, ensure_ascii=False))
+
+
+def list_presets(ipc):
+    workspace = active_workspace(ipc)
+    print(json.dumps({
+        "workspace": workspace.name,
+        "selected": choice(workspace),
+        "presets": [
+            {
+                "id": preset,
+                "label": label,
+                "description": description,
+                "columns": columns,
+                "count": count,
+            }
+            for preset, (label, description, columns, count) in PRESETS.items()
+        ],
     }, ensure_ascii=False))
 
 
@@ -348,7 +374,7 @@ def menu(ipc):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=("menu", "status", "watch", "apply"), nargs="?", default="menu")
+    parser.add_argument("action", choices=("menu", "menu-fallback", "status", "list", "watch", "apply"), nargs="?", default="menu")
     parser.add_argument("preset", choices=PRESETS, nargs="?")
     args = parser.parse_args()
     if args.action == "apply" and not args.preset:
@@ -361,7 +387,8 @@ def main():
         save_choice(workspace, args.preset)
         arrange(ipc, workspace.id, args.preset)
     else:
-        {"menu": menu, "status": status, "watch": watch}[args.action](ipc)
+        {"menu": menu, "menu-fallback": menu, "status": status,
+         "list": list_presets, "watch": watch}[args.action](ipc)
 
 
 if __name__ == "__main__":

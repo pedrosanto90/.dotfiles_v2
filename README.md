@@ -323,7 +323,7 @@ opens the same popup and retains Wofi as a fallback.
 
 ### Automatic window tiling
 
-Click the layout icon in the Quickshell bar to open a two-column picker with SVG previews. Select a preset to immediately arrange the current workspace. Each workspace remembers its own choice across sessions; new windows, closed windows, and windows moved between workspaces update the selected grid automatically.
+Click the layout icon in the Quickshell bar to open a native two-column picker with live QML previews. Select a preset to immediately arrange the current workspace. Each workspace remembers its own choice across sessions; new windows, closed windows, and windows moved between workspaces update the selected grid automatically. Running `sway-layout menu` opens the same popover and falls back to the illustrated Wofi picker when Quickshell is unavailable.
 
 | Preset (columns × rows) | Reference window count |
 | --- | --- |
@@ -339,7 +339,7 @@ Window counts are examples, not limits: fewer windows expand to use the availabl
 
 The **Alternado** option preserves the original default: the second window opens to the right of the first, the third below the second, the fourth to the right of the third, and so on. Each new window subdivides the last tile, even when another window is focused.
 
-Floating and scratchpad windows are excluded. Manually selected tabbed/stacking layouts are left alone until a preset is chosen again. `sway-autotiling` starts with Sway and prevents duplicate listeners on reload. The selector uses Wofi, Python's `i3ipc` package, and SVG support from `librsvg2-common`. Choices are stored in `~/.local/state/debian-sway-dev/tiling.json`.
+Floating and scratchpad windows are excluded. Manually selected tabbed/stacking layouts are left alone until a preset is chosen again. `sway-autotiling` starts with Sway and prevents duplicate listeners on reload. The layout backend uses Python's `i3ipc` package; Wofi and SVG support remain available only for the fallback picker. Choices are stored in `~/.local/state/debian-sway-dev/tiling.json`.
 
 ```bash
 sway-layout menu              # illustrated picker
