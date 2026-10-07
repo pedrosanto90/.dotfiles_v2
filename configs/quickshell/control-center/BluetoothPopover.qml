@@ -10,6 +10,17 @@ BarPopover {
     title: "Bluetooth"
     popupHeight: 410
     readonly property var adapter: Bluetooth.defaultAdapter
+    // Quickshell's ObjectModel exposes entries through `values`; it has no
+    // `count`, so reading `.count` silently yields undefined and hides the
+    // whole list. Connected devices sort first, then paired, then the rest.
+    readonly property var devices: {
+        const list = root.adapter ? [...root.adapter.devices.values] : [];
+        list.sort((a, b) => {
+            const rank = device => device.connected ? 0 : device.paired ? 1 : 2;
+            return rank(a) - rank(b) || a.name.localeCompare(b.name);
+        });
+        return list;
+    }
 
     function setEnabled(enabled) {
         Quickshell.execDetached(["bluetooth-toggle", enabled ? "on" : "off"]);
@@ -47,16 +58,18 @@ BarPopover {
 
     Label {
         Layout.fillWidth: true
-        visible: !!root.adapter && root.adapter.enabled && root.adapter.devices.count === 0
-        text: "Searching for devices…"
+        visible: !!root.adapter && root.adapter.enabled && root.devices.length === 0
+        text: root.adapter && root.adapter.discovering
+            ? "Scanning for devices…" : "No devices found. Tap Scan to search."
         color: Theme.secondary
+        wrapMode: Text.WordWrap
     }
 
     ScrollView {
         id: deviceScroll
         Layout.fillWidth: true
         implicitHeight: 230
-        visible: !!root.adapter && root.adapter.enabled && root.adapter.devices.count > 0
+        visible: !!root.adapter && root.adapter.enabled && root.devices.length > 0
         clip: true
         contentWidth: availableWidth
         ScrollBar.vertical: ThemeScrollBar { }
@@ -66,7 +79,7 @@ BarPopover {
             spacing: 4
 
             Repeater {
-                model: root.adapter ? root.adapter.devices : 0
+                model: root.devices
 
                 Rectangle {
                     id: deviceRow

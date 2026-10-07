@@ -348,7 +348,8 @@ Scope {
                         id: bluetoothButton
                         height: statusArea.height
                         text: root.bluetoothAdapter && root.bluetoothAdapter.enabled ? "󰂯" : "󰂲"
-                        foregroundColor: Bluetooth.devices.count > 0 ? Theme.accent : Theme.muted
+                        foregroundColor: Bluetooth.devices.values.some(
+                            device => device.connected) ? Theme.accent : Theme.muted
                         onPrimaryClicked: root.controller.togglePopupOnScreen("bluetooth", window.screen)
                         onSecondaryClicked: root.controller.togglePopupOnScreen("bluetooth", window.screen)
                     }
