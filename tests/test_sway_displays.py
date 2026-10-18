@@ -11,13 +11,13 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts/bin/sway-displays"
 
 
-def output(name, width=1920, *, active=True):
+def output(name, width=1920, *, active=True, x=0, y=0):
     return {
         "name": name,
         "active": active,
         "scale": 1,
         "current_mode": {"width": width, "height": 1080, "refresh": 60000},
-        "rect": {"x": 0, "y": 0, "width": width, "height": 1080},
+        "rect": {"x": x, "y": y, "width": width, "height": 1080},
     }
 
 
@@ -86,7 +86,6 @@ sys.exit(0)
             "apply", outputs=[output("eDP-1", 1920), output("DP-1", 2560)])
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(commands, [
-            "output eDP-1 position 0 0",
             "output DP-1 position 1920 0",
             "workspace 1 output DP-1",
             "workspace 2 output DP-1",
@@ -101,7 +100,6 @@ sys.exit(0)
             "apply", outputs=[output("eDP-1", 1920), output("HDMI-A-1", 1366)])
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(commands, [
-            "output eDP-1 position 0 0",
             "output HDMI-A-1 position 1920 0",
             "workspace 1 output HDMI-A-1",
             "workspace 2 output HDMI-A-1",
@@ -118,7 +116,6 @@ sys.exit(0)
                      output("HDMI-A-1", 1920)])
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(commands, [
-            "output HDMI-A-1 position 0 0",
             "output DP-1 position 1920 0",
             "output eDP-1 position 4480 0",
             "workspace 1 output DP-1",
@@ -129,6 +126,30 @@ sys.exit(0)
             "workspace 6 output HDMI-A-1",
             "workspace 10 output eDP-1",
         ])
+
+    def test_settled_layout_does_not_reconfigure_outputs(self):
+        layouts = [
+            [output("eDP-1"), output("DP-1", x=1920)],
+            [output("eDP-1"), output("HDMI-A-1", x=1920)],
+            [output("HDMI-A-1"), output("DP-1", 2560, x=1920),
+             output("eDP-1", x=4480)],
+        ]
+        for monitors in layouts:
+            with self.subTest(outputs=[monitor["name"] for monitor in monitors]):
+                result, commands = self.run_script(
+                    "apply", outputs=monitors, workspaces=[workspace(3, "eDP-1")])
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertFalse(any(command.startswith("output ") for command in commands))
+                self.assertTrue(any("workspace 3 output" in command for command in commands))
+                self.assertTrue(any(command.startswith('[workspace="3"] move')
+                                    for command in commands))
+
+    def test_corrects_vertical_position_even_when_horizontal_position_matches(self):
+        result, commands = self.run_script(
+            "apply", outputs=[output("eDP-1", y=1080), output("DP-1", x=1920)])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual([command for command in commands if command.startswith("output ")],
+                         ["output eDP-1 position 0 0"])
 
     def test_triple_moves_workspace_six_to_hdmi(self):
         result, commands = self.run_script(

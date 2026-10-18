@@ -47,17 +47,20 @@ compute_layout() {
   MOVE_CMDS=()
   FOCUS_CMDS=()
 
-  local name width hdmi="" dp="" internal=""
-  while IFS=$'\t' read -r name width; do
+  local -A current_position=()
+  local name width x y hdmi="" dp="" internal=""
+  while IFS=$'\t' read -r name width x y; do
     [[ -n ${name} ]] || continue
     WIDTH[${name}]=${width:-0}
+    current_position[${name}]="${x} ${y}"
     case ${name} in
       eDP*) internal=${name} ;;
       HDMI*) hdmi=${name} ;;
       DP*) dp=${name} ;;
     esac
   done < <(jq -r '.[] | select(.active) |
-    [.name, (((.current_mode.width // 0) / (.scale // 1)) | floor)] | @tsv' <<<"${outputs}")
+    [.name, (((.current_mode.width // 0) / (.scale // 1)) | floor),
+     .rect.x, .rect.y] | @tsv' <<<"${outputs}")
   INTERNAL=${internal}
 
   if [[ -n ${internal} && -n ${hdmi} && -n ${dp} ]]; then
@@ -84,6 +87,16 @@ compute_layout() {
     MODE=external-only
     PRIMARY=${dp:-${hdmi}}
   fi
+
+  # Reapplying an unchanged position emits output events and feeds the watcher.
+  local cmd keyword
+  local -a pending_positions=()
+  for cmd in ${POSITION_CMDS[@]+"${POSITION_CMDS[@]}"}; do
+    read -r keyword name keyword x y <<<"${cmd}"
+    [[ ${current_position[${name}]} == "${x} ${y}" ]] \
+      || pending_positions+=("${cmd}")
+  done
+  POSITION_CMDS=("${pending_positions[@]}")
 
   local n
   if [[ -n ${PRIMARY} ]]; then
