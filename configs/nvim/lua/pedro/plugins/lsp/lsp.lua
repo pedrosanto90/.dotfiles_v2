@@ -107,6 +107,7 @@ return {
 
 		-- LSP servers (jdtls is configured separately in jdtls.lua)
 		local servers = {
+			astro = {},
 			bashls = {},
 			marksman = {},
 			clangd = {},

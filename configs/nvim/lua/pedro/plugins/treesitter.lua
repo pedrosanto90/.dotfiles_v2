@@ -15,6 +15,7 @@ return {
 				"markdown_inline",
 				"python",
 				"html",
+				"astro",
 				"javascript",
 				"typescript",
 				"tsx",
