@@ -1,10 +1,11 @@
 # Ghostty — the optional generated file switches between installed theme families.
-font-family = JetBrainsMono Nerd Font
-font-size = 14
+# font-family = JetBrainsMono Nerd Font
+font-family = Courier Prime
+font-size = 12
 font-feature = -calt, -liga, -dlig
 theme = light:TokyoNight Day,dark:TokyoNight Night
 config-file = ?current-theme.conf
-background-opacity = 0.80
+background-opacity = 0.95
 cursor-style = block
 cursor-style-blink = false
 shell-integration = zsh

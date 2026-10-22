@@ -8,6 +8,7 @@ readonly EVERFOREST_GTK_COMMIT="9b8be4d6648ae9eaae3dd550105081f8c9054825"
 readonly CATPPUCCIN_GTK_COMMIT="a0f69cc33299dc97267c3507fe8a001aecc46b0f"
 readonly GRUVBOX_GTK_COMMIT="578cd220b5ff6e86b078a6111d26bb20ec8c733f"
 readonly NIGHTFOX_GTK_COMMIT="f0212f2aa0d3d6cc0b313020d2d0122f313eafc9"
+readonly COURIER_PRIME_COMMIT="7204f5a9b1e530633e00c67bd4954ceb7d8c2483"
 
 install_docker_engine() {
   local architecture key_tmp sources_tmp repository_changed=0 package packages_missing=0
@@ -541,5 +542,22 @@ install_nerd_font() {
   unzip -q "${archive}" -d "${temp_dir}"
   mkdir -p "${font_dir}"
   find "${temp_dir}" -maxdepth 1 -type f -name '*.ttf' -exec install -m 0644 -t "${font_dir}" {} +
+  fc-cache -f "${font_dir}"
+}
+
+install_courier_prime_font() {
+  local font_dir="${HOME}/.local/share/fonts/CourierPrime" file temporary
+  mkdir -p "${font_dir}"
+  for file in CourierPrime-Regular.ttf CourierPrime-Bold.ttf CourierPrime-Italic.ttf CourierPrime-BoldItalic.ttf OFL.txt; do
+    [[ -s ${font_dir}/${file} ]] && continue
+    temporary=$(mktemp "${CACHE_HOME}/courier-prime.XXXXXX")
+    download "https://raw.githubusercontent.com/google/fonts/${COURIER_PRIME_COMMIT}/ofl/courierprime/${file}" "${temporary}"
+    if [[ ${file} == *.ttf ]]; then
+      [[ $(fc-scan --format '%{family}' "${temporary}") == 'Courier Prime' ]] ||
+        die "Invalid Courier Prime font: ${file}"
+    fi
+    install -m 0644 "${temporary}" "${font_dir}/${file}"
+    rm -f -- "${temporary}"
+  done
   fc-cache -f "${font_dir}"
 }

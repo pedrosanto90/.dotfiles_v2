@@ -48,6 +48,7 @@ main() {
   install_kanagawa_gtk_theme
   install_additional_gtk_themes
   install_nerd_font
+  install_courier_prime_font
 
   log_step "Deploy configurations with backups"
   deploy_configs

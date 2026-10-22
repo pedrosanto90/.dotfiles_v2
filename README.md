@@ -26,7 +26,7 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 - Repository-managed VSCodium settings, keybindings, and extension inventory
 - Thunar, Yazi, Gwenview/Zathura image and PDF viewing, persistent clipboard history, screenshots, and USB automounting
 - Searchable Sway, tmux, and Neovim keybinding reference
-- Tokyo Night and Kanagawa palettes, Papirus icons, and JetBrainsMono Nerd Font
+- Tokyo Night and Kanagawa palettes, Papirus icons, Courier Prime, and JetBrainsMono Nerd Font
 - Synchronized light/dark theme families for GTK, Quickshell, Ghostty, and Neovim
 - Pomodoro timer in the Quickshell bar with a GTK4 menu (spinners for the durations), and actionable Mako notifications
 - Clipboard history for text and images, available from the Quickshell bar through Wofi
@@ -146,6 +146,9 @@ Software outside Debian and its source:
 | Starship | Official installer targeting `~/.local/bin` |
 | uv | Official Astral installer targeting `~/.local/bin` |
 | JetBrainsMono Nerd Font | Official `ryanoasis/nerd-fonts` release |
+| Courier Prime | Pinned Google Fonts commit; regular, bold, italic, and bold italic |
+
+Ghostty uses Courier Prime at 12 pt with 95% background opacity. JetBrainsMono Nerd Font remains installed for the desktop and can be selected using the commented line in `configs/ghostty/config`. Courier Prime is installed under `~/.local/share/fonts/CourierPrime`, including its OFL license.
 
 The installer deploys `/etc/brave/policies/managed/debian-sway-dev-pwas.json` through `scripts/system/install-brave-pwas.sh`. Brave then installs Webex, Excalidraw, WhatsApp Web, Amália, Notion, Telegram Web, Spotify, and ChatGPT as windowed PWAs for each Brave profile. ChatGPT is not installed as a native Debian package. Restart Brave after the first installation so it can process the policy and create the application launchers.
 
