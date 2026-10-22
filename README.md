@@ -206,7 +206,7 @@ Global TypeScript packages are intentionally omitted, with the exception of the 
 | Media keys | Volume, mute, microphone, and playback controls |
 | Brightness keys | Increase or decrease brightness by 5% |
 
-The tmux prefix is `Ctrl+J`. Follow it with `h/j/k/l` to navigate panes, `r` to reload the configuration, or `f` to open the session selector. Its status bar, messages, selection mode, window states, and pane borders follow the active system palette automatically. From the Zsh prompt, `Ctrl+F` opens the same selector directly.
+The tmux prefix is `Ctrl+J`. Follow it with `h/j/k/l` to navigate panes, `r` to reload the configuration, or `f` to open the session selector. Use `Ctrl+J g`, then `q/w/e/r/t/y/u/i/o/p`, to select windows 1–10; the default `Ctrl+J 0…9` shortcuts remain available. Its status bar, messages, selection mode, window states, and pane borders follow the active system palette automatically. From the Zsh prompt, `Ctrl+F` opens the same selector directly.
 
 ### Quickshell Control Center
 
