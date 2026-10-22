@@ -14,6 +14,7 @@ A complete, minimalist, keyboard-first development environment for **Debian 13 S
 - Framework-free Zsh with Starship, fzf, zoxide, GitHub CLI, and a small alias set
 - Latest stable Neovim built from official source, with modular Tokyo Night and Kanagawa themes
 - Docker Engine with CLI, Buildx, and Compose; no Docker Desktop and no `sudo` for daily use
+- QEMU/KVM, libvirt, and virt-manager for Linux and Windows VMs, with UEFI, virtual TPM, and SPICE consoles
 - Node.js LTS through NVM, npm, Corepack, pnpm, and Yarn
 - Codex CLI (OpenAI) through npm and opencode through its official installer
 - Official stable Go toolchain and Python with venv, pip, pipx, and uv
@@ -163,6 +164,30 @@ After updating the repository, rerun `./install.sh` to install the added GTK the
 The theme selector writes the matching theme directly to VSCodium, so family and mode changes remain reliable under Sway even when automatic desktop-theme detection is unavailable. Only Tokyo Night's dark variants enforce a black application background; every other family keeps its original palette. Its user settings and keybindings are deployed from `configs/vscodium`, with the same backup and idempotency guarantees as the other managed files. The installer reads `configs/vscodium/extensions.txt` and installs every missing extension from Open VSX. Extensions unavailable from Open VSX are reported without aborting the rest of the installation. Some proprietary Microsoft extensions can reject non-Microsoft builds at runtime, even when already present locally. The shell aliases `code` to `codium`, so existing terminal habits continue to work without installing Visual Studio Code. No Settings Sync sign-in is required.
 
 Docker Engine starts automatically at boot. The installer adds the current user to the `docker` group and verifies Engine, Buildx, and Compose through that group. The membership is visible to normal applications after the reboot requested at the end of installation. Membership of the `docker` group grants root-level control over the machine; only trusted users should be added to it.
+
+## Virtual machines
+
+The installer always installs QEMU/KVM, libvirt, virt-manager, disk tools, UEFI firmware, virtual TPM tools, and SPICE support from Debian 13. It selects `qemu-system-x86` and OVMF on `amd64`, or `qemu-system-arm` and `qemu-efi-aarch64` on `arm64`. KVM accelerates guests using the host's native architecture; guests of another architecture require emulation and an appropriate additional QEMU package.
+
+The current user is added to Debian's `libvirt` group. Log out and back in before opening **Virtual Machine Manager** from the application launcher (`Super + D`), or run `virt-manager`. Use the **QEMU/KVM system** connection (`qemu:///system`). The installer enables `libvirtd.socket` for on-demand access and verifies the connection through `sg libvirt` without waiting for a new login.
+
+When creating the first VM, select the NAT network **default** and allow virt-manager to start it if prompted. The installer does not start networks or change their autostart settings. It does not create VMs, download ISOs, open virt-manager, or modify existing VMs, custom networks, bridges, or firewall rules manually. Re-running it installs missing packages and checks access while preserving those configurations.
+
+For Windows 11, enable **Customize configuration before install**, choose UEFI firmware, and add an **Emulated TPM** with version **2.0**. Use a SPICE display for the graphical console. Windows VirtIO storage and network drivers are installed separately inside the guest; obtain the VirtIO driver ISO when preparing the Windows installation.
+
+If `/dev/kvm` is missing, installation continues with a warning. Check virtualization settings in BIOS/UEFI, CPU support, kernel KVM modules, or nested virtualization when this host is itself a VM. QEMU emulation remains available but is slower. Diagnose connection, firmware, TPM, and network availability with:
+
+```bash
+id -nG
+systemctl status libvirtd.socket libvirtd.service
+journalctl -b -u libvirtd
+virsh -c qemu:///system list --all
+virsh -c qemu:///system net-list --all
+virsh -c qemu:///system domcapabilities
+ls -l /dev/kvm
+```
+
+Before a new login, use `sg libvirt -c 'virsh -c qemu:///system list --all'` to check access. A connection failure aborts installation with a diagnostic message.
 
 ## Languages
 
@@ -633,6 +658,8 @@ If screen sharing does not appear in an application, fully close that applicatio
 ## Official references
 
 - [Debian 13 trixie](https://www.debian.org/releases/trixie/)
+- [Debian libvirt system deployment](https://packages.debian.org/trixie/libvirt-daemon-system)
+- [Debian libvirtd service and socket files](https://packages.debian.org/trixie/amd64/libvirt-daemon/filelist)
 - [greetd manual](https://manpages.debian.org/trixie/greetd/greetd.1.en.html)
 - [Debian wlgreet package](https://packages.debian.org/trixie/wlgreet)
 - [Debian NetworkManager OpenVPN plugin](https://packages.debian.org/trixie/network-manager-openvpn-gnome)

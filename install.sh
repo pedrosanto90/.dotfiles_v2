@@ -59,10 +59,12 @@ main() {
   configure_gtk_theme
   install_vscodium_extensions
   configure_docker_access
+  configure_libvirt_access
 
   log_step "Enable services"
   enable_services
   verify_docker_installation
+  verify_libvirt_installation
 
   log_success "Installation complete"
   if (( USE_GREETD == 1 )); then

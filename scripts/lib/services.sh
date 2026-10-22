@@ -59,6 +59,7 @@ enable_services() {
   enable_system_service udisks2.service
   enable_system_service containerd.service
   enable_system_service docker.service
+  enable_system_service libvirtd.socket
   enable_user_service pipewire.socket
   enable_user_service pipewire-pulse.socket
   enable_user_service wireplumber.service
@@ -73,4 +74,24 @@ verify_docker_installation() {
   docker buildx version >/dev/null
   sg docker -c 'docker info --format "Docker Engine {{.ServerVersion}} is ready"'
   log_success "Docker Engine, CLI, Buildx, and Compose work without sudo."
+}
+
+verify_libvirt_installation() {
+  local command architecture
+  for command in virsh virt-manager qemu-img swtpm swtpm_setup sg; do
+    require_command "${command}"
+  done
+  architecture=$(dpkg --print-architecture)
+  case ${architecture} in
+    amd64) require_command qemu-system-x86_64 ;;
+    arm64) require_command qemu-system-aarch64 ;;
+    *) die "Unsupported QEMU/KVM host architecture: ${architecture}" ;;
+  esac
+  if ! sg libvirt -c 'virsh -c qemu:///system list --all'; then
+    die "Could not connect to qemu:///system through the libvirt group; check systemctl status libvirtd.socket libvirtd.service and journalctl -b -u libvirtd."
+  fi
+  if [[ ! -e /dev/kvm ]]; then
+    log_warn "/dev/kvm is unavailable; check virtualization support in BIOS/UEFI and hardware (or nested virtualization on a VM host). Guests can use slower QEMU emulation."
+  fi
+  log_success "QEMU, libvirt, virt-manager, and virtual TPM tools are installed; qemu:///system works without sudo."
 }

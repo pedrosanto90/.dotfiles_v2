@@ -155,3 +155,15 @@ configure_docker_access() {
     log_info "${current_user} already belongs to the docker group."
   fi
 }
+
+configure_libvirt_access() {
+  local current_user
+  current_user=$(id -un)
+  getent group libvirt >/dev/null 2>&1 || die "The Debian libvirt group is missing; check libvirt-daemon-system."
+  if ! id -nG "${current_user}" | tr ' ' '\n' | grep -qx libvirt; then
+    "${SUDO[@]}" usermod --append --groups libvirt "${current_user}"
+    log_info "Added ${current_user} to the libvirt group; log out and back in to apply the new membership."
+  else
+    log_info "${current_user} already belongs to the libvirt group."
+  fi
+}

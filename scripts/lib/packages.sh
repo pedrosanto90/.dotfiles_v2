@@ -30,6 +30,8 @@ readonly DEBIAN_PACKAGES=(
   libgtk-4-dev libgtk4-layer-shell-dev libadwaita-1-dev libxml2-utils
   ca-certificates gnupg util-linux procps dbus-user-session libpam-systemd
   tree-sitter-cli
+  libvirt-daemon-system qemu-utils virt-manager swtpm swtpm-tools
+  qemu-system-modules-spice gir1.2-spiceclientgtk-3.0
 )
 
 readonly GREETD_PACKAGES=(greetd wlgreet)
@@ -41,9 +43,16 @@ apt_update_once() {
 }
 
 install_debian_packages() {
-  local package
+  local package architecture
   local -a requested=("${DEBIAN_PACKAGES[@]}")
   local -a missing=()
+
+  architecture=$(dpkg --print-architecture)
+  case ${architecture} in
+    amd64) requested+=(qemu-system-x86 ovmf) ;;
+    arm64) requested+=(qemu-system-arm qemu-efi-aarch64) ;;
+    *) die "Unsupported QEMU/KVM host architecture: ${architecture}" ;;
+  esac
 
   if (( USE_GREETD == 1 )); then
     requested+=("${GREETD_PACKAGES[@]}")
