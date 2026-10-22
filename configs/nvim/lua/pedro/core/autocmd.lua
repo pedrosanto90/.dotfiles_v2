@@ -6,24 +6,6 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 	end,
 })
 
--- when nvim is opened with a directory arg (e.g. `nvim .`), open Telescope find_files
-vim.api.nvim_create_autocmd("VimEnter", {
-	callback = function()
-		if vim.fn.argc() ~= 1 then
-			return
-		end
-		local arg = vim.fn.argv(0)
-		if vim.fn.isdirectory(arg) ~= 1 then
-			return
-		end
-		vim.cmd.cd(arg)
-		vim.cmd("bd!")
-		vim.schedule(function()
-			require("telescope.builtin").find_files()
-		end)
-	end,
-})
-
 -- restore cursor to file position in previous editing session
 vim.api.nvim_create_autocmd("BufReadPost", {
 	callback = function(args)
