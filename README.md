@@ -64,6 +64,10 @@ After installation:
 4. Reboot the machine.
 5. Enter your username and password in the Tokyo Night wlgreet screen. If the installer preserved an existing display manager, select Sway from its session menu first.
 
+For local Neovim editing of SSHFS-mounted remote projects, see the
+[remote project explorer guide](configs/nvim/REMOTE-SSH.md). The installer includes
+SSHFS; `<leader>rp` opens the SSH host and remote directory pickers.
+
 ### Safety and idempotency
 
 Every destination is compared before deployment. Identical files remain untouched. A different existing file is first copied to:

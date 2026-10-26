@@ -4,7 +4,7 @@ readonly DEBIAN_PACKAGES=(
   sway swaybg swayidle swaylock waybar wofi nwg-displays mako-notifier
   zsh fzf zoxide tmux
   git gh lazygit curl wget unzip zip jq ripgrep fd-find bat eza tree htop btop file fastfetch
-  openssh-client build-essential pkg-config cmake make ninja-build gettext xz-utils
+  openssh-client sshfs build-essential pkg-config cmake make ninja-build gettext xz-utils
   python3 python3-pip python3-venv python3-dev python3-i3ipc pipx
   php composer libapache2-mod-php
   thunar thunar-archive-plugin gvfs gvfs-backends evolution gwenview qt6-wayland zathura
