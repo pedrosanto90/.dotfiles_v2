@@ -26,7 +26,6 @@ return {
 				"jsdoc",
 				"angular",
 				"htmldjango",
-				"java",
 				"xml",
 				"bash",
 				"yaml",

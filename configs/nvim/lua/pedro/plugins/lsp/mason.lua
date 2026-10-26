@@ -19,7 +19,6 @@ return {
             ensure_installed = {
                 "prettier",
                 "stylua",
-                "jdtls",
             },
         })
     end,

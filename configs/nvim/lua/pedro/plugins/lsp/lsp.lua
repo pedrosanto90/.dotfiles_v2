@@ -105,7 +105,7 @@ return {
 
 		local capabilities = require("blink.cmp").get_lsp_capabilities()
 
-		-- LSP servers (jdtls is configured separately in jdtls.lua)
+		-- LSP servers
 		local servers = {
 			astro = {},
 			bashls = {},
@@ -121,7 +121,6 @@ return {
 			cssls = {},
 			tailwindcss = {},
 			gopls = {},
-			ruby_lsp = {},
 		}
 
 		vim.lsp.config("*", { capabilities = capabilities })
