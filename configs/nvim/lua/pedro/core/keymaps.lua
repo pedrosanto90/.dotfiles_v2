@@ -10,6 +10,7 @@ vim.g.mapleader = " "
 -- @keybind neovim|Files|Space F P|Copy the current file path
 -- @keybind neovim|Windows|Ctrl+H/J/K/L|Move focus between windows
 -- @keybind neovim|Git|Space G L|Open LazyGit in a terminal tab
+-- @keybind neovim|Buffers|Space B D|Close the current buffer
 
 -- global keymaps
 vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv", { desc = "moves lines down in visual selection" })
@@ -28,6 +29,7 @@ vim.keymap.set("v", ">", ">gv", opts)
 vim.keymap.set("n", "<leader>e", ":Neotree toggle<CR>", { desc = "Toggle Neo-tree" })
 
 vim.keymap.set("n", "<leader>gl", "<cmd>tabnew<CR><cmd>terminal lazygit<CR><cmd>startinsert<CR>", { desc = "Open LazyGit" })
+vim.keymap.set("n", "<leader>bd", "<cmd>bdelete<CR>", { desc = "Close current buffer" })
 
 -- Copy filepath to the clipboard
 vim.keymap.set("n", "<leader>fp", function()

@@ -55,8 +55,7 @@
   "remote.SSH.configFile": "~/.ssh/config",
   "remote.SSH.useExecServer": false,
   "chat.viewSessions.orientation": "stacked",
-  "workbench.iconTheme": "material-icon-theme",
-  "workbench.colorTheme": "Kanagawa Wave",
+  "workbench.colorTheme": "Rosé Pine",
   "workbench.colorCustomizations": {
     "[Tokyo Night][Tokyo Night Storm]": {
     "activityBar.background": "#000000",
@@ -160,4 +159,8 @@
   "extensions.experimental.affinity": {
     "asvetliakov.vscode-neovim": 1
   },
+  "workbench.startupEditor": "none",
+  "workbench.iconTheme": "material-icon-theme",
+  "clangd.path": "/home/pedro/.config/VSCodium/User/globalStorage/llvm-vs-code-extensions.vscode-clangd/install/22.1.6/clangd_22.1.6/bin/clangd",
+  "window.commandCenter": false,
 }

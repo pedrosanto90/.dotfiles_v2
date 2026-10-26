@@ -17,7 +17,7 @@
     "command": "workbench.action.navigateDown"
   },
   {
-    "key": "space b",
+    "key": "space space",
     "command": "workbench.action.showAllEditors",
     "when": "neovim.mode == normal && (editorTextFocus || !inputFocus)"
   },
@@ -97,11 +97,11 @@
   //   "command": "workbench.action.gotoSymbol",
   //   "when": "neovim.mode == normal && editorTextFocus"
   // },
-  // {
-  //   "key": "space b d",
-  //   "command": "workbench.action.closeActiveEditor",
-  //   "when": "(neovim.mode == normal && editorTextFocus) || !inputFocus"
-  // },
+  {
+    "key": "space b d",
+    "command": "workbench.action.closeActiveEditor",
+    "when": "(neovim.mode == normal && editorTextFocus) || !inputFocus"
+  },
   // {
   //   "key": "space b o",
   //   "command": "workbench.action.closeOtherEditors",
