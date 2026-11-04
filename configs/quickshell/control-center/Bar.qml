@@ -406,10 +406,15 @@ Scope {
                                 cursorShape: Qt.PointingHandCursor
                                 acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
                                 onClicked: mouse => {
-                                    if (mouse.button === Qt.MiddleButton) trayButton.modelData.secondaryActivate();
-                                    else if (trayButton.modelData.hasMenu)
-                                        trayButton.showMenu();
-                                    else trayButton.modelData.activate();
+                                    if (mouse.button === Qt.MiddleButton) {
+                                        trayButton.modelData.secondaryActivate();
+                                    } else if (mouse.button === Qt.RightButton) {
+                                        if (trayButton.modelData.hasMenu) trayButton.showMenu();
+                                    } else if (trayButton.modelData.onlyMenu) {
+                                        if (trayButton.modelData.hasMenu) trayButton.showMenu();
+                                    } else {
+                                        trayButton.modelData.activate();
+                                    }
                                 }
                                 onWheel: wheel => trayButton.modelData.scroll(wheel.angleDelta.y, false)
                             }
