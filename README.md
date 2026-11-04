@@ -112,13 +112,30 @@ An existing Go tree is never deleted. During an upgrade, `/usr/local/go` moves t
 
 ## Installed software
 
-Debian packages cover Sway, greetd/wlgreet, Waybar, Wofi, Mako, Zsh, fzf, zoxide, tmux, Git, lazygit, ripgrep, fd (`fdfind`), bat (`batcat`), eza, jq, btop, fastfetch, the C/C++ toolchain, Python, Thunar/GVFS, Evolution, Gwenview, Zathura, wl-clipboard, cliphist, grim/slurp/swappy, PipeWire, WirePlumber, pavucontrol, playerctl, NetworkManager with VPN plugins, Blueman, BlueZ, rfkill, lxpolkit, XDG portals, UPower, power-profiles-daemon, udisks2, udiskie, brightnessctl, Papirus, and nwg-look.
+Debian packages cover Sway, greetd/wlgreet, Waybar, Wofi, Mako, Zsh, fzf, zoxide, tmux, Git, lazygit, ripgrep, fd (`fdfind`), bat (`batcat`), eza, jq, btop, fastfetch, the C/C++ toolchain, Python, Thunar/GVFS, Evolution, Gwenview, Zathura, OBS Studio, wl-clipboard, cliphist, grim/slurp/swappy, PipeWire, WirePlumber, pavucontrol, playerctl, NetworkManager with VPN plugins, Blueman, BlueZ, rfkill, lxpolkit, XDG portals, UPower, power-profiles-daemon, udisks2, udiskie, brightnessctl, Papirus, and nwg-look.
+
+### OBS Studio
+
+OBS Studio is installed natively from Debian's `obs-studio` and `obs-plugins` packages. The latter is required for Wayland/PipeWire screen capture and is explicitly installed even with `--no-install-recommends`. Launch it from the applications menu or with `obs`. For screen capture under Sway, use a PipeWire screen capture source; the installer already includes PipeWire and the Wayland desktop portals.
 
 ### Image and PDF viewing
 
 Images open in **Gwenview**, a conventional image viewer with broad format support, printing with fit-to-page controls, and direct annotation tools for freehand strokes, lines, arrows, rectangles, ellipses, text, and custom colours. PDF files open in the keyboard-friendly **Zathura** viewer. **Swappy** remains available for annotating screenshots.
 
 The installer defines `fd` and `bat` aliases because Debian names those binaries `fdfind` and `batcat`.
+
+### Biome in Neovim and VSCodium
+
+Both editors use Biome for JavaScript/JSX, TypeScript/TSX, JSON/JSONC, CSS, and GraphQL formatting. Neovim installs the CLI through Mason, runs Conform's `biome-check` on save for formatting, safe lint fixes, and import organization, and uses the Biome language server for diagnostics and code actions. VSCodium installs `biomejs.biome` and enables formatting, safe fixes, and import organization on explicit saves for those languages. TypeScript's language server remains enabled for type checking and completion.
+
+Add Biome to each project so both editors share its version and rules:
+
+```sh
+npm install --save-dev --save-exact @biomejs/biome
+npx biome init
+```
+
+The Biome language server and VSCodium extension require a project configuration (`biome.json` or `biome.jsonc`); Conform runs `biome check --write` and can also process standalone files using the Mason binary. Existing project ESLint/Prettier dependencies, configuration, and CI scripts are not changed automatically. Biome is not a drop-in formatter for every Prettier language: HTML/Angular/Astro formatting is left to the existing language servers where available; SCSS, Markdown, and YAML are not routed to Biome. Other configured Neovim formatters remain unchanged.
 
 ### Neovim is source-only
 

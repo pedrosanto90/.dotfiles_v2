@@ -109,6 +109,7 @@ return {
 		local servers = {
 			astro = {},
 			bashls = {},
+			biome = {},
 			marksman = {},
 			clangd = {},
 			pyright = {},

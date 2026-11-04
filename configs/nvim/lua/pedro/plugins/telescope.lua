@@ -2,6 +2,7 @@
 -- @keybind neovim|Telescope|Space P S|Search file contents
 -- @keybind neovim|Telescope|Space Space|Find open buffers
 -- @keybind neovim|Telescope|Space P Shift+W S|Search for the word under the cursor
+-- @keybind neovim|Telescope|Space D S Search Document Symbols
 -- @keybind neovim|Themes|Space T H S|Open the theme selector
 -- @keybind neovim|Telescope (insert)|Ctrl+K / Ctrl+J|Move the selection up or down
 return {
@@ -49,6 +50,7 @@ return {
 		vim.keymap.set("n", "<leader>pf", builtin.find_files, { desc = "Telescope find files" })
 		vim.keymap.set("n", "<leader>ps", builtin.live_grep, { desc = "Telescope live grep" })
 		vim.keymap.set("n", "<leader><leader>", builtin.buffers, { desc = "Telescope find buffers" })
+		vim.keymap.set("n", "<leader>ds", builtin.lsp_document_symbols, { desc = "Telescope find symbols" })
 
 		vim.keymap.set("n", "<leader>pWs", function()
 			local word = vim.fn.expand("<cWORD>")

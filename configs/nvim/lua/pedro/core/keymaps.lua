@@ -28,14 +28,19 @@ vim.keymap.set("v", ">", ">gv", opts)
 -- neo tree
 vim.keymap.set("n", "<leader>e", ":Neotree toggle<CR>", { desc = "Toggle Neo-tree" })
 
-vim.keymap.set("n", "<leader>gl", "<cmd>tabnew<CR><cmd>terminal lazygit<CR><cmd>startinsert<CR>", { desc = "Open LazyGit" })
+vim.keymap.set(
+	"n",
+	"<leader>gl",
+	"<cmd>tabnew<CR><cmd>terminal lazygit<CR><cmd>startinsert<CR>",
+	{ desc = "Open LazyGit" }
+)
 vim.keymap.set("n", "<leader>bd", "<cmd>bdelete<CR>", { desc = "Close current buffer" })
 
 -- Copy filepath to the clipboard
 vim.keymap.set("n", "<leader>fp", function()
-    local filePath = vim.fn.expand("%:~")
-    vim.fn.setreg("+", filePath)
-    print("File path copied to clipboard: " .. filePath)
+	local filePath = vim.fn.expand("%:~")
+	vim.fn.setreg("+", filePath)
+	print("File path copied to clipboard: " .. filePath)
 end, { desc = "Copy file path to clipboard" })
 
 -- Navigate between panes

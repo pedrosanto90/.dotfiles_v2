@@ -1,15 +1,14 @@
 angular.ng-template
 asvetliakov.vscode-neovim
+biomejs.biome
 bradlc.vscode-tailwindcss
 catppuccin.catppuccin-vsc
 christian-kohler.npm-intellisense
 cweijan.dbclient-jdbc
 cweijan.vscode-mysql-client2
-dbaeumer.vscode-eslint
 eamodio.gitlens
 editorconfig.editorconfig
 enkia.tokyo-night
-esbenp.prettier-vscode
 formulahendry.auto-rename-tag
 fuzionix.devtool-plus
 github.codespaces
